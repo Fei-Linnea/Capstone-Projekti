@@ -14,8 +14,12 @@ COPY pyproject.toml ./
 COPY pipeline/ ./pipeline/
 COPY workflow/ ./workflow/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir snakemake pandas openpyxl
+# Install Python dependencies with specific versions
+RUN pip install --no-cache-dir \
+    snakemake==7.32.4 \
+    pandas>=1.5.0 \
+    openpyxl>=3.0.0 \
+    pulp==2.7.0
 
 # Set entry point
 CMD ["/bin/bash"]
