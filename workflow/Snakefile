@@ -1,0 +1,70 @@
+# Snakefile - Hello World Pipeline
+
+# Configuration
+SUBJECTS = ["subject1", "subject2", "subject3"]
+
+# Rule all - defines final outputs
+rule all:
+    input:
+        "results/final_report.xlsx"
+
+# Step 1: Validate input data
+rule validate:
+    output:
+        "results/validation/{subject}_validated.txt"
+    params:
+        subject = "{subject}"
+    log:
+        "logs/validate/{subject}.log"
+    shell:
+        """
+        echo "Validating {params.subject}..." > {output}
+        echo "Validation complete for {params.subject}" >> {output}
+        echo "$(date): Validated {params.subject}" > {log}
+        """
+
+# Step 2: Process data (simulates Hippodeep)
+rule process:
+    input:
+        "results/validation/{subject}_validated.txt"
+    output:
+        "results/processed/{subject}_processed.txt"
+    params:
+        subject = "{subject}"
+    log:
+        "logs/process/{subject}.log"
+    shell:
+        """
+        echo "Processing {params.subject}..." > {output}
+        echo "Feature1: 123.45" >> {output}
+        echo "Feature2: 678.90" >> {output}
+        echo "$(date): Processed {params.subject}" > {log}
+        """
+
+# Step 3: Extract features (simulates PyRadiomics)
+rule extract_features:
+    input:
+        "results/processed/{subject}_processed.txt"
+    output:
+        "results/features/{subject}_features.csv"
+    params:
+        subject = "{subject}"
+    log:
+        "logs/extract/{subject}.log"
+    shell:
+        """
+        echo "subject,volume,shape,texture" > {output}
+        echo "{params.subject},100.5,25.3,0.85" >> {output}
+        echo "$(date): Extracted features for {params.subject}" > {log}
+        """
+
+# Step 4: Aggregate all results
+rule aggregate:
+    input:
+        expand("results/features/{subject}_features.csv", subject=SUBJECTS)
+    output:
+        "results/final_report.xlsx"
+    log:
+        "logs/aggregate.log"
+    script:
+        "../pipeline/scripts/aggregate.py"
