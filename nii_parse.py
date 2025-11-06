@@ -5,6 +5,13 @@ import numpy as np
 import csv
 import nibabel as nib
 
+labels_to_subfield_names = {
+    1: 'DG',
+    2: 'CA1',
+    3: 'CA2',
+    4: 'CA3',
+    5: 'SUB',
+}
 
 def mask_process(path_L, path_R, output):
     #combine left and right side of hippocamp
@@ -45,7 +52,7 @@ def print_volumes(seg_path, img_path):
         result = extractor.execute(img_path, seg_path, label=int(label))
         #here you can choose which feature to take
         voxel_volume = result.get("original_shape_VoxelVolume")
-        print(f"Voxel Volume (label {int(label)}): {voxel_volume}")
+        print(f"Voxel Volume ({labels_to_subfield_names[label]}): {voxel_volume}")
 
 #this is the cropped original image to only have the hippocampus, you can use the original image here sometimes?
 #probably better to use the cropped on tho, might need testing
