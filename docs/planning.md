@@ -158,4 +158,5 @@ ENTRYPOINT ["snakemake", "--cores", "all"]
 This image already has Mamba preinstalled and is lighter and faster than Conda-based ones.
 
 An example diagram:
+
 ![alt text](image.png)
