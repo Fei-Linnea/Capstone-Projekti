@@ -1,0 +1,27 @@
+
+
+step1:
+[pytorch, nibabel, scipy]
+Run hippodeep on all t1w.nii.gz files found in the bids structure with the command:
+/path/to/hippodeep.py path/to/input_image.nii.gz
+you sadly cant choose the outputdir it just dumps it in the inputdir but we only care about the the outputs ending in mask_L.nii.gz and mask_R.nii.gz
+
+
+Run hsf on all t1w.nii.gz files found in the bids structure with the command:
+
+step2:
+Run binarify_mask() from nii_parse.py on all 
+Run split_mask_by_label() from nii_parse.py on all 
+
+step3:
+[dependencies]
+Run spharm-pdm
+
+
+[dependencies]
+run smooth_vtk from vtk_smooth.py
+
+step4:
+[dependencies]
+Run feature_extraction.py
+
