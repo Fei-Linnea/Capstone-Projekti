@@ -14,19 +14,19 @@ def binarify_hd_mask(input_path, output_path):
     sitk.WriteImage(binary_mask, output_path)
     print(f"Saved binary mask into: {output_path}")
 
-#splits multi labeled masks into separe one label masks
-def split_mask_by_label(input_path, output_dir):
+#combines all the labels from a hsf nii mask into a single mask for whole hippocampus analysis
+def combine_labels(input_path, output_path):
+    mask_nii = nib.load(input_path)
+    mask_data = mask_nii.get_fdata()
+    combined_mask = (mask_data > 0).astype(np.uint8)
+    combined_nii = nib.Nifti1Image(combined_mask, affine=mask_nii.affine, header=mask_nii.header)
+    nib.save(combined_nii, output_path)
+    print(f"Combined mask saved to {output_path}")
+
+#splits label from masks into separe one label masks
+def split_one_label(input_path, output_path, label):
     img = nib.load(input_path)
     data = img.get_fdata()
-    affine = img.affine
-    header = img.header
-    labels = np.unique(data)
-    labels = labels[labels != 0]
-    for label in labels:
-        label_mask = (data == label).astype(np.uint8)
-        label_img = nib.Nifti1Image(label_mask, affine, header)
-        base = os.path.basename(input_path)
-        name, ext = os.path.splitext(base)
-        output_path = os.path.join(output_dir, f"{name}_label_{int(label)}{ext}")
-        nib.save(label_img, output_path)
-        print(f"Saved split label {label} from {input} into: {output_path}")
+    mask = (data == label).astype(np.uint8)
+    out_img = nib.Nifti1Image(mask, img.affine, img.header)
+    nib.save(out_img, output_path)

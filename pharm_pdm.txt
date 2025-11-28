@@ -1,1 +1,0 @@
-command = "& C:\Program Files\SlicerSALT 6.0.0\SlicerSALT.exe" --no-main-window --python-script "C:\Program Files\SlicerSALT 6.0.0\share\SlicerSALT-5.9\CommandLineTool\SPHARM-PDM.py" "C:\Program Files\SlicerSALT 6.0.0\share\SlicerSALT-5.9\CommandLineTool\SPHARM-PDM-parameters.ini" *>&1 | Tee-Object "C:\Users\banu\Desktop\capstone\SPHARM-PDM.log"

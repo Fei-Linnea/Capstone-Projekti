@@ -2,3 +2,7 @@ test
 sub-01/ses-2
 sub-01/ses-1/func
 outputs
+venv
+hsf_results
+hsf_subregions
+hsf_wholehippocampus
