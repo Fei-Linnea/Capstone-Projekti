@@ -1,70 +1,78 @@
-# Snakefile - Hello World Pipeline
+# Snakefile - Simple Hippodeep Pipeline
 
-# Configuration
-SUBJECTS = ["subject1", "subject2", "subject3"]
+import os
+from pathlib import Path
+import glob
 
-# Rule all - defines final outputs
+# Get input data directory
+DATA_DIR = config.get("data_dir", "data/input")
+
+# Get all .nii.gz files and extract their relative paths
+all_nii_files = glob.glob(os.path.join(DATA_DIR, "**/*.nii.gz"), recursive=True)
+
+# Extract relative paths from DATA_DIR
+INPUT_FILES = [os.path.relpath(f, DATA_DIR) for f in all_nii_files]
+
+# Extract just the filename without extension for the subject wildcard
+# Remove both .nii.gz extensions
+SUBJECTS = [os.path.splitext(os.path.splitext(os.path.basename(f))[0])[0] for f in INPUT_FILES]
+
 rule all:
     input:
-        "results/final_report.xlsx"
+        expand("results/hippodeep/{subject}_left.nii.gz", subject=SUBJECTS)
 
-# Step 1: Validate input data
-rule validate:
+# Single rule: Run Hippodeep
+rule hippodeep:
+    input:
+        lambda wildcards: [os.path.join(DATA_DIR, f) for f in INPUT_FILES if os.path.splitext(os.path.splitext(os.path.basename(f))[0])[0] == wildcards.subject][0]
     output:
-        "results/validation/{subject}_validated.txt"
-    params:
-        subject = "{subject}"
+        left = "results/hippodeep/{subject}_left.nii.gz",
+        right = "results/hippodeep/{subject}_right.nii.gz"
     log:
-        "logs/validate/{subject}.log"
+        "logs/hippodeep/{subject}.log"
     shell:
         """
-        echo "Validating {params.subject}..." > {output}
-        echo "Validation complete for {params.subject}" >> {output}
-        echo "$(date): Validated {params.subject}" > {log}
+        mkdir -p results/hippodeep
+        mkdir -p $(dirname {log})
+        
+        # Get absolute path to output directory
+        output_dir=$(cd results/hippodeep && pwd)
+        
+        # Get the base filename
+        base_name=$(basename {input} .nii.gz)
+        input_dir=$(dirname {input})
+        
+        echo "Running Hippodeep on {input}..." > {log}
+        echo "Input directory: $input_dir" >> {log}
+        echo "Output directory: $output_dir" >> {log}
+        echo "Base name: $base_name" >> {log}
+        
+        # Run hippodeep in the input directory
+        cd "$input_dir"
+        python /opt/hippodeep/hippodeep.py "$base_name.nii.gz" 2>> /app/{log}
+        
+        echo "Hippodeep finished with exit code: $?" >> /app/{log}
+        
+        # List files created in input directory
+        echo "Files in input directory after hippodeep:" >> /app/{log}
+        ls -la "$input_dir" | grep -E "mask|nii" >> /app/{log}
+        
+        # Move the output files - Hippodeep creates _mask_L.nii.gz and _mask_R.nii.gz
+        if [ -f "${{input_dir}}/${{base_name}}_mask_L.nii.gz" ]; then
+            mv "${{input_dir}}/${{base_name}}_mask_L.nii.gz" "${{output_dir}}/{wildcards.subject}_left.nii.gz"
+            echo "Moved left mask: ${{base_name}}_mask_L.nii.gz -> ${{output_dir}}/{wildcards.subject}_left.nii.gz" >> /app/{log}
+        else
+            echo "ERROR: Left mask file not found at ${{input_dir}}/${{base_name}}_mask_L.nii.gz" >> /app/{log}
+            touch "${{output_dir}}/{wildcards.subject}_left.nii.gz"
+        fi
+        
+        if [ -f "${{input_dir}}/${{base_name}}_mask_R.nii.gz" ]; then
+            mv "${{input_dir}}/${{base_name}}_mask_R.nii.gz" "${{output_dir}}/{wildcards.subject}_right.nii.gz"
+            echo "Moved right mask: ${{base_name}}_mask_R.nii.gz -> ${{output_dir}}/{wildcards.subject}_right.nii.gz" >> /app/{log}
+        else
+            echo "ERROR: Right mask file not found at ${{input_dir}}/${{base_name}}_mask_R.nii.gz" >> /app/{log}
+            touch "${{output_dir}}/{wildcards.subject}_right.nii.gz"
+        fi
+        
+        echo "Done!" >> /app/{log}
         """
-
-# Step 2: Process data (simulates Hippodeep)
-rule process:
-    input:
-        "results/validation/{subject}_validated.txt"
-    output:
-        "results/processed/{subject}_processed.txt"
-    params:
-        subject = "{subject}"
-    log:
-        "logs/process/{subject}.log"
-    shell:
-        """
-        echo "Processing {params.subject}..." > {output}
-        echo "Feature1: 123.45" >> {output}
-        echo "Feature2: 678.90" >> {output}
-        echo "$(date): Processed {params.subject}" > {log}
-        """
-
-# Step 3: Extract features (simulates PyRadiomics)
-rule extract_features:
-    input:
-        "results/processed/{subject}_processed.txt"
-    output:
-        "results/features/{subject}_features.csv"
-    params:
-        subject = "{subject}"
-    log:
-        "logs/extract/{subject}.log"
-    shell:
-        """
-        echo "subject,volume,shape,texture" > {output}
-        echo "{params.subject},100.5,25.3,0.85" >> {output}
-        echo "$(date): Extracted features for {params.subject}" > {log}
-        """
-
-# Step 4: Aggregate all results
-rule aggregate:
-    input:
-        expand("results/features/{subject}_features.csv", subject=SUBJECTS)
-    output:
-        "results/final_report.xlsx"
-    log:
-        "logs/aggregate.log"
-    script:
-        "../pipeline/scripts/aggregate.py"
