@@ -1,70 +1,68 @@
-# Snakefile - Hello World Pipeline
+# ============================================================================
+# Snakefile - HSF Hippocampal Segmentation Pipeline
+# ============================================================================
+# Simplified pipeline using HSF (Hippocampal Segmentation Factory)
+# No conda environments - HSF installed directly in Docker image
+# ============================================================================
 
-# Configuration
-SUBJECTS = ["subject1", "subject2", "subject3"]
+import os
+import glob
+import re
+from pathlib import Path
 
-# Rule all - defines final outputs
+# Load configuration
+configfile: "/app/config/config.yaml"
+
+# Extract configuration values
+BIDS_ROOT = config["bids_root"]
+DERIVATIVES_ROOT = config["derivatives_root"]
+
+# HSF segmentation parameters
+HSF_PARAMS = config.get("hsf_params", {
+    "contrast": "t1",
+    "margin": "[8,8,8]",
+    "segmentation_mode": "single_fast",
+    "ca_mode": "1/2/3"
+})
+
+# Auto-discover subjects and sessions from BIDS structure
+def discover_subjects():
+    """Discover subjects and sessions from BIDS dataset"""
+    pattern = os.path.join(BIDS_ROOT, "sub-*/ses-*/anat/*_T1w.nii.gz")
+    files = glob.glob(pattern)
+    
+    subjects = []
+    sessions = []
+    
+    for f in files:
+        # Parse BIDS filename: sub-XX_ses-Y_T1w.nii.gz
+        basename = os.path.basename(f)
+        match = re.match(r'sub-([^_]+)_ses-([^_]+)_T1w\.nii\.gz', basename)
+        if match:
+            subjects.append(match.group(1))
+            sessions.append(match.group(2))
+    
+    return subjects, sessions
+
+# Get subjects and sessions
+SUBJECTS, SESSIONS = discover_subjects()
+
+# Helper function to get input path
+def get_input_path(subject, session):
+    """Get the input T1w file path for a subject and session"""
+    return os.path.join(BIDS_ROOT, f"sub-{subject}", f"ses-{session}", "anat",
+                       f"sub-{subject}_ses-{session}_T1w.nii.gz")
+
+# Include rules
+include: "rules/hsf_segmentation.smk"
+
+# Define all output files
 rule all:
     input:
-        "results/final_report.xlsx"
-
-# Step 1: Validate input data
-rule validate:
-    output:
-        "results/validation/{subject}_validated.txt"
-    params:
-        subject = "{subject}"
-    log:
-        "logs/validate/{subject}.log"
-    shell:
-        """
-        echo "Validating {params.subject}..." > {output}
-        echo "Validation complete for {params.subject}" >> {output}
-        echo "$(date): Validated {params.subject}" > {log}
-        """
-
-# Step 2: Process data (simulates Hippodeep)
-rule process:
-    input:
-        "results/validation/{subject}_validated.txt"
-    output:
-        "results/processed/{subject}_processed.txt"
-    params:
-        subject = "{subject}"
-    log:
-        "logs/process/{subject}.log"
-    shell:
-        """
-        echo "Processing {params.subject}..." > {output}
-        echo "Feature1: 123.45" >> {output}
-        echo "Feature2: 678.90" >> {output}
-        echo "$(date): Processed {params.subject}" > {log}
-        """
-
-# Step 3: Extract features (simulates PyRadiomics)
-rule extract_features:
-    input:
-        "results/processed/{subject}_processed.txt"
-    output:
-        "results/features/{subject}_features.csv"
-    params:
-        subject = "{subject}"
-    log:
-        "logs/extract/{subject}.log"
-    shell:
-        """
-        echo "subject,volume,shape,texture" > {output}
-        echo "{params.subject},100.5,25.3,0.85" >> {output}
-        echo "$(date): Extracted features for {params.subject}" > {log}
-        """
-
-# Step 4: Aggregate all results
-rule aggregate:
-    input:
-        expand("results/features/{subject}_features.csv", subject=SUBJECTS)
-    output:
-        "results/final_report.xlsx"
-    log:
-        "logs/aggregate.log"
-    script:
-        "../pipeline/scripts/aggregate.py"
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_dseg.nii.gz"),
+            zip,
+            subject=SUBJECTS,
+            session=SESSIONS
+        )

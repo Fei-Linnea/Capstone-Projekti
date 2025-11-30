@@ -1,10 +1,178 @@
-# Radiomic-Feature-Extraction-Hippocampus-Morphometry
+# Hippocampal Segmentation Pipeline
 
+[![Pipeline Status](https://img.shields.io/badge/status-active-success.svg)]()
+[![BIDS Compliant](https://img.shields.io/badge/BIDS-compliant-brightgreen.svg)](https://bids.neuroimaging.io/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
 
+Automated pipeline for hippocampal segmentation from T1-weighted MRI images using Hippodeep, with full BIDS compliance and Snakemake workflow management.
 
-## Getting started
+## Features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- 🧠 **Hippocampal Segmentation** using [Hippodeep](https://github.com/bthyreau/hippodeep_pytorch)
+- 📦 **BIDS Compliant** input and output structures
+- 🐍 **Snakemake** workflow management with conda environments
+- 🐳 **Docker** containerized for reproducibility
+- 🔄 **Auto-discovery** of all subjects and sessions
+- 📊 **Professional logging** and error handling
+- ✅ **Processing summary** reports
+
+## Quick Start
+
+### 1. Build Docker Image
+
+```powershell
+docker build -t hippodeep-pipeline -f pipeline/Dockerfile .
+```
+
+### 2. Run Pipeline
+
+```powershell
+# Set your BIDS dataset path
+$DATASET_PATH = "D:\Path\To\Your\BIDS_Dataset"
+
+# Run the pipeline
+docker run --rm -it `
+  -v "${DATASET_PATH}:/data" `
+  -v "${PWD}:/app" `
+  hippodeep-pipeline `
+  snakemake --snakefile /app/pipeline/workflow/Snakefile `
+    --configfile /app/pipeline/config/config.yaml `
+    --use-conda `
+    --cores 4
+```
+
+## Input Structure
+
+Your dataset should be BIDS-formatted with T1w images:
+
+```
+dataset/
+├── sub-01/
+│   └── ses-1/
+│       └── anat/
+│           ├── sub-01_ses-1_T1w.nii.gz
+│           ├── sub-01_ses-1_T1w.json
+│           ├── sub-01_ses-1_FLAIR.nii.gz
+│           └── sub-01_ses-1_FLAIR.json
+├── sub-02/
+│   └── ses-1/
+│       └── anat/
+│           └── ...
+```
+
+## Output Structure
+
+Segmentation results are saved as BIDS derivatives:
+
+```
+dataset/
+├── derivatives/
+│   └── hippodeep/
+│       ├── sub-01/
+│       │   └── ses-1/
+│       │       └── anat/
+│       │           ├── sub-01_ses-1_space-T1w_label-hippocampusL_mask.nii.gz
+│       │           └── sub-01_ses-1_space-T1w_label-hippocampusR_mask.nii.gz
+│       └── processing_summary.txt
+```
+
+## Configuration
+
+Edit `pipeline/config/config.yaml` to customize:
+
+```yaml
+bids_root: "/data"
+derivatives_root: "/data/derivatives/hippodeep"
+continue_on_error: false
+cores: 4
+```
+
+## Documentation
+
+- [Docker Usage Guide](docs/docker_usage.md) - Detailed Docker commands and examples
+- [Planning & Best Practices](docs/planning.md) - Snakemake best practices
+
+## Requirements
+
+- Docker Desktop
+- BIDS-formatted MRI dataset with T1w images
+- Minimum 4GB RAM per parallel job
+- ~30 minutes processing time per subject
+
+## Advanced Usage
+
+### Dry Run (Preview)
+
+```powershell
+docker run --rm -it `
+  -v "${DATASET_PATH}:/data" `
+  -v "${PWD}:/app" `
+  hippodeep-pipeline `
+  snakemake --snakefile /app/pipeline/workflow/Snakefile `
+    --configfile /app/pipeline/config/config.yaml `
+    --use-conda `
+    --dry-run
+```
+
+### Continue on Error
+
+Process all subjects even if some fail:
+
+```powershell
+docker run --rm -it `
+  -v "${DATASET_PATH}:/data" `
+  -v "${PWD}:/app" `
+  hippodeep-pipeline `
+  snakemake --snakefile /app/pipeline/workflow/Snakefile `
+    --configfile /app/pipeline/config/config.yaml `
+    --use-conda `
+    --cores 4 `
+    --keep-going
+```
+
+## Logging
+
+Detailed logs for each subject are saved in `logs/hippodeep/` with:
+- Input/output file paths
+- Processing timestamps
+- Resource usage
+- Error messages (if any)
+
+## Troubleshooting
+
+### No subjects found
+
+Check that your dataset follows BIDS format with structure:
+`sub-XX/ses-Y/anat/sub-XX_ses-Y_T1w.nii.gz`
+
+### Conda environment creation fails
+
+First run takes longer as environments are created. Ensure:
+- Internet connection is available
+- Sufficient disk space (~2GB for environments)
+
+## Citation
+
+If you use this pipeline, please cite:
+
+**Hippodeep**: Thyreau, B., Sato, K., Fukuda, H., & Taki, Y. (2018). Segmentation of the hippocampus by transferring algorithmic knowledge for large cohort processing. Medical Image Analysis, 43, 214-228.
+
+## Contributing
+
+Contributions welcome! Please fork, create a feature branch, and submit a pull request.
+
+## Authors
+
+- BigBrain Team / Capstone Group 7
+- University of Turku
+- Date: 2025-11-29
+
+## Acknowledgments
+
+- [Hippodeep](https://github.com/bthyreau/hippodeep_pytorch)
+- [Snakemake](https://snakemake.readthedocs.io)
+- [BIDS](https://bids.neuroimaging.io)
+
 
 Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
 

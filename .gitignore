@@ -1,9 +1,27 @@
+# Snakemake
 .snakemake/
 logs/
 
+# Pipeline outputs
 results/
+derivatives/
 
+# Python
 __pycache__/
 *.py[cod]
 .Python
+
+# Conda environments
+.conda/
+envs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 

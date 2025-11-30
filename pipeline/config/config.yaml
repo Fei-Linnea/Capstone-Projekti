@@ -1,0 +1,24 @@
+# ============================================================================
+# Pipeline Configuration File - HSF Segmentation
+# ============================================================================
+
+# BIDS dataset root directory (where subjects are located)
+# Default: /data (mounted from host)
+bids_root: "/data"
+
+# Derivatives output directory
+derivatives_root: "/data/derivatives/hsf"
+
+# HSF segmentation parameters
+hsf_params:
+  contrast: "t1"  # MRI contrast type
+  margin: "[8,8,8]"  # ROI localization margin in voxels [x,y,z]
+  segmentation_mode: "single_fast"  # Options: single_fast, single_accurate, bagging_fast, bagging_accurate
+  ca_mode: "1/2/3"  # CA subfield mode: "" (whole), "123" (merged CA), "1/23" (CA2+CA3 merged), "1/2/3" (all separate)
+
+# Processing options
+continue_on_error: false
+
+# Resource limits
+cores: 4
+memory_mb: 8000
