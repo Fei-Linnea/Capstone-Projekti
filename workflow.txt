@@ -1,0 +1,42 @@
+
+
+step1: segmentation
+[hsf, onnxruntime]
+Run hsf on all t1w.nii.gz files found in the bids structure with the 
+command: hsf files.path="full_path"  files.pattern="*T1w.nii.gz" roiloc.contrast="t1" roiloc.margin=[8,8,8]  segmentation=single_fast segmentation.ca_mode="1/2/3" files.outputdir="output_dir"
+#segmentation mode should probably be an advanced parameter
+
+
+[dependencies]
+step2: data-processing
+Run split_one_label(input_path, output_path, label) from nii_parse.py on all the hsf given files ending with _seg_crop, one L and R for each brainscan
+Theres 5 labels which should be:
+1: DG
+2: CA1
+3: CA2
+4: CA3
+5: SUB
+So you have to run it for all 5 labels for each image ending in seg_crop
+
+Run combine_labels(input_path, output_path) from nii_parse.py on the same files as the split_one_label
+
+
+[dependencies]
+Run spharm-pdm
+#i will leave this for uuno, i hope hes figured something out
+
+
+#we will need to see if spharms built in smoothing is better but if not then
+[vtk]
+Run smooth_vtk(input_path, output_path) from vtk_smooth.py on all spharm-pdm given files ending in surf_SPHARM.vtk
+
+step3: feature extraction
+[dependencies coming someday]
+Run extract_pyradiomics_features(imagePath, maskPath, features) on all L and R side hippocampal with imagePath being the hsf given images
+with no special ending just hippocampus.nii.gz and mask path being the earlier combine_labels() given combined masks and features for now are ['original_shape_VoxelVolume', "original_shape_SurfaceVolumeRatio"]
+it returns a dictionary
+
+Run extract_curvatures(input) on all Smoothed vtk files from the Smooth_vtk function returns a dataframe
+Run calculate_curv_metrics(df): on the previously returned df and it returns a dictionary
+
+These 2 dictionaries and the dataframe should be then be written into a or multiple csv
