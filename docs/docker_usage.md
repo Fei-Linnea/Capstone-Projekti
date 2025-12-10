@@ -28,7 +28,7 @@ This guide shows how to run the hippocampal segmentation pipeline using Docker w
 From the project root directory:
 
 ```powershell
-docker build -t hippodeep-pipeline -f pipeline/Dockerfile .
+docker build -t hsf-pipeline -f pipeline/Dockerfile .
 ```
 
 ## Run the Pipeline
@@ -40,12 +40,10 @@ Mount your BIDS dataset to `/data` inside the container:
 ```powershell
 docker run --rm -it \
   -v "D:\Path\To\Your\BIDS_Dataset:/data" \
-  -v "${PWD}:/app" \
-  hippodeep-pipeline \
-  snakemake --snakefile /app/pipeline/workflow/Snakefile \
-    --configfile /app/pipeline/config/config.yaml \
-    --use-conda \
-    --cores 4
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --use-conda \
+  --cores 4
 ```
 
 **Replace** `D:\Path\To\Your\BIDS_Dataset` with your actual dataset path.
@@ -57,15 +55,13 @@ docker run --rm -it \
 $DATASET_PATH = "D:\Work\Uni Work\Capstone\Dataset"
 
 # Run pipeline
-docker run --rm -it `
-  -v "${DATASET_PATH}:/data" `
-  -v "${PWD}:/app" `
-  hippodeep-pipeline `
-  snakemake --snakefile /app/pipeline/workflow/Snakefile `
-    --configfile /app/pipeline/config/config.yaml `
-    --use-conda `
-    --cores 4 `
-    --printshellcmds
+docker run --rm -it \
+  -v "${DATASET_PATH}:/data" \
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --use-conda \
+  --cores 4 \
+  --printshellcmds
 ```
 
 ### With Different Cores
@@ -73,12 +69,10 @@ docker run --rm -it `
 ```powershell
 docker run --rm -it \
   -v "${DATASET_PATH}:/data" \
-  -v "${PWD}:/app" \
-  hippodeep-pipeline \
-  snakemake --snakefile /app/pipeline/workflow/Snakefile \
-    --configfile /app/pipeline/config/config.yaml \
-    --use-conda \
-    --cores 8  # Use 8 cores
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --use-conda \
+  --cores 8  # Use 8 cores
 ```
 
 ### Continue on Error (Process All Subjects)
@@ -86,18 +80,16 @@ docker run --rm -it \
 ```powershell
 docker run --rm -it \
   -v "${DATASET_PATH}:/data" \
-  -v "${PWD}:/app" \
-  hippodeep-pipeline \
-  snakemake --snakefile /app/pipeline/workflow/Snakefile \
-    --configfile /app/pipeline/config/config.yaml \
-    --use-conda \
-    --cores 4 \
-    --keep-going  # Continue processing even if some jobs fail
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --use-conda \
+  --cores 4 \
+  --keep-going  # Continue processing even if some jobs fail
 ```
 
 ## Output Structure
 
-Results will be saved in your dataset directory under `derivatives/hippodeep/`:
+Results will be saved in your dataset directory under `derivatives/hsf/`:
 
 ```
 dataset/
@@ -106,7 +98,7 @@ dataset/
 │       └── anat/
 │           └── sub-01_ses-1_T1w.nii.gz
 ├── derivatives/
-│   └── hippodeep/
+│   └── hsf/
 │       ├── sub-01/
 │       │   └── ses-1/
 │       │       └── anat/
@@ -122,11 +114,11 @@ dataset/
 
 ## Logs
 
-Logs are saved in the project directory under `logs/hippodeep/`:
+Logs are saved in the project directory under `logs/hsf/`:
 
 ```
 logs/
-└── hippodeep/
+└── hsf/
     ├── sub-01_ses-1.log
     ├── sub-02_ses-1.log
     └── ...
@@ -139,25 +131,25 @@ logs/
 ```powershell
 docker run --rm -it \
   -v "${DATASET_PATH}:/data" \
-  -v "${PWD}:/app" \
-  hippodeep-pipeline \
-  snakemake --snakefile /app/pipeline/workflow/Snakefile \
-    --configfile /app/pipeline/config/config.yaml \
-    --use-conda \
-    --cores 4 \
-    --dry-run
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --use-conda \
+  --cores 4 \
+  --dry-run
 ```
 
 ### Generate DAG Visualization
 
 ```powershell
-docker run --rm -it \
+$ docker run --rm -it \
   -v "${DATASET_PATH}:/data" \
   -v "${PWD}:/app" \
-  hippodeep-pipeline \
-  snakemake --snakefile /app/pipeline/workflow/Snakefile \
-    --configfile /app/pipeline/config/config.yaml \
-    --dag | dot -Tpng > dag.png
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --dag > dag.dot
+
+# After removing first line "Building DAG of jobs..." from dag.dot, run:
+$ dot -Tpng dag.dot > dag.png
 ```
 
 ### Clean Up Results (Careful!)
@@ -165,11 +157,9 @@ docker run --rm -it \
 ```powershell
 docker run --rm -it \
   -v "${DATASET_PATH}:/data" \
-  -v "${PWD}:/app" \
-  hippodeep-pipeline \
-  snakemake --snakefile /app/pipeline/workflow/Snakefile \
-    --configfile /app/pipeline/config/config.yaml \
-    --delete-all-output
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --delete-all-output
 ```
 
 ## Troubleshooting
@@ -182,8 +172,7 @@ If you encounter permission errors on Linux:
 docker run --rm -it \
   --user $(id -u):$(id -g) \
   -v "${DATASET_PATH}:/data" \
-  -v "${PWD}:/app" \
-  hippodeep-pipeline \
+  hsf-pipeline \
   snakemake ...
 ```
 
@@ -194,11 +183,10 @@ To see which subjects were discovered:
 ```powershell
 docker run --rm -it \
   -v "${DATASET_PATH}:/data" \
-  -v "${PWD}:/app" \
-  hippodeep-pipeline \
-  snakemake --snakefile /app/pipeline/workflow/Snakefile \
-    --configfile /app/pipeline/config/config.yaml \
-    --dry-run
+  hsf-pipeline \
+  --snakefile /app/pipeline/workflow/Snakefile \
+  --configfile /app/pipeline/config/config.yaml \
+  --dry-run
 ```
 
 Look for the output:
@@ -214,7 +202,7 @@ Look for the output:
 After completion:
 
 ```powershell
-cat "${DATASET_PATH}\derivatives\hippodeep\processing_summary.txt"
+cat "${DATASET_PATH}\derivatives\hsf\processing_summary.txt"
 ```
 
 ## Configuration Options
@@ -222,7 +210,7 @@ cat "${DATASET_PATH}\derivatives\hippodeep\processing_summary.txt"
 Edit `pipeline/config/config.yaml` to customize:
 
 - `bids_root`: Input dataset location (default: `/data`)
-- `derivatives_root`: Output location (default: `/data/derivatives/hippodeep`)
+- `derivatives_root`: Output location (default: `/data/derivatives/hsf`)
 - `continue_on_error`: Continue on failures (default: `false`)
 - `cores`: Number of parallel jobs
 

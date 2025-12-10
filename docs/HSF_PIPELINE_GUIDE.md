@@ -7,7 +7,7 @@
 
 ## What Changed?
 
-### From Hippodeep to HSF:
+### From hsf to HSF:
 1. **Simpler Docker image**: Python 3.11-slim + pip install (no conda/mamba)
 2. **Simpler Snakefile**: Direct HSF command (no temp directory manipulation)
 3. **Cleaner dependencies**: HSF[onnx] + Snakemake only
@@ -47,35 +47,29 @@ docker run --rm hsf-pipeline:latest bash -c "hsf --help"
 ### Dry Run (Check Pipeline)
 ```powershell
 docker run --rm `
-  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" `
-  -v "${PWD}/pipeline/workflow:/app/workflow" `
-  -v "${PWD}/pipeline/config:/app/config" `
-  -v "${PWD}/logs:/app/logs" `
-  hsf-pipeline:latest `
-  --snakefile /app/workflow/Snakefile `
-  --cores 4 `
+  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hsf-pipeline:latest \
+  --snakefile /app/workflow/Snakefile \
+  --cores 4 \
   --dry-run
 ```
 
 ### Full Run
 ```powershell
-docker run --rm `
-  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" `
-  -v "${PWD}/pipeline/workflow:/app/workflow" `
-  -v "${PWD}/pipeline/config:/app/config" `
-  -v "${PWD}/logs:/app/logs" `
-  hsf-pipeline:latest `
-  --snakefile /app/workflow/Snakefile `
+docker run --rm \
+  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hsf-pipeline:latest \
+  --snakefile /app/workflow/Snakefile \
   --cores 4
 ```
 
 ### Interactive Shell (Debugging)
 ```powershell
-docker run --rm -it `
-  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" `
-  -v "${PWD}/pipeline/workflow:/app/workflow" `
-  -v "${PWD}/pipeline/config:/app/config" `
-  hsf-pipeline:latest `
+docker run --rm -it \
+  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" \
+  hsf-pipeline:latest \
   bash
 ```
 
@@ -141,12 +135,10 @@ Edit `pipeline/config/config.yaml` to change:
 
 ### Check if subjects are discovered:
 ```powershell
-docker run --rm `
-  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" `
-  -v "${PWD}/pipeline/workflow:/app/workflow" `
-  -v "${PWD}/pipeline/config:/app/config" `
-  hsf-pipeline:latest `
-  --snakefile /app/workflow/Snakefile `
+docker run --rm \
+  -v "D:\Work\Uni Work\Capstone\SampleDataset:/data" \
+  hsf-pipeline:latest \
+  --snakefile /app/workflow/Snakefile \
   --dry-run
 ```
 

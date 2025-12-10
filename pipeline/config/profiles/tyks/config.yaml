@@ -1,0 +1,16 @@
+# Snakemake profile for TYKS (run inside main Docker image; no per-rule containers/conda)
+# Activate with: snakemake --profile pipeline/config/profiles/tyks
+
+# Local execution inside the container
+cores: 8
+keep-going: true
+latency-wait: 60
+restart-times: 1
+printshellcmds: true
+
+# No cluster submission; adjust cores above as needed
+cluster: false
+
+# Environment handling: everything baked into the main Docker image.
+use-conda: false
+use-singularity: false

@@ -13,7 +13,6 @@ __pycache__/
 
 # Conda environments
 .conda/
-envs/
 
 # IDE
 .vscode/

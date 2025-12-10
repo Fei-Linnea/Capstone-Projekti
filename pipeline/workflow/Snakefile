@@ -9,21 +9,30 @@ import os
 import glob
 import re
 from pathlib import Path
+from workflow.scripts.nii_parse import split_one_label, combine_labels
 
 # Load configuration
-configfile: "/app/config/config.yaml"
+configfile: "/app/pipeline/config/config.yaml"
 
 # Extract configuration values
 BIDS_ROOT = config["bids_root"]
 DERIVATIVES_ROOT = config["derivatives_root"]
 
 # HSF segmentation parameters
-HSF_PARAMS = config.get("hsf_params", {
-    "contrast": "t1",
-    "margin": "[8,8,8]",
-    "segmentation_mode": "single_fast",
-    "ca_mode": "1/2/3"
-})
+HSF_PARAMS = config["hsf_params"]
+
+# Hemisphere and label definitions
+HEMIS = config["hemis"]
+LABELS = config["labels"]
+
+# HEMIS = config.get("hemis", ["L", "R"])
+# LABELS = config.get("labels", {
+#     "DG": 1,
+#     "CA1": 2,
+#     "CA2": 3,
+#     "CA3": 4,
+#     "SUB": 5,
+# })
 
 # Auto-discover subjects and sessions from BIDS structure
 def discover_subjects():
@@ -51,18 +60,90 @@ SUBJECTS, SESSIONS = discover_subjects()
 def get_input_path(subject, session):
     """Get the input T1w file path for a subject and session"""
     return os.path.join(BIDS_ROOT, f"sub-{subject}", f"ses-{session}", "anat",
-                       f"sub-{subject}_ses-{session}_T1w.nii.gz")
+            f"sub-{subject}_ses-{session}_T1w.nii.gz")
+
+def hsf_output(subject, session):
+    """Path to the combined HSF segmentation output."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_dseg.nii.gz",
+    )
+
+def hsf_left_crop_output(subject, session):
+    """Path to the left cropped segmentation output produced by HSF."""
+    return get_seg_crop_output(subject, session, "L")
+
+def hsf_right_crop_output(subject, session):
+    """Path to the right cropped segmentation output produced by HSF."""
+    return get_seg_crop_output(subject, session, "R")
+
+def get_seg_crop_output(subject, session, hemi):
+    """Path to cropped segmentation produced by HSF (per hemisphere)."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_seg_crop.nii.gz",
+    )
+
+def label_mask_output(subject, session, hemi, label):
+    """Path to per-label mask for a hemisphere."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mask.nii.gz",
+    )
+
+def combined_mask_output(subject, session, hemi):
+    """Path to combined hippocampus mask (all labels merged) for a hemisphere."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_mask.nii.gz",
+    )
 
 # Include rules
 include: "rules/hsf_segmentation.smk"
+include: "rules/data_processing.smk"
 
 # Define all output files
 rule all:
     input:
+        # Segmentation outputs (left-side copy, plus cropped hemispheres)
         expand(
-            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
-                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_dseg.nii.gz"),
-            zip,
+            hsf_output,
             subject=SUBJECTS,
             session=SESSIONS
+        ),
+        expand(
+            hsf_left_crop_output,
+            subject=SUBJECTS,
+            session=SESSIONS,
+        ),
+        expand(
+            hsf_right_crop_output,
+            subject=SUBJECTS,
+            session=SESSIONS,
+        ),
+        # Data processing outputs: per-label masks and combined mask per hemisphere
+        expand(
+            label_mask_output,
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            combined_mask_output,
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
         )

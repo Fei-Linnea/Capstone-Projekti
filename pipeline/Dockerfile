@@ -11,15 +11,13 @@ LABEL maintainer="BigBrain Team"
 LABEL description="HSF hippocampal segmentation pipeline"
 LABEL version="2.0.0"
 
-# Set working directory
-WORKDIR /app
-
 # Install system dependencies and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     bash \
     gcc \
     g++ \
+    graphviz \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,15 +26,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # PyTorch CPU version (lighter)
 # Snakemake for workflow management
 # Pin PuLP to 2.7.0 for compatibility with Snakemake 7.32.4
+# SimpleITK, nibabel and numpy for nii_parse.py functions (data_processing part)
 RUN pip install --no-cache-dir \
+    nibabel \
+    numpy \
     pulp==2.7.0 \
+    simpleitk \
     snakemake==7.32.4 \
     onnxruntime \
     hsf && \
     pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
+# Set working directory
+WORKDIR /app
+
 # Set environment to allow executable stack for onnxruntime
 ENV LD_PRELOAD=""
+
+# make Snakemake workflow importable
+# ENV PYTHONPATH="/app/pipeline:${PYTHONPATH}"
+
+COPY pipeline /app/pipeline
 
 # Set entrypoint to Snakemake
 ENTRYPOINT ["snakemake"]
