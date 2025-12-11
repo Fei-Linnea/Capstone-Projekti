@@ -1,0 +1,33 @@
+# Snakemake profile for CSC (Slurm, Snakemake preinstalled)
+# Activate with: snakemake --profile pipeline/config/profiles/csc
+
+jobs: 100
+keep-going: true
+latency-wait: 60
+restart-times: 1
+printshellcmds: true
+
+# Classic cluster submission; adjust account/partition/time/mem as needed.
+cluster: >
+  sbatch
+  -J {rule}
+  -A {resources.account}
+  -p {resources.partition}
+  -t {resources.time}
+  -c {threads}
+  --mem={resources.mem_mb}
+  --output=logs/slurm/%x-%j.out
+  --error=logs/slurm/%x-%j.err
+
+# Default resources if rules don't specify them explicitly.
+default-resources:
+  - mem_mb=8000
+  - time="04:00:00"
+  - partition="serial"
+  - account="project_2001234"
+  - threads=4
+
+# Environment handling: Snakemake is installed on CSC; rules provide `container:`
+# and Singularity will be used to execute them. No conda.
+use-conda: false
+use-singularity: true
