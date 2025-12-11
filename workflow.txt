@@ -7,8 +7,8 @@ command: hsf files.path="full_path"  files.pattern="*T1w.nii.gz" roiloc.contrast
 #segmentation mode should probably be an advanced parameter
 
 
-[dependencies]
 step2: data-processing
+[dependencies in nii_parse python file]
 Run split_one_label(input_path, output_path, label) from nii_parse.py on all the hsf given files ending with _seg_crop, one L and R for each brainscan
 Theres 5 labels which should be:
 1: DG
@@ -20,23 +20,46 @@ So you have to run it for all 5 labels for each image ending in seg_crop
 
 Run combine_labels(input_path, output_path) from nii_parse.py on the same files as the split_one_label
 
+After this step you have 12 segmentation files: 6 left-side (of the brain) files and 6 right-side files for each subfield (DG, CA1, CA2 CA3, SUB) and "combined" meaning the whole hippocampus.
 
-[dependencies]
-Run spharm-pdm
-#i will leave this for uuno, i hope hes figured something out
+step3: create 3D mesh files
+[dependencies in voxelToMesh python file]
+Run nii_to_vtk(input_path, output_path, min_voxel_count=20, smooth_iters=50, decimation_degree=0.7) from voxelToMesh.py for each of the 12 segmentation files from step2.
+This gives you 12 3D mesh .vtk files (one for each segmentation) these mesh files are used to calculate curvatures in the step5
 
+step4: pyradiomics feature extraction
+[dependencies in the feature_extraction python file]
+Run extract_pyradiomics_features(imagePath, maskPath, features) from feature_extraction.py on all the 12 segmentation files from step2 
+imagePath should be the original MRI image from which the 12 segmentation masks were gotten from (this is the same for every one of the 12 times this function is called)
+maskPath should be the 12 segmentation files from step2 (this is what you changed between each call of the function)
+features should be the following list: ['original_shape_MeshVolume', "original_shape_SurfaceVolumeRatio"]
 
-#we will need to see if spharms built in smoothing is better but if not then
-[vtk]
-Run smooth_vtk(input_path, output_path) from vtk_smooth.py on all spharm-pdm given files ending in surf_SPHARM.vtk
+Each run of the function outputs a dictionary, which will be used in step6 
 
-step3: feature extraction
-[dependencies coming someday]
-Run extract_pyradiomics_features(imagePath, maskPath, features) on all L and R side hippocampal with imagePath being the hsf given images
-with no special ending just hippocampus.nii.gz and mask path being the earlier combine_labels() given combined masks and features for now are ['original_shape_VoxelVolume', "original_shape_SurfaceVolumeRatio"]
-it returns a dictionary
+step5: curvature feature extraction
+[dependencies in the feature_extraction python file]
+For each of the 12 .vtk files gotten in step3, run extract_curvatures(input) from feature_extraction.py.
+The output of this function (a pandas dataframe) is then given as an input to the function calculate_curv_metrics(df) from feature_extraction.py
 
-Run extract_curvatures(input) on all Smoothed vtk files from the Smooth_vtk function returns a dataframe
-Run calculate_curv_metrics(df): on the previously returned df and it returns a dictionary
+Each run of this latter function outputs a dictionary, which will be used in step6
 
-These 2 dictionaries and the dataframe should be then be written into a or multiple csv
+step6: data aggregation
+[dependencies in the aggregate_data python file]
+Now you should have 12 step4 output dictionaries (from now on called radiomics_data) and 12 step5 outputs dictionaries (from now on called curvature_data).
+Run aggregate_region_data(hippocampus_data_L, DG_data_L, CA1_data_L, CA2_data_L, CA3_data_L, SUB_data_L,
+                          hippocampus_data_R, DG_data_R, CA1_data_R, CA2_data_R, CA3_data_R, SUB_data_R) from aggregate_data.py with the radiomics_data dictionaries as input.
+Please note that here the order matters!
+This basically just combines all these 12 dictionaries into just 1 dictionary, so the output is 1 radiomics_data dictionary
+
+Now run aggregate_region_data(hippocampus_data_L, DG_data_L, CA1_data_L, CA2_data_L, CA3_data_L, SUB_data_L,
+                              hippocampus_data_R, DG_data_R, CA1_data_R, CA2_data_R, CA3_data_R, SUB_data_R) from aggregate_data.py but this time with the curvature_data dictionaries as input.
+Again please not that here the order matters!
+
+After this you should have 1 radiomics_data dictionary and 1 curvature_data dictionary
+
+Run form_row_from_data(image_path, radiomics_data, curvature_data) from aggregate_data.py with the radiomics_data dict and curvature_data dict as inputs.
+image_path should be the original MRI image (or any image as long as the filename contains the subject/session identifiers in BIDS format (sub-XX_ses-XX_*))
+This outputs a row with everything we need in it
+
+[THIS MIGHT NEED TO CHANGE BECAUSE WE NEED TO WRITE THE ROW INTO A .CSV FILE POSSIBLY OUTSIDE THE PIPELINE]
+Finally run append_csv('outputs_features.csv', row) with row being the output of the previous function, to append the row into the final output.csv 
