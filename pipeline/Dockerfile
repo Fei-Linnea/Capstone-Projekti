@@ -22,15 +22,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
+# First install numpy (required by pyradiomics build)
+RUN pip install --no-cache-dir numpy
+
+# Then install remaining packages
 # HSF for hippocampal segmentation
 # PyTorch CPU version (lighter)
 # Snakemake for workflow management
 # Pin PuLP to 2.7.0 for compatibility with Snakemake 7.32.4
-# SimpleITK, nibabel and numpy for nii_parse.py functions (data_processing part)
+# SimpleITK, nibabel and pandas for nii_parse.py functions (data_processing part)
+# pyradiomics for feature extraction
 RUN pip install --no-cache-dir \
     nibabel \
-    numpy \
+    pandas \
     pulp==2.7.0 \
+    pyradiomics \
     simpleitk \
     snakemake==7.32.4 \
     onnxruntime \

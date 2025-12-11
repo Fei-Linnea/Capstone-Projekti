@@ -41,21 +41,26 @@ def discover_subjects():
     pattern = os.path.join(BIDS_ROOT, "sub-*/ses-*/anat/*_T1w.nii.gz")
     files = glob.glob(pattern)
     
-    subjects = []
-    sessions = []
+    subject_session_pairs = []
     
     for f in files:
         # Parse BIDS filename: sub-XX_ses-Y_T1w.nii.gz
         basename = os.path.basename(f)
         match = re.match(r'sub-([^_]+)_ses-([^_]+)_T1w\.nii\.gz', basename)
         if match:
-            subjects.append(match.group(1))
-            sessions.append(match.group(2))
+            subject = match.group(1)
+            session = match.group(2)
+            if (subject, session) not in subject_session_pairs:
+                subject_session_pairs.append((subject, session))
     
-    return subjects, sessions
+    # Separate into subjects and sessions lists for backward compatibility
+    subjects = [pair[0] for pair in subject_session_pairs]
+    sessions = [pair[1] for pair in subject_session_pairs]
+    
+    return subjects, sessions, subject_session_pairs
 
 # Get subjects and sessions
-SUBJECTS, SESSIONS = discover_subjects()
+SUBJECTS, SESSIONS, SUBJECT_SESSION_PAIRS = discover_subjects()
 
 # Helper function to get input path
 def get_input_path(subject, session):
@@ -114,6 +119,7 @@ def combined_mask_output(subject, session, hemi):
 # Include rules
 include: "rules/hsf_segmentation.smk"
 include: "rules/data_processing.smk"
+include: "rules/feature_extraction.smk"
 
 # Define all output files
 rule all:
@@ -152,4 +158,26 @@ rule all:
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
-        )
+        ),
+        # Feature extraction outputs: PyRadiomics features per label and combined
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_pyradiomics.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_combined_pyradiomics.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        # Aggregated features per subject (one row with both hemispheres)
+        [os.path.join(DERIVATIVES_ROOT, f"sub-{subject}", f"ses-{session}", "features",
+                     f"sub-{subject}_ses-{session}_all_features.csv")
+         for subject, session in SUBJECT_SESSION_PAIRS],
+        # Final aggregated summary
+        os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv")

@@ -1,4 +1,3 @@
-import pyvista as pv
 import numpy as np
 import pandas as pd
 from radiomics import featureextractor
@@ -21,6 +20,8 @@ def extract_pyradiomics_features(imagePath, maskPath, features):
 
 #extracs point-wise curvature features from .vtk files    
 def extract_curvatures(input):
+    import pyvista as pv
+    
     mesh = pv.read(input)
     H = mesh.curvature(curv_type='mean')
     mesh['Mean_Curvature'] = H
