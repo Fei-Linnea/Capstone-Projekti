@@ -6,6 +6,8 @@ from radiomics import featureextractor
 #extracts wanted pyradiomics features from nii.gz files with nii.gz mask
 def extract_pyradiomics_features(imagePath, maskPath, features): 
     extractor = featureextractor.RadiomicsFeatureExtractor()
+    extractor.disableAllFeatures() # Disable all features first
+    extractor.enableFeatureClassByName('shape') # Enable only the features we need, this cuts down on computation time
     result = extractor.execute(imagePath, maskPath)
     data = {}
     for feature_name in features:
@@ -13,6 +15,7 @@ def extract_pyradiomics_features(imagePath, maskPath, features):
             data[feature_name] = result[feature_name]
         else:
             data[feature_name] = None
+            print(f"Warning: Feature {feature_name} not found in pyradiomics output.")
     print("features extracted with pyradiomics")
     return data
 
