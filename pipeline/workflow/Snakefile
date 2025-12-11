@@ -8,8 +8,9 @@
 import os
 import glob
 import re
+import sys
 from pathlib import Path
-from workflow.scripts.nii_parse import split_one_label, combine_labels
+from scripts.nii_parse import split_one_label, combine_labels
 
 # Load configuration
 configfile: "/app/pipeline/config/config.yaml"
@@ -119,30 +120,35 @@ rule all:
     input:
         # Segmentation outputs (left-side copy, plus cropped hemispheres)
         expand(
-            hsf_output,
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_dseg.nii.gz"),
             subject=SUBJECTS,
             session=SESSIONS
         ),
         expand(
-            hsf_left_crop_output,
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-L_seg_crop.nii.gz"),
             subject=SUBJECTS,
             session=SESSIONS,
         ),
         expand(
-            hsf_right_crop_output,
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-R_seg_crop.nii.gz"),
             subject=SUBJECTS,
             session=SESSIONS,
         ),
         # Data processing outputs: per-label masks and combined mask per hemisphere
         expand(
-            label_mask_output,
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mask.nii.gz"),
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
             label=LABELS.keys(),
         ),
         expand(
-            combined_mask_output,
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_mask.nii.gz"),
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
