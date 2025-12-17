@@ -5,12 +5,13 @@
 # No conda environments - HSF installed directly in Docker image
 # ============================================================================
 
-import os
-import glob
-import re
-import sys
+import os, glob, re, sys
+import pandas as pd
 from pathlib import Path
 from scripts.nii_parse import split_one_label, combine_labels
+from scripts.feature_extraction import extract_pyradiomics_features
+from scripts.aggregate_data import aggregate_region_data
+from scripts.voxelToMesh import nii_to_vtk
 
 # Load configuration
 configfile: "/app/pipeline/config/config.yaml"
@@ -25,15 +26,6 @@ HSF_PARAMS = config["hsf_params"]
 # Hemisphere and label definitions
 HEMIS = config["hemis"]
 LABELS = config["labels"]
-
-# HEMIS = config.get("hemis", ["L", "R"])
-# LABELS = config.get("labels", {
-#     "DG": 1,
-#     "CA1": 2,
-#     "CA2": 3,
-#     "CA3": 4,
-#     "SUB": 5,
-# })
 
 # Auto-discover subjects and sessions from BIDS structure
 def discover_subjects():
@@ -120,6 +112,7 @@ def combined_mask_output(subject, session, hemi):
 include: "rules/hsf_segmentation.smk"
 include: "rules/data_processing.smk"
 include: "rules/feature_extraction.smk"
+include: "rules/mesh_generation.smk"
 
 # Define all output files
 rule all:
@@ -171,6 +164,37 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                         "sub-{subject}_ses-{session}_hemi-{hemi}_combined_pyradiomics.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        # Mesh generation outputs (VTK + PNG) for labels and combined
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mesh.vtk"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mesh.png"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_combined_mesh.vtk"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_combined_mesh.png"),
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,

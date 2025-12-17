@@ -7,7 +7,7 @@
 bids_root: "/data"
 
 # Derivatives output directory
-derivatives_root: "/data/derivatives/hsf"
+derivatives_root: "/data/derivatives/"
 
 # HSF segmentation parameters
 hsf_params:
@@ -31,3 +31,9 @@ continue_on_error: false
 # Resource limits
 cores: 4
 memory_mb: 8000
+
+# Mesh generation parameters (step 3)
+mesh_params:
+  min_voxel_count: 20
+  smooth_iters: 50
+  decimation_degree: 0.7

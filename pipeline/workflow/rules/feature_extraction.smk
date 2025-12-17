@@ -18,12 +18,6 @@ rule extract_pyradiomics_per_label:
     log:
         os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from feature_extraction import extract_pyradiomics_features
-        import pandas as pd
-        
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -67,12 +61,6 @@ rule extract_pyradiomics_combined:
     log:
         os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from feature_extraction import extract_pyradiomics_features
-        import pandas as pd
-        
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -133,12 +121,6 @@ rule aggregate_subject_features:
     log:
         os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_aggregate.log")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from aggregate_data import aggregate_region_data
-        import pandas as pd
-        
         # Read LEFT hemisphere features
         label_data_L = {}
         for csv_file in input.label_features_L:
@@ -214,9 +196,6 @@ rule aggregate_all_subjects:
     log:
         os.path.join("logs", "feature_extraction", "aggregate_all.log")
     run:
-        import pandas as pd
-        from pathlib import Path
-        
         # Create output directory
         Path(output.summary).parent.mkdir(parents=True, exist_ok=True)
         

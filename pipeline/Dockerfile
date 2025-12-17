@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     graphviz \
     python3-dev \
+    libxrender1 \
+    libosmesa6 \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
@@ -40,7 +43,11 @@ RUN pip install --no-cache-dir \
     simpleitk \
     snakemake==7.32.4 \
     onnxruntime \
-    hsf && \
+    hsf \
+    scikit-image \
+    pyvista \
+    pyvista[jupyter] \
+    vtk && \
     pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
 # Set working directory
@@ -48,6 +55,10 @@ WORKDIR /app
 
 # Set environment to allow executable stack for onnxruntime
 ENV LD_PRELOAD=""
+
+# Enable off-screen plotting for PyVista in headless environments
+ENV PYVISTA_OFF_SCREEN="true"
+ENV VTK_OSMESA_DLL="/usr/lib/libOSMesa.so"
 
 # make Snakemake workflow importable
 # ENV PYTHONPATH="/app/pipeline:${PYTHONPATH}"

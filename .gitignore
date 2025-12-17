@@ -1,3 +1,5 @@
+SampleDataset/
+
 # Snakemake
 .snakemake/
 logs/
