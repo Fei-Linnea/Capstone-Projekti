@@ -55,7 +55,7 @@ rule hsf_segmentation:
             roiloc.contrast="{params.contrast}" \
             roiloc.margin="{params.margin}" \
             segmentation="{params.seg_mode}" \
-            segmentation.ca_mode="{params.ca_mode}" 2>&1 | tee -a {log}
+            segmentation.ca_mode="{params.ca_mode}" >> {log} 2>&1
         
         # HSF creates left and right hippocampus segmentations separately
         # Move them to derivatives directory

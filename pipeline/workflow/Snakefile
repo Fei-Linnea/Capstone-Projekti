@@ -199,6 +199,22 @@ rule all:
             session=SESSIONS,
             hemi=HEMIS,
         ),
+        # Curvature feature extraction outputs
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
         # Aggregated features per subject (one row with both hemispheres)
         [os.path.join(DERIVATIVES_ROOT, f"sub-{subject}", f"ses-{session}", "features",
                      f"sub-{subject}_ses-{session}_all_features.csv")
