@@ -23,6 +23,18 @@ def extract_curvatures(input):
     import pyvista as pv
     
     mesh = pv.read(input)
+    
+    # Check if mesh is empty
+    if mesh.n_points == 0 or mesh.n_cells == 0:
+        print(f"WARNING: Empty mesh detected: {input}. Returning NaN values.")
+        # Return empty dataframe with expected columns
+        return pd.DataFrame({
+            "Mean": [np.nan],
+            "Gaussian": [np.nan],
+            "k1": [np.nan],
+            "k2": [np.nan],
+        })
+    
     H = mesh.curvature(curv_type='mean')
     mesh['Mean_Curvature'] = H
     K = mesh.curvature(curv_type='gaussian')
@@ -47,15 +59,41 @@ def calculate_curv_metrics(df):
     curvature_cols = ["Mean", "Gaussian", "k1", "k2"]
     for col in curvature_cols:
         data = df[col].values
-        stats[col] = {
-            "median": np.median(data),
-            "mean": np.mean(data),
-            "std": np.std(data, ddof=1),
-            "min": np.min(data),
-            "max": np.max(data),
-            "25th_percentile": np.percentile(data, 25),
-            "75th_percentile": np.percentile(data, 75),
-        }
+        
+        # Handle empty or all-NaN data
+        if len(data) == 0 or np.all(np.isnan(data)):
+            stats[col] = {
+                "median": np.nan,
+                "mean": np.nan,
+                "std": np.nan,
+                "min": np.nan,
+                "max": np.nan,
+                "25th_percentile": np.nan,
+                "75th_percentile": np.nan,
+            }
+        else:
+            # Filter out NaN values for statistics
+            valid_data = data[~np.isnan(data)]
+            if len(valid_data) == 0:
+                stats[col] = {
+                    "median": np.nan,
+                    "mean": np.nan,
+                    "std": np.nan,
+                    "min": np.nan,
+                    "max": np.nan,
+                    "25th_percentile": np.nan,
+                    "75th_percentile": np.nan,
+                }
+            else:
+                stats[col] = {
+                    "median": np.median(valid_data),
+                    "mean": np.mean(valid_data),
+                    "std": np.std(valid_data, ddof=1) if len(valid_data) > 1 else 0.0,
+                    "min": np.min(valid_data),
+                    "max": np.max(valid_data),
+                    "25th_percentile": np.percentile(valid_data, 25),
+                    "75th_percentile": np.percentile(valid_data, 75),
+                }
     return stats
 
 #this is supposed to be done in snakemake i think? il leave it here as reference

@@ -65,8 +65,12 @@ ENV VTK_OSMESA_DLL="/usr/lib/libOSMesa.so"
 
 COPY pipeline /app/pipeline
 
-# Set entrypoint to Snakemake
-ENTRYPOINT ["snakemake"]
+# Copy batch processing wrapper
+COPY pipeline/run_pipeline.py /app/run_pipeline.py
+RUN chmod +x /app/run_pipeline.py
+
+# Set entrypoint to batch wrapper (can still use snakemake directly if needed)
+ENTRYPOINT ["python3", "/app/run_pipeline.py"]
 
 # Default command: show help
 CMD ["--help"]

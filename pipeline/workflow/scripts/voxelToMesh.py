@@ -10,13 +10,75 @@ import pyvista as pv
 def nii_to_vtk(input_path, output_path, min_voxel_count=20, smooth_iters=50, decimation_degree=0.7, plot_png_path=None, plot_html_path=None, enable_interactive_plot=False):
     img = nib.load(input_path)
     data = img.get_fdata().astype(bool)
+    
+    # Check if mask is empty or has too few voxels
+    voxel_count = np.sum(data)
+    if voxel_count == 0 or voxel_count < min_voxel_count:
+        # Create empty VTK file as placeholder
+        empty_mesh = pv.PolyData()
+        empty_mesh.save(output_path, binary=True)
+        
+        # Create empty PNG if requested
+        if plot_png_path:
+            os.environ.setdefault("PYVISTA_OFF_SCREEN", "true")
+            plotter = pv.Plotter(off_screen=True)
+            plotter.set_background("white")
+            plotter.add_text(f"Empty mask\n({voxel_count} voxels)", font_size=12)
+            plotter.show(auto_close=False)
+            plotter.screenshot(plot_png_path)
+            plotter.close()
+        
+        # Log warning
+        print(f"WARNING: Mask has only {voxel_count} voxels (min={min_voxel_count}). Created empty mesh: {input_path}")
+        return
+    
+    # Remove small objects
     data = remove_small_objects(data, min_size=min_voxel_count)
-    spacing = img.header.get_zooms() 
-    verts, faces, _, _ = marching_cubes(
-        data,
-        level=0.5,
-        spacing=spacing
-    )
+    
+    # Check again after cleaning - might be empty now
+    voxel_count_after = np.sum(data)
+    if voxel_count_after == 0:
+        # Create empty VTK file as placeholder
+        empty_mesh = pv.PolyData()
+        empty_mesh.save(output_path, binary=True)
+        
+        # Create empty PNG if requested
+        if plot_png_path:
+            os.environ.setdefault("PYVISTA_OFF_SCREEN", "true")
+            plotter = pv.Plotter(off_screen=True)
+            plotter.set_background("white")
+            plotter.add_text(f"Empty after cleanup\n(removed small objects)", font_size=12)
+            plotter.show(auto_close=False)
+            plotter.screenshot(plot_png_path)
+            plotter.close()
+        
+        print(f"WARNING: Mask became empty after removing small objects. Created empty mesh: {input_path}")
+        return
+    
+    spacing = img.header.get_zooms()
+    
+    try:
+        verts, faces, _, _ = marching_cubes(
+            data,
+            level=0.5,
+            spacing=spacing
+        )
+    except ValueError as e:
+        # Handle marching cubes errors (e.g., "Surface level must be within volume data range")
+        print(f"WARNING: Marching cubes failed for {input_path}: {e}. Creating empty mesh.")
+        empty_mesh = pv.PolyData()
+        empty_mesh.save(output_path, binary=True)
+        
+        if plot_png_path:
+            os.environ.setdefault("PYVISTA_OFF_SCREEN", "true")
+            plotter = pv.Plotter(off_screen=True)
+            plotter.set_background("white")
+            plotter.add_text(f"Marching cubes failed\n{str(e)[:50]}", font_size=10)
+            plotter.show(auto_close=False)
+            plotter.screenshot(plot_png_path)
+            plotter.close()
+        return
+    
     faces_flat = np.c_[np.full(len(faces), 3), faces].ravel()
     mesh = pv.PolyData(verts, faces_flat)
     mesh = mesh.decimate(decimation_degree)

@@ -19,6 +19,7 @@ configfile: "/app/pipeline/config/config.yaml"
 # Extract configuration values
 BIDS_ROOT = config["bids_root"]
 DERIVATIVES_ROOT = config["derivatives_root"]
+LOG_DIR = config.get("log_dir", "/app/logs")
 
 # HSF segmentation parameters
 HSF_PARAMS = config["hsf_params"]
@@ -44,6 +45,22 @@ def discover_subjects():
             session = match.group(2)
             if (subject, session) not in subject_session_pairs:
                 subject_session_pairs.append((subject, session))
+    
+    # Sort for consistent batching
+    subject_session_pairs.sort()
+    
+    # Apply batch filtering if configured
+    # Convert to int since command-line config passes strings
+    batch_size = int(config.get("batch_size", 0))
+    batch_number = int(config.get("batch_number", 0))
+    
+    if batch_size > 0:
+        start_idx = batch_number * batch_size
+        end_idx = start_idx + batch_size
+        subject_session_pairs = subject_session_pairs[start_idx:end_idx]
+        print(f"[BATCH MODE] Processing batch {batch_number}: subjects {start_idx} to {end_idx-1} ({len(subject_session_pairs)} subjects)")
+    else:
+        print(f"[FULL MODE] Processing all {len(subject_session_pairs)} subjects")
     
     # Separate into subjects and sessions lists for backward compatibility
     subjects = [pair[0] for pair in subject_session_pairs]
@@ -220,4 +237,5 @@ rule all:
                      f"sub-{subject}_ses-{session}_all_features.csv")
          for subject, session in SUBJECT_SESSION_PAIRS],
         # Final aggregated summary
-        os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv")
+        os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
+        os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")

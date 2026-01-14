@@ -16,7 +16,7 @@ rule hsf_segmentation:
         right_crop = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                                  "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-R_seg_crop.nii.gz")
     log:
-        os.path.join("logs", "hsf", "sub-{subject}_ses-{session}.log")
+        os.path.join(LOG_DIR, "hsf", "sub-{subject}_ses-{session}.log")
     params:
         subject_anat_dir = lambda wildcards: os.path.join(BIDS_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),
         output_dir = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),
@@ -45,6 +45,11 @@ rule hsf_segmentation:
         
         # Create output directory
         mkdir -p {params.output_dir}
+        
+        # Clean up any existing partial segmentations (HSF +overwrite doesn't work reliably)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cleaning up old segmentations..." >> {log}
+        rm -f "{params.hsf_left}" "{params.hsf_right}" >> {log} 2>&1
+        rm -rf "{params.subject_anat_dir}/hsf_outputs" >> {log} 2>&1
         
         # Run HSF segmentation
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running HSF..." >> {log}
