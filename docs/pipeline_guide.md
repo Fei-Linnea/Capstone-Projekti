@@ -81,13 +81,13 @@ dataset/
 **For large datasets (50+ subjects):**
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Path\To\Data:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 50 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Path\To\Data:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 50 \
   --cores 4
 ```
 
@@ -102,13 +102,13 @@ docker run --rm `
 **For datasets <50 subjects:**
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Path\To\Data:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 0 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Path\To\Data:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 0 \
   --cores 4
 ```
 
@@ -132,14 +132,14 @@ docker run --rm \
 If processing was interrupted:
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Path\To\Data:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 50 `
-  --start-batch 5 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Path\To\Data:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 50 \
+  --start-batch 5 \
   --cores 4
 ```
 
@@ -148,14 +148,14 @@ docker run --rm `
 Process batches only, aggregate manually later:
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Path\To\Data:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 50 `
-  --cores 4 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Path\To\Data:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 50 \
+  --cores 4 \
   --skip-aggregation
 ```
 
@@ -163,13 +163,13 @@ docker run --rm `
 
 ```powershell
 # More memory, more cores
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="16g" `
-  -v "D:\Path\To\Data:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 100 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="16g" \
+  -v "D:\Path\To\Data:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 100 \
   --cores 8
 ```
 
@@ -204,10 +204,18 @@ dataset/
 │       ├── all_features.csv             # ✅ FINAL OUTPUT: All subjects
 │       └── processing_issues.txt        # Quality report
 └── logs/
-    ├── hsf/                             # Step 1 logs
-    ├── data_processing/                 # Step 2 logs
-    ├── mesh/                            # Step 3 logs
-    └── feature_extraction/              # Steps 4-6 logs
+    ├── <timestamp>/
+      ├── hsf/                         # Step 1 logs
+      ├── data_processing/             # Step 2 logs
+      ├── mesh/                        # Step 3 logs
+      ├── feature_extraction/          # Steps 4-6 logs
+      ├── benchmarks/                # Performance metrics
+      │   ├── hsf/
+      │   ├── data_processing/
+      │   ├── mesh/
+      │   └── feature_extraction/
+      ├── snakemake_batch_001.log
+      └── snakemake_aggregation.log
 ```
 
 ### Output Files Explained
@@ -229,6 +237,18 @@ dataset/
 - `*_curvature.csv`: Curvature metrics (mean, Gaussian)
 - `*_all_features.csv`: Combined per-subject features
 - `summary/all_features.csv`: **Final dataset** with all subjects
+
+**Benchmarks:**
+- `logs/<timestamp>/benchmarks/`: Performance metrics for each job
+- Tab-delimited files with columns:
+  - `s`: Runtime in seconds
+  - `h:m:s`: Formatted time (hours:minutes:seconds)
+  - `max_rss`: Maximum resident set size (memory)
+  - `max_vms`: Maximum virtual memory size
+  - `max_uss`, `max_pss`: Memory usage details
+  - `io_in`, `io_out`: I/O read/write in MB
+  - `mean_load`: Average CPU load
+- Use these files to identify bottlenecks and optimize batch sizes
 
 ## Configuration Options
 
@@ -296,10 +316,10 @@ labels:
 **Check:**
 ```powershell
 # Wrapper shows discovered subjects
-docker run --rm `
-  -v "D:\Path\To\Data:/data" `
-  hippocampus-pipeline:latest `
-  --batch-size 1 `
+docker run --rm \
+  -v "D:\Path\To\Data:/data" \
+  hippocampus-pipeline:latest \
+  --batch-size 1 \
   --cores 1
 ```
 

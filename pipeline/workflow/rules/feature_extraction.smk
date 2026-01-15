@@ -17,6 +17,8 @@ rule extract_pyradiomics_per_label:
         features = ['original_shape_MeshVolume', 'original_shape_SurfaceVolumeRatio']
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -60,6 +62,8 @@ rule extract_pyradiomics_combined:
         features = ['original_shape_MeshVolume', 'original_shape_SurfaceVolumeRatio']
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -105,13 +109,9 @@ rule extract_curvature_per_label:
                                "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.csv")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.txt")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from feature_extraction import extract_curvatures, calculate_curv_metrics
-        import pandas as pd
-        
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -158,13 +158,9 @@ rule extract_curvature_combined:
                                "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.csv")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.txt")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from feature_extraction import extract_curvatures, calculate_curv_metrics
-        import pandas as pd
-        
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -257,13 +253,9 @@ rule aggregate_subject_features:
                                  "sub-{subject}_ses-{session}_all_features.csv")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_aggregate.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_aggregate.txt")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from aggregate_data import aggregate_region_data, form_row_from_data
-        import pandas as pd
-        
         # ===== Read RADIOMICS features =====
         # Left hemisphere
         label_radiomics_L = {}
@@ -400,6 +392,8 @@ rule aggregate_all_subjects:
         issues = os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "aggregate_all.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "aggregate_all.txt")
     run:
         # Create output directory
         Path(output.summary).parent.mkdir(parents=True, exist_ok=True)

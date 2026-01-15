@@ -9,8 +9,8 @@ import os, glob, re, sys
 import pandas as pd
 from pathlib import Path
 from scripts.nii_parse import split_one_label, combine_labels
-from scripts.feature_extraction import extract_pyradiomics_features
-from scripts.aggregate_data import aggregate_region_data
+from scripts.feature_extraction import extract_pyradiomics_features, extract_curvatures, calculate_curv_metrics
+from scripts.aggregate_data import aggregate_region_data, form_row_from_data
 from scripts.voxelToMesh import nii_to_vtk
 
 # Load configuration
@@ -55,7 +55,6 @@ def discover_subjects():
     batch_number = int(config.get("batch_number", 0))
     
     # Debug output to stderr so it appears in logs
-    import sys
     print(f"[DEBUG] Config batch_size: {config.get('batch_size', 'NOT SET')} -> {batch_size}", file=sys.stderr)
     print(f"[DEBUG] Config batch_number: {config.get('batch_number', 'NOT SET')} -> {batch_number}", file=sys.stderr)
     print(f"[DEBUG] Total subjects found: {len(subject_session_pairs)}", file=sys.stderr)

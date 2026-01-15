@@ -48,13 +48,13 @@ Build time: ~5-10 minutes (first time only)
 The pipeline includes automatic batching to handle large datasets efficiently:
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Path\To\Your\BIDS_Dataset:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 50 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Path\To\Your\BIDS_Dataset:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 50 \
   --cores 4
 ```
 
@@ -73,13 +73,13 @@ docker run --rm `
 
 ```powershell
 # Full dataset processing with batching
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Work\BigBrain\data\Fulldataset:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 50 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Work\BigBrain\data\Fulldataset:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 50 \
   --cores 4
 ```
 
@@ -87,13 +87,13 @@ docker run --rm `
 
 ```powershell
 # Process 10 subjects per batch (safer for 8GB RAM)
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Work\BigBrain\data\Fulldataset:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 10 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Work\BigBrain\data\Fulldataset:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 10 \
   --cores 4
 ```
 
@@ -102,13 +102,13 @@ docker run --rm `
 ⚠️ Only for small datasets (<50 subjects) or high-memory systems:
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="16g" `
-  -v "D:\Work\BigBrain\data\Fulldataset:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 0 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="16g" \
+  -v "D:\Work\BigBrain\data\Fulldataset:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 0 \
   --cores 8
 ```
 
@@ -117,14 +117,14 @@ docker run --rm `
 If processing was interrupted, resume from a specific batch:
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Work\BigBrain\data\Fulldataset:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 50 `
-  --start-batch 5 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Work\BigBrain\data\Fulldataset:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 50 \
+  --start-batch 5 \
   --cores 4
 ```
 
@@ -191,12 +191,12 @@ docker run --rm hippocampus-pipeline:latest --help
 ### Dry Run (Preview What Will Execute)
 
 ```powershell
-docker run --rm `
-  -v "D:\Path\To\Data:/data" `
-  hippocampus-pipeline:latest `
-  --batch-size 10 `
-  --cores 4 `
-  --skip-aggregation `
+docker run --rm \
+  -v "D:\Path\To\Data:/data" \
+  hippocampus-pipeline:latest \
+  --batch-size 10 \
+  --cores 4 \
+  --skip-aggregation \
   --dry-run
 ```
 
@@ -205,14 +205,14 @@ docker run --rm `
 If you only want to process batches without final aggregation:
 
 ```powershell
-docker run --rm `
-  --security-opt seccomp=unconfined `
-  --memory="8g" `
-  -v "D:\Path\To\Data:/data" `
-  -v "${PWD}/logs:/app/logs" `
-  hippocampus-pipeline:latest `
-  --batch-size 50 `
-  --cores 4 `
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --memory="8g" \
+  -v "D:\Path\To\Data:/data" \
+  -v "${PWD}/logs:/app/logs" \
+  hippocampus-pipeline:latest \
+  --batch-size 50 \
+  --cores 4 \
   --skip-aggregation
 ```
 
@@ -230,10 +230,10 @@ If the container crashes with "Exit code -9":
 Check dataset structure and discovery:
 ```powershell
 # The wrapper shows discovered subjects on startup
-docker run --rm `
-  -v "D:\Path\To\Data:/data" `
-  hippocampus-pipeline:latest `
-  --batch-size 1 `
+docker run --rm \
+  -v "D:\Path\To\Data:/data" \
+  hippocampus-pipeline:latest \
+  --batch-size 1 \
   --cores 1
 ```
 
