@@ -54,13 +54,19 @@ def discover_subjects():
     batch_size = int(config.get("batch_size", 0))
     batch_number = int(config.get("batch_number", 0))
     
+    # Debug output to stderr so it appears in logs
+    import sys
+    print(f"[DEBUG] Config batch_size: {config.get('batch_size', 'NOT SET')} -> {batch_size}", file=sys.stderr)
+    print(f"[DEBUG] Config batch_number: {config.get('batch_number', 'NOT SET')} -> {batch_number}", file=sys.stderr)
+    print(f"[DEBUG] Total subjects found: {len(subject_session_pairs)}", file=sys.stderr)
+    
     if batch_size > 0:
         start_idx = batch_number * batch_size
         end_idx = start_idx + batch_size
         subject_session_pairs = subject_session_pairs[start_idx:end_idx]
-        print(f"[BATCH MODE] Processing batch {batch_number}: subjects {start_idx} to {end_idx-1} ({len(subject_session_pairs)} subjects)")
+        print(f"[BATCH MODE] Processing batch {batch_number}: subjects {start_idx} to {end_idx-1} ({len(subject_session_pairs)} subjects)", file=sys.stderr)
     else:
-        print(f"[FULL MODE] Processing all {len(subject_session_pairs)} subjects")
+        print(f"[FULL MODE] Processing all {len(subject_session_pairs)} subjects", file=sys.stderr)
     
     # Separate into subjects and sessions lists for backward compatibility
     subjects = [pair[0] for pair in subject_session_pairs]
