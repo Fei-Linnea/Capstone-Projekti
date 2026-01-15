@@ -8,6 +8,7 @@ import sys, os, subprocess
 def run_aggregation(config_file, profile_dir, cores, log_dir, dry_run=False):
     """
     Run the aggregation step after all batches are complete.
+    This combines features from all subjects into final output files.
     
     Args:
         config_file: Path to config.yaml
@@ -22,15 +23,18 @@ def run_aggregation(config_file, profile_dir, cores, log_dir, dry_run=False):
     log_file = os.path.join(log_dir, "snakemake_aggregation.log")
     
     print(f"\n{'='*80}", file=sys.stderr)
-    print("Running aggregation step...", file=sys.stderr)
+    print("Running final aggregation...", file=sys.stderr)
     print(f"Log: {log_file}", file=sys.stderr)
     print(f"{'='*80}\n", file=sys.stderr)
     
+    # Run aggregation for all subjects (batch_size=0 means process all)
     cmd = [
         "snakemake",
         "--snakefile", "workflow/Snakefile",
         "--configfile", config_file,
-        "--config", f"log_dir={log_dir}",
+        "--config",
+        f"batch_size=0",
+        f"log_dir={log_dir}",
         "--cores", str(cores),
         "--rerun-incomplete",
         "aggregate_all_subjects"

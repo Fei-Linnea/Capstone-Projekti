@@ -59,12 +59,13 @@ def print_progress_bar(current, total, prefix='', suffix='', length=40, spinner_
         length: Character length of the bar
         spinner_frame: Frame number for spinner animation
     """
-    if total == 0:
+    if total is None or total  == 0:
         percent = 0
+        filled_length = 0
     else:
         percent = min(100, int(100 * current / total))
+        filled_length = int(length * current / total)
     
-    filled_length = int(length * current / total) if total > 0 else 0
     bar = '█' * filled_length + '░' * (length - filled_length)
     
     # Spinner animation
@@ -72,5 +73,5 @@ def print_progress_bar(current, total, prefix='', suffix='', length=40, spinner_
     spin = spinner[spinner_frame % len(spinner)]
     
     # Use \r to overwrite the same line
-    print(f'\r{prefix} [{current}/{total}] |{bar}| {percent}% {spin} {suffix}', 
+    print(f'\r{prefix} [{current}/{total if total else "?"}] |{bar}| {percent}% {spin} {suffix}',  
           end='', file=sys.stderr, flush=True)
