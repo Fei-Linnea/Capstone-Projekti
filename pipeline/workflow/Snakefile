@@ -9,8 +9,8 @@ import os, glob, re, sys
 import pandas as pd
 from pathlib import Path
 from scripts.nii_parse import split_one_label, combine_labels
-from scripts.feature_extraction import extract_pyradiomics_features
-from scripts.aggregate_data import aggregate_region_data
+from scripts.feature_extraction import extract_pyradiomics_features, extract_curvatures, calculate_curv_metrics
+from scripts.aggregate_data import aggregate_region_data, form_row_from_data
 from scripts.voxelToMesh import nii_to_vtk
 
 # Load configuration

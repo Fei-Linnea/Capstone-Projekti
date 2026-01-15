@@ -106,12 +106,6 @@ rule extract_curvature_per_label:
     log:
         os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.log")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from feature_extraction import extract_curvatures, calculate_curv_metrics
-        import pandas as pd
-        
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -159,12 +153,6 @@ rule extract_curvature_combined:
     log:
         os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.log")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from feature_extraction import extract_curvatures, calculate_curv_metrics
-        import pandas as pd
-        
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -258,12 +246,6 @@ rule aggregate_subject_features:
     log:
         os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_aggregate.log")
     run:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, "/app/pipeline/workflow/scripts")
-        from aggregate_data import aggregate_region_data, form_row_from_data
-        import pandas as pd
-        
         # ===== Read RADIOMICS features =====
         # Left hemisphere
         label_radiomics_L = {}

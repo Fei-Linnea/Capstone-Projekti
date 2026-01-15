@@ -1,7 +1,4 @@
-import csv
-import os
-import re
-#from datetime import datetime
+import csv, os, re
 
 # Used for aggregating both radiomics and curvature data
 def aggregate_region_data(hippocampus_data_L, DG_data_L, CA1_data_L, CA2_data_L, CA3_data_L, SUB_data_L,
