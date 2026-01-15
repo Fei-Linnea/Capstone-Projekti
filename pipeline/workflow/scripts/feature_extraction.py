@@ -95,13 +95,3 @@ def calculate_curv_metrics(df):
                     "75th_percentile": np.percentile(valid_data, 75),
                 }
     return stats
-
-#this is supposed to be done in snakemake i think? il leave it here as reference
-"""
-pyrdata = extract_pyradiomics_features('sub-01/ses-1/anat/sub-01_ses-1_T1w.nii.gz', "sub-01/ses-1/anat/sub-01_ses-1_T1w_binary.nii.gz", ['original_shape_VoxelVolume', "original_shape_SurfaceVolumeRatio"])
-curv_data = extract_curvatures("smoothed_vtk/label_1_pp_surf_SPHARM_smooth.vtk")
-curv_metrics = calculate_curv_metrics(curv_data)
-summary_statistics = pd.DataFrame([ {**curv_metrics, **pyrdata} ])
-curv_data.to_csv("curvatures/curvatures_pointwise.csv", index=False)
-curv_metrics.to_csv("curvatures/curvatures_statistics.csv")
-print("Point-wise curvatures and summary statistics saved.")"""

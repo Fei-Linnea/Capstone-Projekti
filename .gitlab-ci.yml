@@ -23,5 +23,5 @@ publish:
     - docker:dind
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -f pipeline/Dockerfile -t "$CI_REGISTRY_IMAGE:hippocampus-morphometry-pipeline" .
-    - docker push "$CI_REGISTRY_IMAGE:hippocampus-morphometry-pipeline"
+    - docker build -f pipeline/Dockerfile -t "$CI_REGISTRY_IMAGE:hippocampus-pipeline" .
+    - docker push "$CI_REGISTRY_IMAGE:hippocampus-pipeline"

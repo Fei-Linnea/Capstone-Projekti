@@ -1,15 +1,9 @@
-# ============================================================================
-# Simplified Dockerfile for HSF Segmentation Pipeline
-# ============================================================================
-# Direct pip installation of HSF - no conda complexity
-# ============================================================================
-
 FROM python:3.11-slim
 
 # Metadata
 LABEL maintainer="BigBrain Team"
-LABEL description="HSF hippocampal segmentation pipeline"
-LABEL version="2.0.0"
+LABEL description="Radiomic Feature Extraction Hippocampus Morphometry Pipeline"
+LABEL version="1.0.0"
 
 # Install system dependencies and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -50,7 +44,7 @@ RUN pip install --no-cache-dir \
     vtk && \
     pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
-# Set working directory
+
 WORKDIR /app
 
 # Set environment to allow pipeline/executable stack for onnxruntime
@@ -60,9 +54,6 @@ ENV LD_PRELOAD=""
 ENV PYVISTA_OFF_SCREEN="true"
 ENV VTK_OSMESA_DLL="/usr/lib/libOSMesa.so"
 
-# make Snakemake workflow importable
-# ENV PYTHONPATH="/app/pipeline:${PYTHONPATH}"
-
 COPY pipeline /app/pipeline
 
 RUN chmod +x /app/pipeline/run_pipeline.py
@@ -70,5 +61,4 @@ RUN chmod +x /app/pipeline/run_pipeline.py
 # Set entrypoint to batch wrapper (can still use snakemake directly if needed)
 ENTRYPOINT ["python3", "/app/pipeline/run_pipeline.py"]
 
-# Default command: show help
 CMD ["--help"]

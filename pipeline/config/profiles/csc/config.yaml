@@ -1,13 +1,12 @@
-# Snakemake profile for CSC (Slurm, Snakemake preinstalled)
-# Activate with: snakemake --profile pipeline/config/profiles/csc
+# Snakemake profile for CSC (Slurm, Apptainer support)
 
-jobs: 100
-keep-going: true
-latency-wait: 60
+jobs: 100                           # Max parallel jobs
+keep-going: true                    # Continue on individual job failures
+latency-wait: 60                    # Wait for filesystem
 restart-times: 1
 printshellcmds: true
 
-# Classic cluster submission; adjust account/partition/time/mem as needed.
+# Slurm cluster submission configuration
 cluster: >
   sbatch
   -J {rule}
@@ -19,15 +18,17 @@ cluster: >
   --output=logs/slurm/%x-%j.out
   --error=logs/slurm/%x-%j.err
 
-# Default resources if rules don't specify them explicitly.
+# Default resources for each job
 default-resources:
   - mem_mb=8000
   - time="04:00:00"
   - partition="serial"
-  - account="project_2001234"
+  - account="project_2001234"        # Replace with your project ID
   - threads=4
 
-# Environment handling: Snakemake is installed on CSC; rules provide `container:`
-# and Singularity will be used to execute them. No conda.
+# Software deployment: Use Apptainer
 use-conda: false
-use-singularity: true
+use-singularity: true              # Or: use-apptainer: true (Snakemake >= 7.29)
+
+# Apptainer-specific settings
+apptainer-args: "--bind=/users,/projappl,/scratch"
