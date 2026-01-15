@@ -91,12 +91,13 @@ def print_progress_bar(current, total, prefix='', suffix='', length=40, spinner_
         length: Character length of the bar
         spinner_frame: Frame number for spinner animation
     """
-    if total == 0:
+    if total is None or total == 0:
         percent = 0
+        filled_length = 0
     else:
         percent = min(100, int(100 * current / total))
+        filled_length = int(length * current / total)
     
-    filled_length = int(length * current / total) if total > 0 else 0
     bar = '█' * filled_length + '░' * (length - filled_length)
     
     # Spinner animation
@@ -104,7 +105,7 @@ def print_progress_bar(current, total, prefix='', suffix='', length=40, spinner_
     spin = spinner[spinner_frame % len(spinner)]
     
     # Use \r to overwrite the same line
-    print(f'\r{prefix} [{current}/{total}] |{bar}| {percent}% {spin} {suffix}', 
+    print(f'\r{prefix} [{current}/{total if total else "?"}] |{bar}| {percent}% {spin} {suffix}', 
           end='', file=sys.stderr, flush=True)
 
 
@@ -268,22 +269,26 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
 def run_aggregation(config_file, profile_dir, cores, log_dir, dry_run=False):
     """
     Run the aggregation step after all batches are complete.
+    This combines features from all subjects into final output files.
     """
     log_file = os.path.join(log_dir, "snakemake_aggregation.log")
     
     print(f"\n{'='*80}", file=sys.stderr)
-    print("Running aggregation step...", file=sys.stderr)
+    print("Running final aggregation...", file=sys.stderr)
     print(f"Log: {log_file}", file=sys.stderr)
     print(f"{'='*80}\n", file=sys.stderr)
     
+    # Run aggregation for all subjects (batch_size=0 means process all)
     cmd = [
         "snakemake",
         "--snakefile", "workflow/Snakefile",
         "--configfile", config_file,
-        "--config", f"log_dir={log_dir}",
+        "--config",
+        f"batch_size=0",
+        f"log_dir={log_dir}",
         "--cores", str(cores),
         "--rerun-incomplete",
-        "aggregate_features"
+        "aggregate_all_subjects"
     ]
     
     if profile_dir:
