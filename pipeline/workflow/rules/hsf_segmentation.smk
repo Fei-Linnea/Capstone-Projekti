@@ -16,7 +16,9 @@ rule hsf_segmentation:
         right_crop = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                                  "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-R_seg_crop.nii.gz")
     log:
-        os.path.join("logs", "hsf", "sub-{subject}_ses-{session}.log")
+        os.path.join(LOG_DIR, "hsf", "sub-{subject}_ses-{session}.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "hsf", "sub-{subject}_ses-{session}.txt")
     params:
         subject_anat_dir = lambda wildcards: os.path.join(BIDS_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),
         output_dir = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),

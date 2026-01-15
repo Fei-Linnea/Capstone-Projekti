@@ -53,7 +53,7 @@ RUN pip install --no-cache-dir \
 # Set working directory
 WORKDIR /app
 
-# Set environment to allow executable stack for onnxruntime
+# Set environment to allow pipeline/executable stack for onnxruntime
 ENV LD_PRELOAD=""
 
 # Enable off-screen plotting for PyVista in headless environments
@@ -65,8 +65,10 @@ ENV VTK_OSMESA_DLL="/usr/lib/libOSMesa.so"
 
 COPY pipeline /app/pipeline
 
-# Set entrypoint to Snakemake
-ENTRYPOINT ["snakemake"]
+RUN chmod +x /app/pipeline/run_pipeline.py
+
+# Set entrypoint to batch wrapper (can still use snakemake directly if needed)
+ENTRYPOINT ["python3", "/app/pipeline/run_pipeline.py"]
 
 # Default command: show help
 CMD ["--help"]

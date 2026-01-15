@@ -20,7 +20,9 @@ rule mesh_per_label:
         html_path = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "meshes",
                                                     f"sub-{wildcards.subject}_ses-{wildcards.session}_space-T1w_desc-hsf_hemi-{wildcards.hemi}_label-{wildcards.label}_mesh.html")
     log:
-        os.path.join("logs", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
+        os.path.join(LOG_DIR, "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
     run:
         Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
         nii_to_vtk(
@@ -51,9 +53,11 @@ rule mesh_combined:
         smooth_iters = config["mesh_params"]["smooth_iters"],
         decimation_degree = config["mesh_params"]["decimation_degree"],
         # html_path = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "meshes",
-        #             f"sub-{wildcards.subject}_ses-{wildcards.session}_space-T1w_desc-hsf_hemi-{wildcards.hemi}_combined_mesh.html")
+        #             f"sub-{wildcards.subject}_ses-{ses-{session}_space-T1w_desc-hsf_hemi-{wildcards.hemi}_combined_mesh.html")
     log:
-        os.path.join("logs", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
+        os.path.join(LOG_DIR, "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     run:
         Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
         nii_to_vtk(

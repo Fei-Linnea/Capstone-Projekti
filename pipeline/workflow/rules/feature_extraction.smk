@@ -16,7 +16,9 @@ rule extract_pyradiomics_per_label:
     params:
         features = ['original_shape_MeshVolume', 'original_shape_SurfaceVolumeRatio']
     log:
-        os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
+        os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -59,7 +61,9 @@ rule extract_pyradiomics_combined:
     params:
         features = ['original_shape_MeshVolume', 'original_shape_SurfaceVolumeRatio']
     log:
-        os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
+        os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -104,7 +108,9 @@ rule extract_curvature_per_label:
         features = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.csv")
     log:
-        os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.log")
+        os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.txt")
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -151,7 +157,9 @@ rule extract_curvature_combined:
         features = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.csv")
     log:
-        os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.log")
+        os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.txt")
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -244,7 +252,9 @@ rule aggregate_subject_features:
         aggregated = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                  "sub-{subject}_ses-{session}_all_features.csv")
     log:
-        os.path.join("logs", "feature_extraction", "sub-{subject}_ses-{session}_aggregate.log")
+        os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_aggregate.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_aggregate.txt")
     run:
         # ===== Read RADIOMICS features =====
         # Left hemisphere
@@ -378,18 +388,30 @@ rule aggregate_all_subjects:
                                         f"sub-{subject}_ses-{session}_all_features.csv")
                            for subject, session in SUBJECT_SESSION_PAIRS]
     output:
-        summary = os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv")
+        summary = os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
+        issues = os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
     log:
-        os.path.join("logs", "feature_extraction", "aggregate_all.log")
+        os.path.join(LOG_DIR, "feature_extraction", "aggregate_all.log")
+    benchmark:
+        os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "aggregate_all.txt")
     run:
         # Create output directory
         Path(output.summary).parent.mkdir(parents=True, exist_ok=True)
         
-        # Read all subject feature files
+        # Read all subject feature files and track issues
         all_dfs = []
+        issues_found = []
+        
         for csv_file in input.subject_features:
             df = pd.read_csv(csv_file)
             all_dfs.append(df)
+            
+            # Check for NaN values (indicates empty masks/failed processing)
+            nan_columns = df.columns[df.isna().any()].tolist()
+            if nan_columns:
+                subject_id = df['Subject'].values[0] if 'Subject' in df.columns else 'unknown'
+                session_id = df['Session'].values[0] if 'Session' in df.columns else 'unknown'
+                issues_found.append(f"sub-{subject_id}_ses-{session_id}: Empty masks or processing failures in {len(nan_columns)} features")
         
         # Concatenate all dataframes
         combined_df = pd.concat(all_dfs, ignore_index=True)
@@ -400,10 +422,26 @@ rule aggregate_all_subjects:
         # Save combined CSV
         combined_df.to_csv(output.summary, index=False)
         
+        # Save issues report
+        with open(output.issues, 'w') as f:
+            f.write("=" * 80 + "\n")
+            f.write("PROCESSING ISSUES REPORT\n")
+            f.write("=" * 80 + "\n\n")
+            if issues_found:
+                f.write(f"Found {len(issues_found)} subjects with processing issues:\n\n")
+                for issue in issues_found:
+                    f.write(f"  - {issue}\n")
+                f.write("\nNote: NaN values indicate empty masks (likely too few voxels in subregion)\n")
+            else:
+                f.write("No processing issues detected. All subjects completed successfully!\n")
+            f.write("\n" + "=" * 80 + "\n")
+        
         # Write log
         Path(log[0]).write_text(
             f"Aggregated {len(all_dfs)} subject feature files\n"
             f"Total rows: {len(combined_df)}\n"
+            f"Subjects with issues: {len(issues_found)}\n"
             f"Output: {output.summary}\n"
+            f"Issues report: {output.issues}\n"
         )
 

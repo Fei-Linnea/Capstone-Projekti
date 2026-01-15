@@ -90,6 +90,7 @@ cores: 4
 ## Documentation
 
 - [Docker Usage Guide](docs/docker_usage.md) - Detailed Docker commands and examples
+- [Pipeline Guide](docs/pipeline_guide.md) - Pipeline architecture and workflow details
 - [Planning & Best Practices](docs/planning.md) - Snakemake best practices
 
 ## Requirements
