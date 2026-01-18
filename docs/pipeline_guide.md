@@ -425,3 +425,19 @@ left_vol = df['L_Hippocampus_MeshVolume']
 right_vol = df['R_Hippocampus_MeshVolume']
 ttest_ind(left_vol, right_vol)
 ```
+
+## Workflow Visualization
+
+### Rule Graph (dag.svg)
+
+After pipeline completion, a workflow rule graph is automatically generated and saved to:
+```
+logs/<timestamp>/dag.svg
+```
+
+**What it shows:**
+- Complete pipeline structure showing all rules and their dependencies
+- Visual representation of workflow stages: HSF Segmentation → Data Processing → Mesh Generation → Feature Extraction → Aggregation
+- Scalable diagram optimized for large datasets (shows rule relationships, not individual subject jobs)
+
+**Note:** The rule graph generates after aggregation completes, ensuring it represents the entire pipeline execution across all batches.

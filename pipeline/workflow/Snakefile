@@ -243,4 +243,35 @@ rule all:
          for subject, session in SUBJECT_SESSION_PAIRS],
         # Final aggregated summary
         os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
-        os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
+        os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt"),
+        # DAG visualization
+        os.path.join(LOG_DIR, "dag.svg")
+
+
+rule generate_dag:
+    """Generate workflow DAG visualization after all batches and aggregation complete."""
+    input:
+        summary = os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
+        issues = os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
+    output:
+        dag_svg = os.path.join(LOG_DIR, "dag.svg")
+    log:
+        os.path.join(LOG_DIR, "dag_generation.log")
+    shell:
+        """
+        echo "Generating DAG visualization..." > {log}
+        
+        # Check if dot command exists
+        if ! command -v dot &> /dev/null; then
+            echo "Error: 'dot' command not found. Graphviz may not be installed." >> {log}
+            exit 1
+        fi
+        
+        # Generate rule graph (simplified workflow structure, scales to large datasets)
+        if snakemake --snakefile workflow/Snakefile --rulegraph 2>> {log} | dot -Tsvg > {output.dag_svg} 2>> {log}; then
+            echo "Rule graph visualization successfully saved to {output.dag_svg}" >> {log}
+        else
+            echo "Warning: Rule graph generation failed or completed with issues" >> {log}
+            exit 1
+        fi
+        """

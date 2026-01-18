@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pyvista as pv
 from radiomics import featureextractor
 
 #extracts wanted pyradiomics features from nii.gz files with nii.gz mask
@@ -20,8 +21,6 @@ def extract_pyradiomics_features(imagePath, maskPath, features):
 
 #extracs point-wise curvature features from .vtk files    
 def extract_curvatures(input):
-    import pyvista as pv
-    
     mesh = pv.read(input)
     
     # Check if mesh is empty
