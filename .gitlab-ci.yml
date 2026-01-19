@@ -6,11 +6,22 @@
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-- test
-- secret-detection
+  - test
+  - secret-detection
+  - publish
 variables:
   SECRET_DETECTION_ENABLED: 'true'
 secret_detection:
   stage: secret-detection
 include:
 - template: Security/Secret-Detection.gitlab-ci.yml
+
+publish:
+  stage: publish
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -f pipeline/Dockerfile -t "$CI_REGISTRY_IMAGE:hippocampus-pipeline" .
+    - docker push "$CI_REGISTRY_IMAGE:hippocampus-pipeline"

@@ -1,0 +1,34 @@
+# Snakemake profile for CSC (Slurm, Apptainer support)
+
+jobs: 100                           # Max parallel jobs
+keep-going: true                    # Continue on individual job failures
+latency-wait: 60                    # Wait for filesystem
+restart-times: 1
+printshellcmds: true
+
+# Slurm cluster submission configuration
+cluster: >
+  sbatch
+  -J {rule}
+  -A {resources.account}
+  -p {resources.partition}
+  -t {resources.time}
+  -c {threads}
+  --mem={resources.mem_mb}
+  --output=logs/slurm/%x-%j.out
+  --error=logs/slurm/%x-%j.err
+
+# Default resources for each job
+default-resources:
+  - mem_mb=8000
+  - time="04:00:00"
+  - partition="serial"
+  - account="project_2001234"        # Replace with your project ID
+  - threads=4
+
+# Software deployment: Use Apptainer
+use-conda: false
+use-singularity: true              # Or: use-apptainer: true (Snakemake >= 7.29)
+
+# Apptainer-specific settings
+apptainer-args: "--bind=/users,/projappl,/scratch"

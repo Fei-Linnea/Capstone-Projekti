@@ -1,0 +1,55 @@
+# ============================================================================
+# Snakemake Profile for TYKS - Single Machine with Apptainer
+# ============================================================================
+# 
+# TYKS Environment:
+#   - Single beefy machine (no cluster)
+#   - No job scheduler (Slurm/PBS)
+#   - Apptainer available for containerized execution
+#   - Local bash execution only
+#
+# Usage (from inside Apptainer):
+#   apptainer run \
+#     --writable-tmpfs \
+#     --bind /path/to/data:/data \
+#     --bind ./logs:/app/logs \
+#     hippocampus-pipeline.sif \
+#     --cores 16 --batch-size 20
+#
+# ============================================================================
+
+# Local execution settings (no cluster submission)
+jobs: 8                             # Max parallel jobs (adjust based on RAM)
+cores: 16                           # Max cores to use (adjust to machine)
+keep-going: true                    # Continue on individual rule failures
+printshellcmds: true                # Show commands being executed
+rerun-incomplete: true              # Rerun jobs that were interrupted
+
+# Latency settings (local filesystem - fast)
+latency-wait: 5                     # Short wait for local filesystem
+
+# Resource defaults for local execution
+default-resources:
+  - mem_mb=4000                     # Memory per job in MB
+  - threads=2                       # Threads per job
+
+# No cluster submission (local execution)
+# cluster: (not set - runs locally)
+
+# No Apptainer/Singularity inside container 
+# (we're already running inside Apptainer)
+use-conda: false
+use-singularity: false
+
+# Restart failed jobs once
+restart-times: 1
+
+# Note: Memory is managed by batch-size in run_pipeline.py
+# Recommended settings for different machine sizes:
+#
+# | Machine RAM | batch-size | jobs | cores |
+# |-------------|------------|------|-------|
+# | 32 GB       | 10         | 4    | 8     |
+# | 64 GB       | 20         | 8    | 16    |
+# | 128 GB      | 40         | 16   | 32    |
+# | 256 GB      | 80         | 32   | 64    |

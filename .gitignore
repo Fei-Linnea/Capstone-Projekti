@@ -1,0 +1,36 @@
+SampleDataset/
+
+# Snakemake
+.snakemake/
+logs/
+
+# Pipeline outputs
+results/
+derivatives/
+
+# Python
+__pycache__/
+*.py[cod]
+.Python
+
+# Conda environments
+.conda/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+test
+sub-01/ses-2
+sub-01/ses-1/func
+outputs
+venv
+hsf_results
+hsf_subregions
+hsf_wholehippocampus
