@@ -2,10 +2,13 @@
 Snakemake aggregation step after batch processing
 """
 
-import sys, os, subprocess
+import sys
+import os
+import subprocess
 
 
-def run_aggregation(config_file, profile_dir, cores, log_dir, dry_run=False):
+def run_aggregation(config_file, profile_dir, cores, log_dir, pipeline_dir,
+                    dry_run=False):
     """
     Run the aggregation step after all batches are complete.
     This combines features from all subjects into final output files.
@@ -15,6 +18,7 @@ def run_aggregation(config_file, profile_dir, cores, log_dir, dry_run=False):
         profile_dir: Snakemake profile directory
         cores: Number of CPU cores to use
         log_dir: Directory for logs
+        pipeline_dir: Working directory for Snakemake
         dry_run: If True, don't execute, just show commands
         
     Returns:
@@ -54,7 +58,7 @@ def run_aggregation(config_file, profile_dir, cores, log_dir, dry_run=False):
                 cmd,
                 stdout=f,
                 stderr=subprocess.STDOUT,
-                cwd="/app/pipeline",
+                cwd=pipeline_dir,
                 check=False
             )
         

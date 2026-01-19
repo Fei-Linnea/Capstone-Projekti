@@ -2,7 +2,9 @@
 Progress parsing and display utilities
 """
 
-import sys, re
+import sys
+import re
+from .config import SPINNER_FRAMES
 
 
 def parse_progress(log_line, state):
@@ -59,7 +61,7 @@ def print_progress_bar(current, total, prefix='', suffix='', length=40, spinner_
         length: Character length of the bar
         spinner_frame: Frame number for spinner animation
     """
-    if total is None or total  == 0:
+    if total is None or total == 0:
         percent = 0
         filled_length = 0
     else:
@@ -69,8 +71,7 @@ def print_progress_bar(current, total, prefix='', suffix='', length=40, spinner_
     bar = '█' * filled_length + '░' * (length - filled_length)
     
     # Spinner animation
-    spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-    spin = spinner[spinner_frame % len(spinner)]
+    spin = SPINNER_FRAMES[spinner_frame % len(SPINNER_FRAMES)]
     
     # Use \r to overwrite the same line
     print(f'\r{prefix} [{current}/{total if total else "?"}] |{bar}| {percent}% {spin} {suffix}',  

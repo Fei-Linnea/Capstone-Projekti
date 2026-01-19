@@ -2,13 +2,19 @@
 Snakemake batch execution
 """
 
-import os, sys, subprocess, threading
+import os
+import sys
+import subprocess
+import threading
+
+from .config import RULE_DISPLAY_NAMES, SPINNER_FRAMES
 from .logger import tail_log_file
 from .progress import parse_progress, print_progress_bar
 
 
 def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file, 
-                        profile_dir, cores, log_dir, batch_size, dry_run=False):
+                        profile_dir, cores, log_dir, batch_size, pipeline_dir,
+                        dry_run=False):
     """
     Run Snakemake for a batch of subjects with progress tracking.
     
@@ -21,6 +27,7 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
         cores: Number of CPU cores to use
         log_dir: Directory for logs
         batch_size: Size of batch (for config)
+        pipeline_dir: Working directory for Snakemake
         dry_run: If True, don't execute, just show commands
         
     Returns:
@@ -63,10 +70,6 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
         print(f"DRY RUN: {' '.join(cmd)}", file=sys.stderr)
         return True
     
-    # Debug: show the actual command being executed
-    print(f"[CMD] {' '.join(cmd)}", file=sys.stderr)
-    print(f"", file=sys.stderr)
-    
     # Progress tracking state
     progress_state = {'current_jobs': 0, 'total_jobs': None, 'shown_initial': False, 'spinner_frame': 0}
     stop_event = threading.Event()
@@ -84,23 +87,9 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
         current_rule = progress_state.get('current_rule', '')
         current_subject = progress_state.get('current_subject', '')
         
-        # Shorten rule names for display
-        rule_display = {
-            'hsf_segmentation': 'hsf',
-            'split_label': 'split',
-            'mesh_per_label': 'mesh',
-            'mesh_combined': 'mesh_cmb',
-            'extract_curvature_per_label': 'curv',
-            'extract_curvature_combined': 'curv_cmb',
-            'extract_pyradiomics_per_label': 'radiomics',
-            'extract_pyradiomics_combined': 'radiomics_cmb',
-            'combine_labels': 'combine',
-            'aggregate_subject_features': 'aggregate'
-        }
-        
         status_suffix = ''
         if current_subject and current_rule:
-            rule_short = rule_display.get(current_rule, current_rule[:10])
+            rule_short = RULE_DISPLAY_NAMES.get(current_rule, current_rule[:10])
             status_suffix = f' | sub-{current_subject} - {rule_short}'
         
         # Show initial progress bar as soon as we have the total
@@ -125,8 +114,7 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
             )
         elif jobs_done > 0:
             # Fallback: show progress without percentage until total is known
-            spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-            spin = spinner[spinner_frame % len(spinner)]
+            spin = SPINNER_FRAMES[spinner_frame % len(SPINNER_FRAMES)]
             print(f'\rBatch {batch_num}/{total_batches} [{jobs_done}/?] {spin} Processing...{status_suffix}', 
                   end='', file=sys.stderr, flush=True)
     
@@ -145,7 +133,7 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
                 cmd,
                 stdout=f,
                 stderr=subprocess.STDOUT,
-                cwd="/app/pipeline",
+                cwd=pipeline_dir,
                 check=False
             )
         
