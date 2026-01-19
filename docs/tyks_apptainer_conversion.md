@@ -1,3 +1,27 @@
+# For local testing,
+
+First build the docker image as before,
+
+```bash 
+docker build -f pipeline/Dockerfile -t hippocampus-pipeline:latest .
+```
+Then you have to extract the image into a .tar file with the following command
+
+```bash
+ docker save hippocampus-pipeline:latest -o hippocampus-pipeline.tar
+```
+Then convert the .tar file to apptainer using the following command.
+Make sure you have apptainer installed
+
+```bash
+apptainer build hippocampus-pipeline.sif docker-archive://hippocampus-pipeline.tar
+```
+
+
+
+=======================================================
+
+
 # Converting Docker Image to Apptainer SIF for CSC/TYKS
 
 This guide explains how to convert the hippocampus pipeline Docker image to Apptainer SIF format for use on CSC supercomputers (Puhti/Mahti) and Tyks systems that only have Apptainer installed.
