@@ -1,0 +1,277 @@
+# ============================================================================
+# Snakefile - HSF Hippocampal Segmentation Pipeline
+# ============================================================================
+# Simplified pipeline using HSF (Hippocampal Segmentation Factory)
+# No conda environments - HSF installed directly in Docker image
+# ============================================================================
+
+import os, glob, re, sys
+import pandas as pd
+from pathlib import Path
+from scripts.nii_parse import split_one_label, combine_labels
+from scripts.feature_extraction import extract_pyradiomics_features, extract_curvatures, calculate_curv_metrics
+from scripts.aggregate_data import aggregate_region_data, form_row_from_data
+from scripts.voxelToMesh import nii_to_vtk
+
+# Load configuration
+configfile: "/app/pipeline/config/config.yaml"
+
+# Extract configuration values
+BIDS_ROOT = config["bids_root"]
+DERIVATIVES_ROOT = config["derivatives_root"]
+LOG_DIR = config.get("log_dir", "/app/logs")
+
+# HSF segmentation parameters
+HSF_PARAMS = config["hsf_params"]
+
+# Hemisphere and label definitions
+HEMIS = config["hemis"]
+LABELS = config["labels"]
+
+# Auto-discover subjects and sessions from BIDS structure
+def discover_subjects():
+    """Discover subjects and sessions from BIDS dataset"""
+    pattern = os.path.join(BIDS_ROOT, "sub-*/ses-*/anat/*_T1w.nii.gz")
+    files = glob.glob(pattern)
+    
+    subject_session_pairs = []
+    
+    for f in files:
+        # Parse BIDS filename: sub-XX_ses-Y_T1w.nii.gz
+        basename = os.path.basename(f)
+        match = re.match(r'sub-([^_]+)_ses-([^_]+)_T1w\.nii\.gz', basename)
+        if match:
+            subject = match.group(1)
+            session = match.group(2)
+            if (subject, session) not in subject_session_pairs:
+                subject_session_pairs.append((subject, session))
+    
+    # Sort for consistent batching
+    subject_session_pairs.sort()
+    
+    # Apply batch filtering if configured
+    # Convert to int since command-line config passes strings
+    batch_size = int(config.get("batch_size", 0))
+    batch_number = int(config.get("batch_number", 0))
+    
+    # Debug output to stderr so it appears in logs
+    print(f"[DEBUG] Config batch_size: {config.get('batch_size', 'NOT SET')} -> {batch_size}", file=sys.stderr)
+    print(f"[DEBUG] Config batch_number: {config.get('batch_number', 'NOT SET')} -> {batch_number}", file=sys.stderr)
+    print(f"[DEBUG] Total subjects found: {len(subject_session_pairs)}", file=sys.stderr)
+    
+    if batch_size > 0:
+        start_idx = batch_number * batch_size
+        end_idx = start_idx + batch_size
+        subject_session_pairs = subject_session_pairs[start_idx:end_idx]
+        print(f"[BATCH MODE] Processing batch {batch_number}: subjects {start_idx} to {end_idx-1} ({len(subject_session_pairs)} subjects)", file=sys.stderr)
+    else:
+        print(f"[FULL MODE] Processing all {len(subject_session_pairs)} subjects", file=sys.stderr)
+    
+    # Separate into subjects and sessions lists for backward compatibility
+    subjects = [pair[0] for pair in subject_session_pairs]
+    sessions = [pair[1] for pair in subject_session_pairs]
+    
+    return subjects, sessions, subject_session_pairs
+
+# Get subjects and sessions
+SUBJECTS, SESSIONS, SUBJECT_SESSION_PAIRS = discover_subjects()
+
+# Helper function to get input path
+def get_input_path(subject, session):
+    """Get the input T1w file path for a subject and session"""
+    return os.path.join(BIDS_ROOT, f"sub-{subject}", f"ses-{session}", "anat",
+            f"sub-{subject}_ses-{session}_T1w.nii.gz")
+
+def hsf_output(subject, session):
+    """Path to the combined HSF segmentation output."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_dseg.nii.gz",
+    )
+
+def hsf_left_crop_output(subject, session):
+    """Path to the left cropped segmentation output produced by HSF."""
+    return get_seg_crop_output(subject, session, "L")
+
+def hsf_right_crop_output(subject, session):
+    """Path to the right cropped segmentation output produced by HSF."""
+    return get_seg_crop_output(subject, session, "R")
+
+def get_seg_crop_output(subject, session, hemi):
+    """Path to cropped segmentation produced by HSF (per hemisphere)."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_seg_crop.nii.gz",
+    )
+
+def label_mask_output(subject, session, hemi, label):
+    """Path to per-label mask for a hemisphere."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mask.nii.gz",
+    )
+
+def combined_mask_output(subject, session, hemi):
+    """Path to combined hippocampus mask (all labels merged) for a hemisphere."""
+    return os.path.join(
+        DERIVATIVES_ROOT,
+        f"sub-{subject}",
+        f"ses-{session}",
+        "anat",
+        f"sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_mask.nii.gz",
+    )
+
+# Include rules
+include: "rules/hsf_segmentation.smk"
+include: "rules/data_processing.smk"
+include: "rules/feature_extraction.smk"
+include: "rules/mesh_generation.smk"
+
+# Define all output files
+rule all:
+    input:
+        # Segmentation outputs (left-side copy, plus cropped hemispheres)
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_dseg.nii.gz"),
+            subject=SUBJECTS,
+            session=SESSIONS
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-L_seg_crop.nii.gz"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-R_seg_crop.nii.gz"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+        ),
+        # Data processing outputs: per-label masks and combined mask per hemisphere
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mask.nii.gz"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_mask.nii.gz"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        # Feature extraction outputs: PyRadiomics features per label and combined
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_pyradiomics.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_combined_pyradiomics.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        # Mesh generation outputs (VTK + PNG) for labels and combined
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mesh.vtk"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mesh.png"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_combined_mesh.vtk"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
+                        "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_combined_mesh.png"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        # Curvature feature extraction outputs
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+            label=LABELS.keys(),
+        ),
+        expand(
+            os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
+                        "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.csv"),
+            subject=SUBJECTS,
+            session=SESSIONS,
+            hemi=HEMIS,
+        ),
+        # Aggregated features per subject (one row with both hemispheres)
+        [os.path.join(DERIVATIVES_ROOT, f"sub-{subject}", f"ses-{session}", "features",
+                     f"sub-{subject}_ses-{session}_all_features.csv")
+         for subject, session in SUBJECT_SESSION_PAIRS],
+        # Final aggregated summary
+        os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
+        os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt"),
+        # DAG visualization
+        os.path.join(LOG_DIR, "dag.svg")
+
+
+rule generate_dag:
+    """Generate workflow DAG visualization after all batches and aggregation complete."""
+    input:
+        summary = os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
+        issues = os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
+    output:
+        dag_svg = os.path.join(LOG_DIR, "dag.svg")
+    log:
+        os.path.join(LOG_DIR, "dag_generation.log")
+    shell:
+        """
+        echo "Generating DAG visualization..." > {log}
+        
+        # Check if dot command exists
+        if ! command -v dot &> /dev/null; then
+            echo "Error: 'dot' command not found. Graphviz may not be installed." >> {log}
+            exit 1
+        fi
+        
+        # Generate rule graph (simplified workflow structure, scales to large datasets)
+        if snakemake --snakefile workflow/Snakefile --rulegraph 2>> {log} | dot -Tsvg > {output.dag_svg} 2>> {log}; then
+            echo "Rule graph visualization successfully saved to {output.dag_svg}" >> {log}
+        else
+            echo "Warning: Rule graph generation failed or completed with issues" >> {log}
+            exit 1
+        fi
+        """
