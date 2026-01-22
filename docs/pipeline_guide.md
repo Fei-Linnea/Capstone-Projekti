@@ -41,7 +41,7 @@ This pipeline performs comprehensive radiomics and morphometric analysis of hipp
 From the project root directory:
 
 ```powershell
-docker build -f pipeline/Dockerfile -t hippocampus-pipeline:latest .
+docker build -f pipeline/Dockerfile -t tarizw/hippocampus-pipeline:latest .
 ```
 
 **Expected output:**
@@ -52,7 +52,7 @@ docker build -f pipeline/Dockerfile -t hippocampus-pipeline:latest .
 ### Verify Installation
 
 ```powershell
-docker run --rm hippocampus-pipeline:latest --help
+docker run --rm tarizw/hippocampus-pipeline:latest --help
 ```
 
 You should see the batch processing wrapper help message.
@@ -86,7 +86,7 @@ docker run --rm \
   --memory="8g" \
   -v "D:\Path\To\Data:/data" \
   -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 50 \
   --cores 4
 ```
@@ -107,7 +107,7 @@ docker run --rm \
   --memory="8g" \
   -v "D:\Path\To\Data:/data" \
   -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 0 \
   --cores 4
 ```
@@ -120,7 +120,7 @@ docker run --rm \
   --memory="8g" \
   -v "/path/to/data:/data" \
   -v "$(pwd)/logs:/app/logs" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 50 \
   --cores 4
 ```
@@ -137,7 +137,7 @@ docker run --rm \
   --memory="8g" \
   -v "D:\Path\To\Data:/data" \
   -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 50 \
   --start-batch 5 \
   --cores 4
@@ -153,7 +153,7 @@ docker run --rm \
   --memory="8g" \
   -v "D:\Path\To\Data:/data" \
   -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 50 \
   --cores 4 \
   --skip-aggregation
@@ -168,7 +168,7 @@ docker run --rm \
   --memory="16g" \
   -v "D:\Path\To\Data:/data" \
   -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 100 \
   --cores 8
 ```
@@ -318,7 +318,7 @@ labels:
 # Wrapper shows discovered subjects
 docker run --rm \
   -v "D:\Path\To\Data:/data" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 1 \
   --cores 1
 ```
@@ -356,7 +356,7 @@ docker run --rm \
   --memory="8g" \
   -v "/path/to/data:/data" \
   -v "$(pwd)/logs:/app/logs" \
-  hippocampus-pipeline:latest \
+  tarizw/hippocampus-pipeline:latest \
   --batch-size 50 \
   --cores 4
 ```
