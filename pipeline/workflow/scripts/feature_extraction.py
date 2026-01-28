@@ -12,7 +12,10 @@ def extract_pyradiomics_features(imagePath, maskPath, features):
     data = {}
     for feature_name in features:
         if feature_name in result:
-            data[feature_name] = result[feature_name]
+            value = result[feature_name]
+            if isinstance(value, np.ndarray) and value.size == 1:
+                value = value.item()
+            data[feature_name] = value
         else:
             data[feature_name] = None
             print(f"Warning: Feature {feature_name} not found in pyradiomics output.")
@@ -65,8 +68,6 @@ def calculate_curv_metrics(df):
                 "median": np.nan,
                 "mean": np.nan,
                 "std": np.nan,
-                "min": np.nan,
-                "max": np.nan,
                 "25th_percentile": np.nan,
                 "75th_percentile": np.nan,
             }
@@ -78,8 +79,6 @@ def calculate_curv_metrics(df):
                     "median": np.nan,
                     "mean": np.nan,
                     "std": np.nan,
-                    "min": np.nan,
-                    "max": np.nan,
                     "25th_percentile": np.nan,
                     "75th_percentile": np.nan,
                 }
@@ -88,8 +87,6 @@ def calculate_curv_metrics(df):
                     "median": np.median(valid_data),
                     "mean": np.mean(valid_data),
                     "std": np.std(valid_data, ddof=1) if len(valid_data) > 1 else 0.0,
-                    "min": np.min(valid_data),
-                    "max": np.max(valid_data),
                     "25th_percentile": np.percentile(valid_data, 25),
                     "75th_percentile": np.percentile(valid_data, 75),
                 }

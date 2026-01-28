@@ -1,13 +1,14 @@
 import nibabel as nib
 import numpy as np
 from skimage.measure import marching_cubes
-from skimage.morphology import remove_small_objects
+from skimage.morphology import remove_small_objects, ball
+from scipy.ndimage import binary_fill_holes, binary_closing, binary_opening
 import os
 import pyvista as pv
 
 
 
-def nii_to_vtk(input_path, output_path, min_voxel_count=20, smooth_iters=50, decimation_degree=0.7, plot_png_path=None, plot_html_path=None, enable_interactive_plot=False):
+def nii_to_vtk(input_path, output_path, min_voxel_count=20, smooth_iters=50, plot_png_path=None, plot_html_path=None, enable_interactive_plot=False):
     img = nib.load(input_path)
     data = img.get_fdata().astype(bool)
     
@@ -32,8 +33,25 @@ def nii_to_vtk(input_path, output_path, min_voxel_count=20, smooth_iters=50, dec
         print(f"WARNING: Mask has only {voxel_count} voxels (min={min_voxel_count}). Created empty mesh: {input_path}")
         return
     
+     # fill small holes
+    _tmp = binary_fill_holes(data)
+    if np.sum(_tmp) != 0:
+        data = _tmp
+
+    # close small openings
+    _tmp = binary_closing(data, ball(3))
+    if np.sum(_tmp) != 0:
+        data = _tmp
+
+    # remove  spikes
+    _tmp = binary_opening(data, ball(1))
+    if np.sum(_tmp) != 0:
+        data = _tmp
+
     # Remove small objects
-    data = remove_small_objects(data, min_size=min_voxel_count)
+    _tmp = remove_small_objects(data, min_size=min_voxel_count)
+    if np.sum(_tmp) != 0:
+        data = _tmp
     
     # Check again after cleaning - might be empty now
     voxel_count_after = np.sum(data)
@@ -81,7 +99,6 @@ def nii_to_vtk(input_path, output_path, min_voxel_count=20, smooth_iters=50, dec
     
     faces_flat = np.c_[np.full(len(faces), 3), faces].ravel()
     mesh = pv.PolyData(verts, faces_flat)
-    mesh = mesh.decimate(decimation_degree)
     mesh = mesh.smooth(n_iter=smooth_iters, relaxation_factor=0.1)
     mesh.compute_normals(inplace=True)
     mesh.save(output_path, binary=True)
