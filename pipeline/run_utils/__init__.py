@@ -18,6 +18,7 @@ from .progress import parse_progress, print_progress_bar
 from .batchExecutor import run_snakemake_batch
 from .aggregate import run_aggregation
 from .subjects import discover_subjects
+from .snakemake_profile import get_snakemake_args, print_snakemake_config
 
 __all__ = [
     # Config defaults
@@ -36,5 +37,7 @@ __all__ = [
     'print_progress_bar',
     'run_snakemake_batch',
     'run_aggregation',
-    'discover_subjects'
+    'discover_subjects',
+    'get_snakemake_args',
+    'print_snakemake_config'
 ]

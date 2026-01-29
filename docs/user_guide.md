@@ -22,7 +22,6 @@ apptainer pull hippocampus-pipeline.sif docker://docker.io/tarizw/hippocampus-pi
 
 This will download the container image (~4.3 GiB).
 
-
 ## Run the Pipeline
 
 Execute the pipeline with the following command:
@@ -45,6 +44,44 @@ apptainer run --writable-tmpfs \
   --profile config/profiles/tyks \
   --batch-size 10
 ```
+
+### Configuring Pipeline Resources (Dynamic Configuration)
+
+You can customize the Snakemake execution parameters at runtime using environment variables. This allows you to adjust resource allocation without modifying the container image.
+
+**Available Environment Variables:**
+
+| Variable | Description | Default 
+|----------|-------------|---------
+| `SNAKEMAKE_JOBS` | Max parallel jobs to run | 8  
+| `SNAKEMAKE_CORES` | Total CPU cores to use | 16  
+| `SNAKEMAKE_MEM_MB` | Memory per job (MB) | 4000 
+| `SNAKEMAKE_THREADS` | Threads per job | 2
+
+**Example with Custom Resources:**
+```bash
+apptainer run --writable-tmpfs \
+  --bind ./DatasetName:/data \
+  --bind ./logs:/app/logs \
+  -e SNAKEMAKE_JOBS=12 \
+  -e SNAKEMAKE_CORES=20 \
+  -e SNAKEMAKE_MEM_MB=8000 \
+  -e SNAKEMAKE_THREADS=4 \
+  hippocampus-pipeline.sif \
+  --profile config/profiles/tyks \
+  --batch-size 10
+```
+
+**Recommended Settings for Different Machine Sizes:**
+
+| Machine RAM | batch-size | SNAKEMAKE_JOBS | SNAKEMAKE_CORES | SNAKEMAKE_MEM_MB |
+|-------------|-----------|----------------|-----------------|------------------|
+| 32 GB       | 10        | 4              | 8               | 4000             |
+| 64 GB       | 20        | 8              | 16              | 4000             |
+| 128 GB      | 40        | 16             | 32              | 8000             |
+| 256 GB      | 80        | 32             | 64              | 8000             |
+
+**Note:** The static configuration file (`config/profiles/tyks/config.yaml`) contains other settings like error handling and execution behavior. These remain unchanged and don't require environment variables to be set.
 
 ## Output Structure
 
