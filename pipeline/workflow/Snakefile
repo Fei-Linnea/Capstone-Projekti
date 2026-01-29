@@ -245,18 +245,18 @@ rule all:
         os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
         os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt"),
         # DAG visualization
-        os.path.join(LOG_DIR, "dag.svg")
+        os.path.join(LOG_DIR, "rulegraph.svg")
 
 
-rule generate_dag:
+rule generate_rulegraph:
     """Generate workflow DAG visualization after all batches and aggregation complete."""
     input:
         summary = os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
         issues = os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
     output:
-        dag_svg = os.path.join(LOG_DIR, "dag.svg")
+        rulegraph_svg = os.path.join(LOG_DIR, "rulegraph.svg")
     log:
-        os.path.join(LOG_DIR, "dag_generation.log")
+        os.path.join(LOG_DIR, "rulegraph_generation.log")
     shell:
         """
         echo "Generating DAG visualization..." > {log}
@@ -268,8 +268,8 @@ rule generate_dag:
         fi
         
         # Generate rule graph (simplified workflow structure, scales to large datasets)
-        if snakemake --snakefile workflow/Snakefile --rulegraph 2>> {log} | dot -Tsvg > {output.dag_svg} 2>> {log}; then
-            echo "Rule graph visualization successfully saved to {output.dag_svg}" >> {log}
+        if snakemake --snakefile workflow/Snakefile --rulegraph 2>> {log} | dot -Tsvg > {output.rulegraph_svg} 2>> {log}; then
+            echo "Rule graph visualization successfully saved to {output.rulegraph_svg}" >> {log}
         else
             echo "Warning: Rule graph generation failed or completed with issues" >> {log}
             exit 1
