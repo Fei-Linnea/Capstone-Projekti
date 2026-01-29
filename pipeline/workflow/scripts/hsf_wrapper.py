@@ -109,6 +109,15 @@ def run_hsf_segmentation(
         # Use one as the main output (or combine them if needed)
         shutil.copy2(left_target, output_seg)
         
+        # Clean up hsf_outputs folder created by HSF in the input directory
+        hsf_outputs_dir = os.path.join(subject_anat_dir, "hsf_outputs")
+        if os.path.isdir(hsf_outputs_dir):
+            try:
+                shutil.rmtree(hsf_outputs_dir)
+                log(f"Cleaned up temporary folder: {hsf_outputs_dir}")
+            except Exception as e:
+                log(f"WARNING: Could not remove hsf_outputs folder: {e}")
+        
         log_timestamp("Segmentation completed successfully")
         log(f"Output: {output_seg}")
         log(f"Left hippocampus: {left_target}")
