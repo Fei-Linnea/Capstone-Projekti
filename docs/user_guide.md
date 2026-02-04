@@ -45,18 +45,54 @@ apptainer run --writable-tmpfs \
   --batch-size 10
 ```
 
+### Command-Line Options
+
+**Available Pipeline Options:**
+
+| Option | Description | Default | Required |
+|--------|-------------|----------|----------|
+| `--profile` | Snakemake profile directory (e.g., `config/profiles/tyks`) | None | **Yes** |
+| `--batch-size` | Number of subjects per batch | 5 | No |
+| `--cleanup` | Remove intermediate files after completion, keeping only `summary/all_features.csv` and error report | disabled | No |
+| `--dry-run` | Show what would be done without executing | disabled | No |
+| `--subjects` | Process specific subjects (e.g., `--subjects 01 02 03`) | all subjects | No |
+
+**Note:** The `--profile` flag is required to specify default execution settings (cores, memory, jobs). Use `config/profiles/tyks` for TYKS environment.
+
+**Example with cleanup flag:**
+```bash
+apptainer run --writable-tmpfs \
+  --bind ./DatasetName:/data \
+  --bind ./logs:/app/logs \
+  hippocampus-pipeline.sif \
+  --profile config/profiles/tyks \
+  --batch-size 10 \
+  --cleanup
+```
+
+**Example processing specific subjects:**
+```bash
+apptainer run --writable-tmpfs \
+  --bind ./DatasetName:/data \
+  --bind ./logs:/app/logs \
+  hippocampus-pipeline.sif \
+  --profile config/profiles/tyks \
+  --subjects 01 02 03 04 05
+```
+
 ### Configuring Pipeline Resources (Dynamic Configuration)
 
-You can customize the Snakemake execution parameters at runtime using environment variables. This allows you to adjust resource allocation without modifying the container image.
+You can customize the Snakemake execution parameters at runtime using environment variables. This allows you to adjust resource allocation without modifying the container image. These override the defaults in `config/profiles/tyks/config.yaml`.
 
 **Available Environment Variables:**
 
-| Variable | Description | Default 
-|----------|-------------|---------
-| `SNAKEMAKE_JOBS` | Max parallel jobs to run | 8  
-| `SNAKEMAKE_CORES` | Total CPU cores to use | 16  
-| `SNAKEMAKE_MEM_MB` | Memory per job (MB) | 4000 
-| `SNAKEMAKE_THREADS` | Threads per job | 2
+| Variable | Description | Default (from profile) |
+|----------|-------------|------------------------|
+| `SNAKEMAKE_JOBS` | Max parallel jobs to run | 8 |
+| `SNAKEMAKE_CORES` | Total CPU cores to use | 16 |
+| `SNAKEMAKE_MEM_MB` | Memory per job (MB) | 4000 |
+| `SNAKEMAKE_THREADS` | Threads per job | 2 |
+
 
 **Example with Custom Resources:**
 ```bash
@@ -81,12 +117,43 @@ apptainer run --writable-tmpfs \
 | 128 GB      | 40        | 16             | 32              | 8000             |
 | 256 GB      | 80        | 32             | 64              | 8000             |
 
-**Note:** The static configuration file (`config/profiles/tyks/config.yaml`) contains other settings like error handling and execution behavior. These remain unchanged and don't require environment variables to be set.
+
+
+## Cleanup Option (Disk Space Management)
+
+The `--cleanup` flag removes all intermediate files after successful pipeline completion, keeping only the final `summary/all_features.csv` file and error report. 
+
+**What gets deleted:**
+- Individual subject segmentation files (`sub-XX/ses-X/anat/`)
+- Per-subject feature files (`sub-XX/ses-X/features/`)
+- Mesh files (`sub-XX/ses-X/meshes/`)
+
+**What gets preserved:**
+- `derivatives/summary/all_features.csv` (final aggregated results)
+- `derivatives/summary/processing_issues.txt` (error report)
+
+
+**Usage:**
+```bash
+apptainer run --writable-tmpfs \
+  --bind ./DatasetName:/data \
+  --bind ./logs:/app/logs \
+  hippocampus-pipeline.sif \
+  --profile config/profiles/tyks \
+  --batch-size 10 \
+  --cleanup
+```
+
+The cleanup will:
+1. Show a preview of what will be deleted
+2. Ask for confirmation before proceeding
+3. Only run if the pipeline completes successfully
 
 ## Output Structure
 
 After successful execution, your dataset directory will contain:
 
+**Without `--cleanup` flag (default):**
 ```
 dataset/
 ├── derivatives/
@@ -95,11 +162,20 @@ dataset/
 │   │       ├── anat/          # Segmentation outputs
 │   │       ├── features/      # Extracted radiomics features
 │   │       └── meshes/        # Generated 3D meshes
-│   └── sub-02/
-│       └── ...
-└── summary/
-    ├── all_features.csv       # Aggregated features from all subjects
-    └── processing_issues.txt   # Any subjects with processing errors
+│   ├── sub-02/
+│   │   └── ...
+│   └── summary/
+│       ├── all_features.csv       # Aggregated features from all subjects
+│       └── processing_issues.txt  # Any subjects with processing errors
+```
+
+**With `--cleanup` flag:**
+```
+dataset/
+└── derivatives/
+    └── summary/
+        ├── all_features.csv       # Aggregated features from all subjects
+        └── processing_issues.txt  # Any subjects with processing errors
 ```
 
 Your logs directory will contain timestamped directories with detailed execution logs:

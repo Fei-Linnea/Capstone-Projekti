@@ -7,7 +7,7 @@ import os
 import subprocess
 
 
-def run_aggregation(config_file, profile_dir, cores, log_dir, pipeline_dir,
+def run_aggregation(config_file, profile_dir, log_dir, pipeline_dir,
                     dry_run=False):
     """
     Run the aggregation step after all batches are complete.
@@ -15,8 +15,7 @@ def run_aggregation(config_file, profile_dir, cores, log_dir, pipeline_dir,
     
     Args:
         config_file: Path to config.yaml
-        profile_dir: Snakemake profile directory
-        cores: Number of CPU cores to use
+        profile_dir: Snakemake profile directory (required)
         log_dir: Directory for logs
         pipeline_dir: Working directory for Snakemake
         dry_run: If True, don't execute, just show commands
@@ -39,13 +38,15 @@ def run_aggregation(config_file, profile_dir, cores, log_dir, pipeline_dir,
         "--config",
         f"batch_size=0",
         f"log_dir={log_dir}",
-        "--cores", str(cores),
         "--rerun-incomplete",
         "aggregate_all_subjects"
     ]
     
     if profile_dir:
         cmd.extend(["--profile", profile_dir])
+    else:
+        print("ERROR: --profile is required", file=sys.stderr)
+        return False
     
     if dry_run:
         cmd.append("--dry-run")

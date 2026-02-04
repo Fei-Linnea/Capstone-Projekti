@@ -5,7 +5,6 @@ Utility modules for the Hippocampus Radiomic Feature Extraction Pipeline
 from .config import (
     DEFAULT_CONFIG_PATH,
     DEFAULT_BATCH_SIZE,
-    DEFAULT_CORES,
     DEFAULT_PIPELINE_DIR,
     DEFAULT_LOG_BASE_DIR,
     DEFAULT_DATA_DIR,
@@ -19,12 +18,12 @@ from .batchExecutor import run_snakemake_batch
 from .aggregate import run_aggregation
 from .subjects import discover_subjects
 from .snakemake_profile import get_snakemake_args, print_snakemake_config
+from .cleanup import cleanup_intermediate_files, cleanup_with_confirmation
 
 __all__ = [
     # Config defaults
     'DEFAULT_CONFIG_PATH',
     'DEFAULT_BATCH_SIZE',
-    'DEFAULT_CORES',
     'DEFAULT_PIPELINE_DIR',
     'DEFAULT_LOG_BASE_DIR',
     'DEFAULT_DATA_DIR',
@@ -39,5 +38,7 @@ __all__ = [
     'run_aggregation',
     'discover_subjects',
     'get_snakemake_args',
-    'print_snakemake_config'
+    'print_snakemake_config',
+    'cleanup_intermediate_files',
+    'cleanup_with_confirmation'
 ]

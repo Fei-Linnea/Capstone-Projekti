@@ -14,7 +14,7 @@ from .snakemake_profile import get_snakemake_args, print_snakemake_config
 
 
 def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file, 
-                        profile_dir, cores, log_dir, batch_size, pipeline_dir,
+                        profile_dir, log_dir, batch_size, pipeline_dir,
                         dry_run=False):
     """
     Run Snakemake for a batch of subjects with progress tracking.
@@ -24,8 +24,7 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
         batch_num: Batch number (1-indexed)
         total_batches: Total number of batches
         config_file: Path to config.yaml
-        profile_dir: Snakemake profile directory
-        cores: Number of CPU cores to use
+        profile_dir: Snakemake profile directory (required)
         log_dir: Directory for logs
         batch_size: Size of batch (for config)
         pipeline_dir: Working directory for Snakemake
@@ -71,8 +70,8 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
         dynamic_args = get_snakemake_args(profile_dir)
         cmd.extend(dynamic_args)
     else:
-        # Fallback if no profile - just use cores
-        cmd.extend(["--cores", str(cores)])
+        print("ERROR: --profile is required", file=sys.stderr)
+        return False
     
     if dry_run:
         cmd.append("--dry-run")

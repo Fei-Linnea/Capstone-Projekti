@@ -7,23 +7,21 @@ This is the main entry point for the pipeline. All utility functions
 are imported from the run_utils package.
 """
 
-import argparse
-import os
-import sys
+import argparse, os, sys, yaml
 from datetime import datetime
 
 # Import all utilities from run_utils package
 from run_utils import (
     DEFAULT_CONFIG_PATH,
     DEFAULT_BATCH_SIZE,
-    DEFAULT_CORES,
     DEFAULT_PIPELINE_DIR,
     DEFAULT_LOG_BASE_DIR,
     DEFAULT_DATA_DIR,
     DEFAULT_BIDS_PATTERN,
     run_snakemake_batch,
     run_aggregation,
-    discover_subjects
+    discover_subjects,
+    cleanup_with_confirmation
 )
 
 
@@ -36,7 +34,6 @@ def main():
 Environment variables (used as defaults if not specified via CLI):
   PIPELINE_CONFIG       Config file path (default: config/config.yaml)
   PIPELINE_BATCH_SIZE   Subjects per batch (default: 5)
-  PIPELINE_CORES        CPU cores to use (default: auto-detect)
   PIPELINE_DIR          Pipeline working directory (default: /app/pipeline)
   PIPELINE_LOG_DIR      Log base directory (default: /app/logs)
   PIPELINE_DATA_DIR     BIDS data directory (default: /data)
@@ -46,10 +43,10 @@ Examples:
   # Run with default settings
   python run_pipeline.py
 
-  # Run with custom batch size and cores
-  python run_pipeline.py --batch-size 20 --cores 8
+  # Run with custom batch size
+  python run_pipeline.py --batch-size 20
 
-  # Run with TYKS profile
+  # Run with TYKS profile (recommended)
   python run_pipeline.py --profile config/profiles/tyks --batch-size 20
 
   # Dry run (show what would be done)
@@ -78,12 +75,6 @@ Examples:
         type=int,
         default=DEFAULT_BATCH_SIZE,
         help=f"Number of subjects per batch (default: {DEFAULT_BATCH_SIZE})"
-    )
-    parser.add_argument(
-        "--cores",
-        type=int,
-        default=DEFAULT_CORES,
-        help=f"Number of CPU cores to use (default: {DEFAULT_CORES})"
     )
     
     # Path arguments
@@ -119,6 +110,11 @@ Examples:
         nargs="+",
         help="Specific subjects to process (default: auto-discover from data-dir)"
     )
+    parser.add_argument(
+        "--cleanup",
+        action="store_true",
+        help="Remove intermediate files after successful completion, keeping only summary/all_features.csv"
+    )
     
     args = parser.parse_args()
     
@@ -137,7 +133,6 @@ Examples:
     print(f"Pipeline dir: {args.pipeline_dir}", file=sys.stderr)
     print(f"Data dir: {args.data_dir}", file=sys.stderr)
     print(f"Batch size: {args.batch_size}", file=sys.stderr)
-    print(f"Cores: {args.cores}", file=sys.stderr)
     if args.profile:
         print(f"Profile: {args.profile}", file=sys.stderr)
     if args.dry_run:
@@ -178,7 +173,6 @@ Examples:
             total_batches=total_batches,
             config_file=args.config,
             profile_dir=args.profile,
-            cores=args.cores,
             log_dir=log_dir,
             batch_size=args.batch_size,
             pipeline_dir=args.pipeline_dir,
@@ -193,7 +187,6 @@ Examples:
         aggregation_success = run_aggregation(
             config_file=args.config,
             profile_dir=args.profile,
-            cores=args.cores,
             log_dir=log_dir,
             pipeline_dir=args.pipeline_dir,
             dry_run=args.dry_run
@@ -201,6 +194,21 @@ Examples:
         
         if not aggregation_success:
             failed_batches.append("aggregation")
+    
+    # Cleanup intermediate files if requested and pipeline succeeded
+    if args.cleanup and not failed_batches:
+        # Need to get derivatives_root from config
+        with open(args.config, 'r') as f:
+            config = yaml.safe_load(f)
+        derivatives_root = config.get('derivatives_root', '/data/derivatives')
+        
+        cleanup_success = cleanup_with_confirmation(
+            derivatives_root=derivatives_root,
+            dry_run=args.dry_run
+        )
+        
+        if not cleanup_success:
+            print("⚠ Warning: Cleanup encountered errors (pipeline results preserved)", file=sys.stderr)
     
     # Final summary
     print(f"\n{'='*80}", file=sys.stderr)

@@ -2,7 +2,7 @@
 
 Snakemake rulegraph is a dependency diagram: each box is a rule, and each arrow means “the upstream rule produces files that the downstream rule needs as input.” 
 
-![alt text](image-1.png)
+![alt text](rulegraph.png)
 
 **top → bottom**
 

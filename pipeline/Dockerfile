@@ -34,6 +34,7 @@ RUN pip install --no-cache-dir \
     pandas \
     pulp==2.7.0 \
     pyradiomics \
+    pyyaml \
     simpleitk \
     snakemake==7.32.4 \
     onnxruntime \
