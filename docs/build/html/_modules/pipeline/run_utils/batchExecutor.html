@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pipeline.run_utils.batchExecutor &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">User and Develeper Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pipeline">pipeline</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pipeline.run_utils.batchExecutor</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pipeline.run_utils.batchExecutor</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Snakemake batch execution</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">RULE_DISPLAY_NAMES</span><span class="p">,</span> <span class="n">SPINNER_FRAMES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">tail_log_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_progress</span><span class="p">,</span> <span class="n">print_progress_bar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.snakemake_profile</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_snakemake_args</span><span class="p">,</span> <span class="n">print_snakemake_config</span>
+
+
+<div class="viewcode-block" id="run_snakemake_batch">
+<a class="viewcode-back" href="../../../pipeline.run_utils.html#pipeline.run_utils.batchExecutor.run_snakemake_batch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_snakemake_batch</span><span class="p">(</span><span class="n">batch_subjects</span><span class="p">,</span> <span class="n">batch_num</span><span class="p">,</span> <span class="n">total_batches</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> 
+                        <span class="n">profile_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">pipeline_dir</span><span class="p">,</span>
+                        <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run Snakemake for a batch of subjects with progress tracking.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        batch_subjects: List of subject IDs for this batch</span>
+<span class="sd">        batch_num: Batch number (1-indexed)</span>
+<span class="sd">        total_batches: Total number of batches</span>
+<span class="sd">        config_file: Path to config.yaml</span>
+<span class="sd">        profile_dir: Snakemake profile directory (required)</span>
+<span class="sd">        log_dir: Directory for logs</span>
+<span class="sd">        batch_size: Size of batch (for config)</span>
+<span class="sd">        pipeline_dir: Working directory for Snakemake</span>
+<span class="sd">        dry_run: If True, don&#39;t execute, just show commands</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        True if successful, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create subject list string</span>
+    <span class="n">subject_list</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">batch_subjects</span><span class="p">)</span>
+    
+    <span class="c1"># Set up log file for this batch</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;snakemake_batch_</span><span class="si">{</span><span class="n">batch_num</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">.log&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Batch </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s2">: Processing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">batch_subjects</span><span class="p">)</span><span class="si">}</span><span class="s2"> subjects&quot;</span><span class="p">,</span> 
+          <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Subjects: </span><span class="si">{</span><span class="n">subject_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Log: </span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    
+    <span class="c1"># Print effective Snakemake configuration (on first batch)</span>
+    <span class="k">if</span> <span class="n">batch_num</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">profile_dir</span><span class="p">:</span>
+        <span class="n">print_snakemake_config</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">)</span>
+    
+    <span class="c1"># Build Snakemake command with batch parameters</span>
+    <span class="c1"># Note: batch_number is 0-indexed for Snakefile</span>
+    <span class="c1"># All config values must be in a single --config argument</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;snakemake&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--snakefile&quot;</span><span class="p">,</span> <span class="s2">&quot;workflow/Snakefile&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--configfile&quot;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
+        <span class="s2">&quot;--config&quot;</span><span class="p">,</span> 
+        <span class="sa">f</span><span class="s2">&quot;batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;batch_number=</span><span class="si">{</span><span class="n">batch_num</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;log_dir=</span><span class="si">{</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--rerun-incomplete&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--keep-going&quot;</span>
+    <span class="p">]</span>
+    
+    <span class="c1"># Add dynamic Snakemake profile and resource arguments</span>
+    <span class="k">if</span> <span class="n">profile_dir</span><span class="p">:</span>
+        <span class="n">dynamic_args</span> <span class="o">=</span> <span class="n">get_snakemake_args</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">)</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dynamic_args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: --profile is required&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--dry-run&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DRY RUN: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    
+    <span class="c1"># Progress tracking state</span>
+    <span class="n">progress_state</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;current_jobs&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;total_jobs&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;shown_initial&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;spinner_frame&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">stop_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">progress_callback</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called for each new log line&quot;&quot;&quot;</span>
+        <span class="n">jobs_done</span> <span class="o">=</span> <span class="n">parse_progress</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">progress_state</span><span class="p">)</span>
+        <span class="n">total_jobs</span> <span class="o">=</span> <span class="n">progress_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;total_jobs&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Increment spinner frame on every callback</span>
+        <span class="n">progress_state</span><span class="p">[</span><span class="s1">&#39;spinner_frame&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">progress_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;spinner_frame&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">spinner_frame</span> <span class="o">=</span> <span class="n">progress_state</span><span class="p">[</span><span class="s1">&#39;spinner_frame&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># Build status suffix showing current job</span>
+        <span class="n">current_rule</span> <span class="o">=</span> <span class="n">progress_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;current_rule&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">current_subject</span> <span class="o">=</span> <span class="n">progress_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;current_subject&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        
+        <span class="n">status_suffix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">current_subject</span> <span class="ow">and</span> <span class="n">current_rule</span><span class="p">:</span>
+            <span class="n">rule_short</span> <span class="o">=</span> <span class="n">RULE_DISPLAY_NAMES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">current_rule</span><span class="p">,</span> <span class="n">current_rule</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
+            <span class="n">status_suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39; | sub-</span><span class="si">{</span><span class="n">current_subject</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">rule_short</span><span class="si">}</span><span class="s1">&#39;</span>
+        
+        <span class="c1"># Show initial progress bar as soon as we have the total</span>
+        <span class="k">if</span> <span class="n">total_jobs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">progress_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shown_initial&#39;</span><span class="p">):</span>
+            <span class="n">progress_state</span><span class="p">[</span><span class="s1">&#39;shown_initial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">print_progress_bar</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="n">total_jobs</span><span class="p">,</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Batch </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                <span class="n">suffix</span><span class="o">=</span><span class="n">status_suffix</span><span class="p">,</span>
+                <span class="n">spinner_frame</span><span class="o">=</span><span class="n">spinner_frame</span>
+            <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">jobs_done</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">total_jobs</span><span class="p">:</span>
+            <span class="c1"># Use actual total from Snakemake</span>
+            <span class="n">print_progress_bar</span><span class="p">(</span>
+                <span class="n">jobs_done</span><span class="p">,</span>
+                <span class="n">total_jobs</span><span class="p">,</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Batch </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                <span class="n">suffix</span><span class="o">=</span><span class="n">status_suffix</span><span class="p">,</span>
+                <span class="n">spinner_frame</span><span class="o">=</span><span class="n">spinner_frame</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">jobs_done</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Fallback: show progress without percentage until total is known</span>
+            <span class="n">spin</span> <span class="o">=</span> <span class="n">SPINNER_FRAMES</span><span class="p">[</span><span class="n">spinner_frame</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">SPINNER_FRAMES</span><span class="p">)]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">Batch </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s1"> [</span><span class="si">{</span><span class="n">jobs_done</span><span class="si">}</span><span class="s1">/?] </span><span class="si">{</span><span class="n">spin</span><span class="si">}</span><span class="s1"> Processing...</span><span class="si">{</span><span class="n">status_suffix</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> 
+                  <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># Start log tailing thread</span>
+    <span class="n">tail_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">tail_log_file</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">),</span>
+        <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">tail_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    
+    <span class="c1"># Run Snakemake with output redirected to log file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">cmd</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="n">pipeline_dir</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        
+        <span class="c1"># Stop the tail thread</span>
+        <span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+        <span class="n">tail_thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        
+        <span class="c1"># Final progress update</span>
+        <span class="n">final_jobs</span> <span class="o">=</span> <span class="n">progress_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;current_jobs&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">total_jobs</span> <span class="o">=</span> <span class="n">progress_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;total_jobs&#39;</span><span class="p">,</span> <span class="n">final_jobs</span><span class="p">)</span>
+        <span class="n">print_progress_bar</span><span class="p">(</span>
+            <span class="n">final_jobs</span><span class="p">,</span>
+            <span class="n">total_jobs</span><span class="p">,</span>
+            <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Batch </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;✓ Complete</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">spinner_frame</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">⚠️  Batch </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s2"> failed with exit code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> 
+                  <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Check log file: </span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        
+        <span class="k">return</span> <span class="kc">True</span>
+        
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">❌ Error running batch </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

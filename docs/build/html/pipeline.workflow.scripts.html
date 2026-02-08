@@ -1,0 +1,562 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_analysis scripts &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="run_utils functions" href="pipeline.run_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User and Develeper Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#pipeline">pipeline</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pipeline.run_utils.html">run_utils functions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">data_analysis scripts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.workflow.scripts.aggregate_data">aggregate_data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.aggregate_data.aggregate_region_data"><code class="docutils literal notranslate"><span class="pre">aggregate_region_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.aggregate_data.append_csv"><code class="docutils literal notranslate"><span class="pre">append_csv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.aggregate_data.form_row_from_data"><code class="docutils literal notranslate"><span class="pre">form_row_from_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.workflow.scripts.feature_extraction">feature_extraction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.feature_extraction.calculate_curv_metrics"><code class="docutils literal notranslate"><span class="pre">calculate_curv_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.feature_extraction.extract_curvatures"><code class="docutils literal notranslate"><span class="pre">extract_curvatures()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.feature_extraction.extract_pyradiomics_features"><code class="docutils literal notranslate"><span class="pre">extract_pyradiomics_features()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.workflow.scripts.hsf_wrapper">hsf_wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.hsf_wrapper.run_hsf_segmentation"><code class="docutils literal notranslate"><span class="pre">run_hsf_segmentation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.workflow.scripts.nii_parse">nii_parse</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.nii_parse.binarify_hd_mask"><code class="docutils literal notranslate"><span class="pre">binarify_hd_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.nii_parse.combine_labels"><code class="docutils literal notranslate"><span class="pre">combine_labels()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.nii_parse.split_one_label"><code class="docutils literal notranslate"><span class="pre">split_one_label()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.workflow.scripts.voxelToMesh">voxelToMesh</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.workflow.scripts.voxelToMesh.nii_to_vtk"><code class="docutils literal notranslate"><span class="pre">nii_to_vtk()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User and Develeper Guide</a></li>
+      <li class="breadcrumb-item active">data_analysis scripts</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/pipeline.workflow.scripts.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-analysis-scripts">
+<h1>data_analysis scripts<a class="headerlink" href="#data-analysis-scripts" title="Link to this heading"></a></h1>
+<section id="module-pipeline.workflow.scripts.aggregate_data">
+<span id="aggregate-data"></span><h2>aggregate_data<a class="headerlink" href="#module-pipeline.workflow.scripts.aggregate_data" title="Link to this heading"></a></h2>
+<p>Aggregation utilities for radiomics and curvature feature data.</p>
+<p>This module provides helper functions to:</p>
+<ol class="arabic simple">
+<li><p>Combine left/right hemisphere feature dictionaries into a structured
+region-level dictionary.</p></li>
+<li><p>Convert aggregated feature dictionaries into a single flattened row
+suitable for CSV export.</p></li>
+<li><p>Append structured feature rows to a CSV file, creating headers if needed.</p></li>
+</ol>
+<p>These functions are used during the final aggregation stage of the
+hippocampus radiomic feature extraction pipeline.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.aggregate_data.aggregate_region_data">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.aggregate_data.</span></span><span class="sig-name descname"><span class="pre">aggregate_region_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hippocampus_data_L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DG_data_L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CA1_data_L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CA2_data_L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CA3_data_L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SUB_data_L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hippocampus_data_R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DG_data_R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CA1_data_R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CA2_data_R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CA3_data_R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SUB_data_R</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/aggregate_data.html#aggregate_region_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.aggregate_data.aggregate_region_data" title="Link to this definition"></a></dt>
+<dd><p>Combine region-wise radiomics or curvature data for both hemispheres.</p>
+<p>This function groups feature dictionaries by anatomical region and
+hemisphere (Left/Right) into a structured nested dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hippocampus_data_L</strong> (<em>dict</em>) – Feature dictionary for left whole hippocampus.</p></li>
+<li><p><strong>DG_data_L</strong> (<em>dict</em>) – Feature dictionary for left dentate gyrus.</p></li>
+<li><p><strong>CA1_data_L</strong> (<em>dict</em>) – Feature dictionary for left CA1.</p></li>
+<li><p><strong>CA2_data_L</strong> (<em>dict</em>) – Feature dictionary for left CA2.</p></li>
+<li><p><strong>CA3_data_L</strong> (<em>dict</em>) – Feature dictionary for left CA3.</p></li>
+<li><p><strong>SUB_data_L</strong> (<em>dict</em>) – Feature dictionary for left subiculum.</p></li>
+<li><p><strong>hippocampus_data_R</strong> (<em>dict</em>) – Feature dictionary for right whole hippocampus.</p></li>
+<li><p><strong>DG_data_R</strong> (<em>dict</em>) – Feature dictionary for right dentate gyrus.</p></li>
+<li><p><strong>CA1_data_R</strong> (<em>dict</em>) – Feature dictionary for right CA1.</p></li>
+<li><p><strong>CA2_data_R</strong> (<em>dict</em>) – Feature dictionary for right CA2.</p></li>
+<li><p><strong>CA3_data_R</strong> (<em>dict</em>) – Feature dictionary for right CA3.</p></li>
+<li><p><strong>SUB_data_R</strong> (<em>dict</em>) – Feature dictionary for right subiculum.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Nested dictionary structured as:</p>
+<blockquote>
+<div><dl>
+<dt>{</dt><dd><dl class="simple">
+<dt>“RegionName”: {</dt><dd><p>“L”: {…},
+“R”: {…}</p>
+</dd>
+</dl>
+<p>}</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>Where region names include:
+- Hippocampus
+- DG
+- CA1
+- CA2
+- CA3
+- SUB</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.aggregate_data.append_csv">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.aggregate_data.</span></span><span class="sig-name descname"><span class="pre">append_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/aggregate_data.html#append_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.aggregate_data.append_csv" title="Link to this definition"></a></dt>
+<dd><p>Append a feature row to a CSV file.</p>
+<p>If the CSV file does not exist, it is created and a header row is written
+automatically. If it already exists, the new row is appended.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csv_path</strong> (<em>str</em>) – Path to the CSV file.</p></li>
+<li><p><strong>row</strong> (<em>dict</em>) – Dictionary representing one subject/session row,
+typically produced by <code class="docutils literal notranslate"><span class="pre">form_row_from_data</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.aggregate_data.form_row_from_data">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.aggregate_data.</span></span><span class="sig-name descname"><span class="pre">form_row_from_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radiomics_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curvature_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/aggregate_data.html#form_row_from_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.aggregate_data.form_row_from_data" title="Link to this definition"></a></dt>
+<dd><p>Flatten radiomics and curvature feature dictionaries into a single CSV row.</p>
+<p>This function extracts subject and session identifiers from a BIDS-formatted
+filename and combines all region- and hemisphere-specific radiomics and
+curvature metrics into a single flat dictionary suitable for CSV writing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_path</strong> (<em>str</em>) – Path to the input image file. Expected to follow
+BIDS naming convention (e.g., sub-01_ses-1_T1w.nii.gz).</p></li>
+<li><p><strong>radiomics_data</strong> (<em>dict</em>) – Nested region dictionary produced by
+<code class="docutils literal notranslate"><span class="pre">aggregate_region_data</span></code> containing radiomics features.</p></li>
+<li><p><strong>curvature_data</strong> (<em>dict</em>) – Nested region dictionary produced by
+<code class="docutils literal notranslate"><span class="pre">aggregate_region_data</span></code> containing curvature metrics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A flattened dictionary representing one subject/session row.
+Keys follow this naming structure:</p>
+<ul class="simple">
+<li><p>Radiomics_&lt;Region&gt;_&lt;Side&gt;_&lt;FeatureName&gt;</p></li>
+<li><p>Curvature_&lt;Region&gt;_&lt;Side&gt;_&lt;CurvatureType&gt;_curvature_&lt;Statistic&gt;</p></li>
+</ul>
+<p>Additionally includes:
+- Subject
+- Session</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.workflow.scripts.feature_extraction">
+<span id="feature-extraction"></span><h2>feature_extraction<a class="headerlink" href="#module-pipeline.workflow.scripts.feature_extraction" title="Link to this heading"></a></h2>
+<p>Feature extraction utilities for radiomics and mesh-based curvature analysis.</p>
+<p>This module provides:</p>
+<ol class="arabic simple">
+<li><p>Shape-based radiomics feature extraction using PyRadiomics.</p></li>
+<li><p>Point-wise curvature computation from VTK meshes using PyVista.</p></li>
+<li><p>Statistical summarization of curvature metrics.</p></li>
+</ol>
+<p>These functions are used during the feature extraction stage of the
+hippocampus radiomic feature extraction pipeline.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.feature_extraction.calculate_curv_metrics">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.feature_extraction.</span></span><span class="sig-name descname"><span class="pre">calculate_curv_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/feature_extraction.html#calculate_curv_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.feature_extraction.calculate_curv_metrics" title="Link to this definition"></a></dt>
+<dd><p>Compute statistical summaries from point-wise curvature values.</p>
+<p>For each curvature type (Mean, Gaussian, k1, k2), the following
+statistics are calculated:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>median</p></li>
+<li><p>mean</p></li>
+<li><p>standard deviation</p></li>
+<li><p>25th percentile</p></li>
+<li><p>75th percentile</p></li>
+</ul>
+</div></blockquote>
+<p>NaN values are ignored during computation. If all values are NaN or
+the input is empty, all statistics are set to NaN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>pandas.DataFrame</em>) – DataFrame containing curvature columns:
+- Mean
+- Gaussian
+- k1
+- k2</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Nested dictionary structured as:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>{</dt><dd><dl class="simple">
+<dt>“Mean”: {</dt><dd><p>“median”: …,
+“mean”: …,
+“std”: …,
+“25th_percentile”: …,
+“75th_percentile”: …</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Standard deviation uses sample standard deviation (ddof=1).</p></li>
+<li><p>If only one valid value exists, std is set to 0.0.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.feature_extraction.extract_curvatures">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.feature_extraction.</span></span><span class="sig-name descname"><span class="pre">extract_curvatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/feature_extraction.html#extract_curvatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.feature_extraction.extract_curvatures" title="Link to this definition"></a></dt>
+<dd><p>Compute point-wise curvature measures from a VTK mesh file.</p>
+<p>The function reads a mesh file, computes mean curvature, Gaussian
+curvature, and principal curvatures (k1, k2), and returns them as
+a pandas DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input</strong> (<em>str</em>) – Path to a VTK mesh file (.vtk).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>DataFrame containing point-wise curvature values
+with the following columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Mean</p></li>
+<li><p>Gaussian</p></li>
+<li><p>k1 (principal curvature 1)</p></li>
+<li><p>k2 (principal curvature 2)</p></li>
+</ul>
+</div></blockquote>
+<p>If the mesh is empty, a DataFrame with NaN values is returned.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.feature_extraction.extract_pyradiomics_features">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.feature_extraction.</span></span><span class="sig-name descname"><span class="pre">extract_pyradiomics_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imagePath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maskPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/feature_extraction.html#extract_pyradiomics_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.feature_extraction.extract_pyradiomics_features" title="Link to this definition"></a></dt>
+<dd><p>Extract selected PyRadiomics shape features from a masked image.</p>
+<p>The function initializes a PyRadiomics feature extractor, disables all
+features, and enables only the “shape” feature class to reduce
+computation time. It then extracts the requested features from the
+provided image and mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imagePath</strong> (<em>str</em>) – Path to the input NIfTI image file (.nii or .nii.gz).</p></li>
+<li><p><strong>maskPath</strong> (<em>str</em>) – Path to the corresponding binary mask file.</p></li>
+<li><p><strong>features</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of feature names to extract from the
+PyRadiomics result dictionary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary mapping feature names to their extracted values.
+If a requested feature is not found in the PyRadiomics output,
+its value is set to None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Only shape features are enabled.</p></li>
+<li><p>Scalar NumPy outputs are converted to native Python types.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.workflow.scripts.hsf_wrapper">
+<span id="hsf-wrapper"></span><h2>hsf_wrapper<a class="headerlink" href="#module-pipeline.workflow.scripts.hsf_wrapper" title="Link to this heading"></a></h2>
+<p>HSF Segmentation Wrapper Script
+Handles hippocampal segmentation using HSF (Hippocampal Segmentation Factory)</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.hsf_wrapper.run_hsf_segmentation">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.hsf_wrapper.</span></span><span class="sig-name descname"><span class="pre">run_hsf_segmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_t1w</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_seg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_left_crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_right_crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subject_anat_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ca_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hsf_left</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hsf_right</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hsf_left_crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hsf_right_crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pipeline/workflow/scripts/hsf_wrapper.html#run_hsf_segmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.hsf_wrapper.run_hsf_segmentation" title="Link to this definition"></a></dt>
+<dd><p>Run HSF segmentation with comprehensive logging and error handling.</p>
+<p>All parameters match the Snakemake rule params/wildcards exactly.</p>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.workflow.scripts.nii_parse">
+<span id="nii-parse"></span><h2>nii_parse<a class="headerlink" href="#module-pipeline.workflow.scripts.nii_parse" title="Link to this heading"></a></h2>
+<p>Mask processing utilities for hippocampal segmentation outputs.</p>
+<p>This module provides functions for:</p>
+<ol class="arabic simple">
+<li><p>Converting fuzzy/probabilistic segmentation masks into binary masks.</p></li>
+<li><p>Combining multiple labeled regions into a whole-hippocampus mask.</p></li>
+<li><p>Splitting multi-label masks into individual label masks.</p></li>
+</ol>
+<p>These utilities are typically used after HSF segmentation and before
+mesh generation or feature extraction steps in the pipeline.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.nii_parse.binarify_hd_mask">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.nii_parse.</span></span><span class="sig-name descname"><span class="pre">binarify_hd_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/nii_parse.html#binarify_hd_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.nii_parse.binarify_hd_mask" title="Link to this definition"></a></dt>
+<dd><p>Convert a fuzzy or probabilistic mask into a binary mask.</p>
+<p>The function thresholds the input mask at a fixed value (&gt; 128),
+converting it into a binary (0/1) mask. Spatial metadata from the
+original image is preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_path</strong> (<em>str</em>) – Path to the input mask image (e.g., NIfTI file).</p></li>
+<li><p><strong>output_path</strong> (<em>str</em>) – Path where the binary mask will be saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Threshold is currently fixed at 128.</p></li>
+<li><p>Output image is saved as unsigned 8-bit integer (uint8).</p></li>
+<li><p>Spatial information (origin, spacing, direction) is preserved.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.nii_parse.combine_labels">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.nii_parse.</span></span><span class="sig-name descname"><span class="pre">combine_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/nii_parse.html#combine_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.nii_parse.combine_labels" title="Link to this definition"></a></dt>
+<dd><p>Combine all non-zero labels from a multi-label mask into a single mask.</p>
+<p>Any voxel with a value greater than zero is set to 1, resulting in a
+whole-structure binary mask. This is typically used to create a
+whole-hippocampus mask from subfield segmentations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_path</strong> (<em>str</em>) – Path to the multi-label NIfTI mask file.</p></li>
+<li><p><strong>output_path</strong> (<em>str</em>) – Path where the combined binary mask will be saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>All labels &gt; 0 are merged into a single region.</p></li>
+<li><p>Output mask is stored as uint8.</p></li>
+<li><p>Original affine and header information are preserved.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.nii_parse.split_one_label">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.nii_parse.</span></span><span class="sig-name descname"><span class="pre">split_one_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/nii_parse.html#split_one_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.nii_parse.split_one_label" title="Link to this definition"></a></dt>
+<dd><p>Extract a single label from a multi-label mask.</p>
+<p>The function creates a binary mask where voxels matching the specified
+label are set to 1 and all others to 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_path</strong> (<em>str</em>) – Path to the multi-label NIfTI mask file.</p></li>
+<li><p><strong>output_path</strong> (<em>str</em>) – Path where the extracted binary mask will be saved.</p></li>
+<li><p><strong>label</strong> (<em>int</em><em> or </em><em>float</em>) – Label value to extract from the mask.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Output mask is stored as uint8.</p></li>
+<li><p>Affine and header information from the original image are preserved.</p></li>
+<li><p>Useful for isolating specific hippocampal subfields
+(e.g., DG, CA1, CA2, CA3, SUB).</p></li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.workflow.scripts.voxelToMesh">
+<span id="voxeltomesh"></span><h2>voxelToMesh<a class="headerlink" href="#module-pipeline.workflow.scripts.voxelToMesh" title="Link to this heading"></a></h2>
+<p>NIfTI to VTK mesh conversion utilities.</p>
+<p>This module converts binary NIfTI masks into 3D surface meshes (VTK format)
+using marching cubes. It includes preprocessing steps for mask cleanup,
+smoothing, and optional visualization outputs (PNG and HTML).</p>
+<p>The function is designed to handle empty or small masks gracefully,
+producing placeholder meshes when necessary to prevent pipeline crashes.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.workflow.scripts.voxelToMesh.nii_to_vtk">
+<span class="sig-prename descclassname"><span class="pre">pipeline.workflow.scripts.voxelToMesh.</span></span><span class="sig-name descname"><span class="pre">nii_to_vtk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_voxel_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_png_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_html_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_interactive_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/workflow/scripts/voxelToMesh.html#nii_to_vtk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.workflow.scripts.voxelToMesh.nii_to_vtk" title="Link to this definition"></a></dt>
+<dd><p>Convert a binary NIfTI mask to a smoothed VTK surface mesh.</p>
+<p>The function performs morphological cleanup, extracts a surface mesh
+using marching cubes, applies smoothing, computes normals, and saves
+the resulting mesh in VTK format.</p>
+<p>If the mask is empty or contains too few voxels, an empty placeholder
+mesh is created to allow the pipeline to continue safely.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_path</strong> (<em>str</em>) – Path to the input NIfTI mask file.</p></li>
+<li><p><strong>output_path</strong> (<em>str</em>) – Path where the VTK mesh will be saved.</p></li>
+<li><p><strong>min_voxel_count</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum number of voxels required to generate a mesh.
+Masks with fewer voxels will produce an empty mesh.
+Default is 20.</p></li>
+<li><p><strong>smooth_iters</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of smoothing iterations applied to the mesh.
+Default is 50.</p></li>
+<li><p><strong>plot_png_path</strong> (<em>str</em><em>, </em><em>optional</em>) – If provided, saves a PNG rendering of the mesh.</p></li>
+<li><p><strong>plot_html_path</strong> (<em>str</em><em>, </em><em>optional</em>) – If provided, saves an interactive HTML visualization.</p></li>
+<li><p><strong>enable_interactive_plot</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, opens an interactive mesh viewer.
+Not recommended in headless/container environments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Processing Steps:</dt><dd><ol class="arabic simple">
+<li><p>Load mask and convert to boolean array.</p></li>
+<li><dl class="simple">
+<dt>Perform morphological cleanup:</dt><dd><ul class="simple">
+<li><p>Fill small holes</p></li>
+<li><p>Binary closing</p></li>
+<li><p>Binary opening</p></li>
+<li><p>Remove small disconnected objects</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Extract surface using marching cubes.</p></li>
+<li><p>Apply smoothing and compute normals.</p></li>
+<li><p>Save mesh in binary VTK format.</p></li>
+<li><p>Optionally generate PNG or HTML visualizations.</p></li>
+</ol>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Empty or invalid masks produce placeholder VTK files.</p></li>
+<li><p>Designed for headless execution (e.g., Docker, HPC).</p></li>
+<li><p>Uses voxel spacing from the NIfTI header for correct scaling.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pipeline.run_utils.html" class="btn btn-neutral float-left" title="run_utils functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

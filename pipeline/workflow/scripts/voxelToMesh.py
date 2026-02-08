@@ -1,3 +1,14 @@
+"""
+NIfTI to VTK mesh conversion utilities.
+
+This module converts binary NIfTI masks into 3D surface meshes (VTK format)
+using marching cubes. It includes preprocessing steps for mask cleanup,
+smoothing, and optional visualization outputs (PNG and HTML).
+
+The function is designed to handle empty or small masks gracefully,
+producing placeholder meshes when necessary to prevent pipeline crashes.
+"""
+
 import nibabel as nib
 import numpy as np
 from skimage.measure import marching_cubes
@@ -7,8 +18,63 @@ import os
 import pyvista as pv
 
 
+def nii_to_vtk(
+    input_path,
+    output_path,
+    min_voxel_count=20,
+    smooth_iters=50,
+    plot_png_path=None,
+    plot_html_path=None,
+    enable_interactive_plot=False
+):
+    """
+    Convert a binary NIfTI mask to a smoothed VTK surface mesh.
 
-def nii_to_vtk(input_path, output_path, min_voxel_count=20, smooth_iters=50, plot_png_path=None, plot_html_path=None, enable_interactive_plot=False):
+    The function performs morphological cleanup, extracts a surface mesh
+    using marching cubes, applies smoothing, computes normals, and saves
+    the resulting mesh in VTK format.
+
+    If the mask is empty or contains too few voxels, an empty placeholder
+    mesh is created to allow the pipeline to continue safely.
+
+    Args:
+        input_path (str): Path to the input NIfTI mask file.
+        output_path (str): Path where the VTK mesh will be saved.
+        min_voxel_count (int, optional):
+            Minimum number of voxels required to generate a mesh.
+            Masks with fewer voxels will produce an empty mesh.
+            Default is 20.
+        smooth_iters (int, optional):
+            Number of smoothing iterations applied to the mesh.
+            Default is 50.
+        plot_png_path (str, optional):
+            If provided, saves a PNG rendering of the mesh.
+        plot_html_path (str, optional):
+            If provided, saves an interactive HTML visualization.
+        enable_interactive_plot (bool, optional):
+            If True, opens an interactive mesh viewer.
+            Not recommended in headless/container environments.
+
+    Returns:
+        None
+
+    Processing Steps:
+        1. Load mask and convert to boolean array.
+        2. Perform morphological cleanup:
+            - Fill small holes
+            - Binary closing
+            - Binary opening
+            - Remove small disconnected objects
+        3. Extract surface using marching cubes.
+        4. Apply smoothing and compute normals.
+        5. Save mesh in binary VTK format.
+        6. Optionally generate PNG or HTML visualizations.
+
+    Notes:
+        - Empty or invalid masks produce placeholder VTK files.
+        - Designed for headless execution (e.g., Docker, HPC).
+        - Uses voxel spacing from the NIfTI header for correct scaling.
+    """   
     img = nib.load(input_path)
     data = img.get_fdata().astype(bool)
     
