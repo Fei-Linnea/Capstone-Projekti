@@ -10,11 +10,11 @@ import threading
 from .config import RULE_DISPLAY_NAMES, SPINNER_FRAMES
 from .logger import tail_log_file
 from .progress import parse_progress, print_progress_bar
-from .snakemake_profile import get_snakemake_args, print_snakemake_config
 
-
-def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file, 
-                        profile_dir, log_dir, batch_size, pipeline_dir,
+def run_snakemake_batch(batch_subjects, batch_num, total_batches, profile,
+                        log_dir, batch_size, pipeline_dir,
+                        jobs=None, cores=None,
+                        set_threads=None, set_resources=None,
                         dry_run=False):
     """
     Run Snakemake for a batch of subjects with progress tracking.
@@ -23,8 +23,7 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
         batch_subjects: List of subject IDs for this batch
         batch_num: Batch number (1-indexed)
         total_batches: Total number of batches
-        config_file: Path to config.yaml
-        profile_dir: Snakemake profile directory (required)
+        profile: Path to Snakemake profile config
         log_dir: Directory for logs
         batch_size: Size of batch (for config)
         pipeline_dir: Working directory for Snakemake
@@ -46,35 +45,34 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, config_file,
     print(f"Log: {log_file}", file=sys.stderr)
     print(f"{'='*80}\n", file=sys.stderr)
     
-    # Print effective Snakemake configuration (on first batch)
-    if batch_num == 1 and profile_dir:
-        print_snakemake_config(profile_dir)
-    
     # Build Snakemake command with batch parameters
     # Note: batch_number is 0-indexed for Snakefile
     # All config values must be in a single --config argument
     cmd = [
         "snakemake",
         "--snakefile", "workflow/Snakefile",
-        "--configfile", config_file,
-        "--config", 
+        "--profile", profile,
+        "--config",
         f"batch_size={batch_size}",
         f"batch_number={batch_num - 1}",
-        f"log_dir={log_dir}",
-        "--rerun-incomplete",
-        "--keep-going"
+        f"log_dir={log_dir}"
     ]
-    
-    # Add dynamic Snakemake profile and resource arguments
-    if profile_dir:
-        dynamic_args = get_snakemake_args(profile_dir)
-        cmd.extend(dynamic_args)
-    else:
-        print("ERROR: --profile is required", file=sys.stderr)
-        return False
-    
+
+    # Add Snakemake execution flags (profile provides other defaults)
+    if jobs is not None:
+        cmd.extend(["--jobs", str(jobs)])
+    if cores is not None:
+        cmd.extend(["--cores", str(cores)])
+    if set_threads:
+        for entry in set_threads:
+            cmd.extend(["--set-threads", entry])
+    if set_resources:
+        for entry in set_resources:
+            cmd.extend(["--set-resources", entry])
     if dry_run:
         cmd.append("--dry-run")
+    
+    if dry_run:
         print(f"DRY RUN: {' '.join(cmd)}", file=sys.stderr)
         return True
     

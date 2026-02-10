@@ -45,6 +45,11 @@ apptainer run --writable-tmpfs \
   --batch-size 10
 ```
 
+Or one line command (without backslash):
+```bash
+apptainer run --writable-tmpfs --bind ./Dataset_Name:/data --bind ./logs:/app/logs hippocampus-pipeline.sif --profile config/profiles/tyks --batch-size 10
+```
+
 ### Command-Line Options
 
 **Available Pipeline Options:**
@@ -53,11 +58,14 @@ apptainer run --writable-tmpfs \
 |--------|-------------|----------|----------|
 | `--profile` | Snakemake profile directory (e.g., `config/profiles/tyks`) | None | **Yes** |
 | `--batch-size` | Number of subjects per batch | 5 | No |
+| `--jobs` | Max parallel Snakemake jobs | 8| No |
+| `--cores` | Total CPU cores available to Snakemake | autodetected or 4 | No |
+| `--set-threads` | Override rule threads (e.g., `hsf_segmentation=4`) | 1 | No |
 | `--cleanup` | Remove intermediate files after completion, keeping only `summary/all_features.csv` and error report | disabled | No |
 | `--dry-run` | Show what would be done without executing | disabled | No |
 | `--subjects` | Process specific subjects (e.g., `--subjects 01 02 03`) | all subjects | No |
 
-**Note:** The `--profile` flag is required to specify default execution settings (cores, memory, jobs). Use `config/profiles/tyks` for TYKS environment.
+**Note:** The `--profile` flag is required to specify default execution settings. Use `config/profiles/tyks` for TYKS environment.
 
 **Example with cleanup flag:**
 ```bash
@@ -80,46 +88,31 @@ apptainer run --writable-tmpfs \
   --subjects 01 02 03 04 05
 ```
 
-### Configuring Pipeline Resources (Dynamic Configuration)
-
-You can customize the Snakemake execution parameters at runtime using environment variables. This allows you to adjust resource allocation without modifying the container image. These override the defaults in `config/profiles/tyks/config.yaml`.
-
-**Available Environment Variables:**
-
-| Variable | Description | Default (from profile) |
-|----------|-------------|------------------------|
-| `SNAKEMAKE_JOBS` | Max parallel jobs to run | 8 |
-| `SNAKEMAKE_CORES` | Total CPU cores to use | 16 |
-| `SNAKEMAKE_MEM_MB` | Memory per job (MB) | 4000 |
-| `SNAKEMAKE_THREADS` | Threads per job | 2 |
-
-
-**Example with Custom Resources:**
+**Example with custom jobs and cores and rule thread override:**
 ```bash
 apptainer run --writable-tmpfs \
   --bind ./DatasetName:/data \
   --bind ./logs:/app/logs \
-  -e SNAKEMAKE_JOBS=12 \
-  -e SNAKEMAKE_CORES=20 \
-  -e SNAKEMAKE_MEM_MB=8000 \
-  -e SNAKEMAKE_THREADS=4 \
   hippocampus-pipeline.sif \
   --profile config/profiles/tyks \
-  --batch-size 10
+  --batch-size 10 \
+  --jobs 12 \
+  --cores 20 \
+  --set-threads hsf_segmentation=4 \
 ```
 
 **Recommended Settings for Different Machine Sizes:**
 
-| Machine RAM | batch-size | SNAKEMAKE_JOBS | SNAKEMAKE_CORES | SNAKEMAKE_MEM_MB |
-|-------------|-----------|----------------|-----------------|------------------|
-| 32 GB       | 10        | 4              | 8               | 4000             |
-| 64 GB       | 20        | 8              | 16              | 4000             |
-| 128 GB      | 40        | 16             | 32              | 8000             |
-| 256 GB      | 80        | 32             | 64              | 8000             |
+| Machine RAM | batch-size | jobs | cores | 
+|-------------|-----------|----------------|-----------------|
+| 32 GB       | 10        | 4              | 8               | 
+| 64 GB       | 20        | 8              | 16              | 
+| 128 GB      | 40        | 16             | 32              | 
+| 256 GB      | 80        | 32             | 64              |
 
 
 
-## Cleanup Option (Disk Space Management)
+## Cleanup Option
 
 The `--cleanup` flag removes all intermediate files after successful pipeline completion, keeping only the final `summary/all_features.csv` file and error report. 
 

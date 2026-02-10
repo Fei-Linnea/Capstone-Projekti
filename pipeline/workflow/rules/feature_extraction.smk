@@ -19,6 +19,9 @@ rule extract_pyradiomics_per_label:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
+    threads: 1
+    resources:
+        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -64,6 +67,9 @@ rule extract_pyradiomics_combined:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
+    threads: 1
+    resources:
+        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -111,6 +117,9 @@ rule extract_curvature_per_label:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.txt")
+    threads: 1
+    resources:
+        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -160,6 +169,9 @@ rule extract_curvature_combined:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.txt")
+    threads: 1
+    resources:
+        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -255,6 +267,9 @@ rule aggregate_subject_features:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_aggregate.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_aggregate.txt")
+    threads: 1
+    resources:
+        mem_mb=2000
     run:
         # ===== Read RADIOMICS features =====
         # Left hemisphere
@@ -394,6 +409,9 @@ rule aggregate_all_subjects:
         os.path.join(LOG_DIR, "feature_extraction", "aggregate_all.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "aggregate_all.txt")
+    threads: 1
+    resources:
+        mem_mb=2000
     run:
         # Create output directory
         Path(output.summary).parent.mkdir(parents=True, exist_ok=True)

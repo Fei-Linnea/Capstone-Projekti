@@ -23,6 +23,9 @@ rule mesh_per_label:
         os.path.join(LOG_DIR, "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
+    threads: 1
+    resources:
+        mem_mb=4000
     run:
         Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
         nii_to_vtk(
@@ -57,6 +60,9 @@ rule mesh_combined:
         os.path.join(LOG_DIR, "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
+    threads: 1
+    resources:
+        mem_mb=4000
     run:
         Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
         nii_to_vtk(

@@ -12,7 +12,6 @@ from datetime import datetime
 
 # Import all utilities from run_utils package
 from run_utils import (
-    DEFAULT_CONFIG_PATH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_PIPELINE_DIR,
     DEFAULT_LOG_BASE_DIR,
@@ -31,42 +30,35 @@ def main():
         description="Run hippocampus feature extraction pipeline in batches",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Environment variables (used as defaults if not specified via CLI):
-  PIPELINE_CONFIG       Config file path (default: config/config.yaml)
-  PIPELINE_BATCH_SIZE   Subjects per batch (default: 5)
-  PIPELINE_DIR          Pipeline working directory (default: /app/pipeline)
-  PIPELINE_LOG_DIR      Log base directory (default: /app/logs)
-  PIPELINE_DATA_DIR     BIDS data directory (default: /data)
-  PIPELINE_BIDS_PATTERN BIDS file pattern (default: sub-*/ses-*/anat/*_T1w.nii.gz)
-
 Examples:
-  # Run with default settings
+  # Run with defaults from profile
   python run_pipeline.py
 
   # Run with custom batch size
   python run_pipeline.py --batch-size 20
 
-  # Run with TYKS profile (recommended)
-  python run_pipeline.py --profile config/profiles/tyks --batch-size 20
+  # Override jobs and cores at runtime
+  python run_pipeline.py --jobs 16 --cores 32
+
+  # Override rule threads for specific rule
+  python run_pipeline.py --set-threads hsf_segmentation=4
 
   # Dry run (show what would be done)
   python run_pipeline.py --dry-run
 
   # Process specific subjects
   python run_pipeline.py --subjects 01 02 03 04 05
+
+  # Complete example with multiple overrides
+  python run_pipeline.py --batch-size 10 --jobs 8 --cores 16 --dry-run
         """
     )
     
     # Configuration arguments
     parser.add_argument(
-        "--config",
-        default=DEFAULT_CONFIG_PATH,
-        help=f"Path to config file (default: {DEFAULT_CONFIG_PATH})"
-    )
-    parser.add_argument(
         "--profile",
-        default=None,
-        help="Snakemake profile directory (e.g., config/profiles/tyks)"
+        required=True,
+        help="Snakemake profile config (e.g., config/profiles/tyks/config.yaml)"
     )
     
     # Processing arguments
@@ -75,6 +67,32 @@ Examples:
         type=int,
         default=DEFAULT_BATCH_SIZE,
         help=f"Number of subjects per batch (default: {DEFAULT_BATCH_SIZE})"
+    )
+
+    # Snakemake overrides (optional)
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=None,
+        help="Override Snakemake jobs (default from config/config.yaml)"
+    )
+    parser.add_argument(
+        "--cores",
+        type=int,
+        default=None,
+        help="Override Snakemake cores (default from config/config.yaml)"
+    )
+    parser.add_argument(
+        "--set-threads",
+        action="append",
+        default=None,
+        help="Override rule threads (e.g., hsf_segmentation=4). Can be used multiple times."
+    )
+    parser.add_argument(
+        "--set-resources",
+        action="append",
+        default=None,
+        help="Override rule resources (e.g., hsf_segmentation:mem_mb=16000). Can be used multiple times."
     )
     
     # Path arguments
@@ -129,16 +147,65 @@ Examples:
     print(f"{'='*80}", file=sys.stderr)
     print(f"Start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", file=sys.stderr)
     print(f"Log directory: {log_dir}", file=sys.stderr)
-    print(f"Config: {args.config}", file=sys.stderr)
+    print(f"Profile: {args.profile}", file=sys.stderr)
     print(f"Pipeline dir: {args.pipeline_dir}", file=sys.stderr)
     print(f"Data dir: {args.data_dir}", file=sys.stderr)
     print(f"Batch size: {args.batch_size}", file=sys.stderr)
-    if args.profile:
-        print(f"Profile: {args.profile}", file=sys.stderr)
+    # Load profile to display effective defaults
+    # Support both directory paths (e.g. config/profiles/tyks) and
+    # direct file paths (e.g. config/profiles/tyks/config.yaml).
+    profile_path = args.profile
+    # If profile is relative, resolve against pipeline_dir (inside container
+    # this is typically /app/pipeline, matching the Snakemake cwd).
+    if not os.path.isabs(profile_path):
+        profile_path = os.path.join(args.pipeline_dir, profile_path)
+
+    # If a directory is given, assume standard Snakemake profile layout
+    # with a config.yaml file inside it.
+    if os.path.isdir(profile_path):
+        profile_config_path = os.path.join(profile_path, "config.yaml")
+    else:
+        profile_config_path = profile_path
+
+    profile_data = {}
+    try:
+        with open(profile_config_path, "r") as f:
+            profile_data = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        print(f"ERROR: Profile not found: {profile_config_path}", file=sys.stderr)
+        sys.exit(1)
+
+    effective_jobs = args.jobs if args.jobs is not None else profile_data.get("jobs")
+    effective_cores = args.cores if args.cores is not None else profile_data.get("cores")
+    mem_mb = None
+    default_resources = profile_data.get("default-resources")
+    # Snakemake profiles typically use a list like ["mem_mb=4000"]
+    # but allow dict-style as well; handle both.
+    if isinstance(default_resources, dict):
+        mem_mb = default_resources.get("mem_mb")
+    elif isinstance(default_resources, list):
+        for item in default_resources:
+            if isinstance(item, str) and item.startswith("mem_mb="):
+                value = item.split("=", 1)[1]
+                try:
+                    mem_mb = int(value)
+                except ValueError:
+                    mem_mb = value
+                break
+
+    print(f"Jobs: {effective_jobs}", file=sys.stderr)
+    print(f"Cores: {effective_cores}", file=sys.stderr)
+    print(f"Memory/job: {mem_mb if mem_mb is not None else 'n/a'}", file=sys.stderr)
+    if args.set_threads:
+        overrides_display = ", ".join(args.set_threads)
+        print(f"Thread overrides: {overrides_display}", file=sys.stderr)
+    else:
+        print("Thread overrides: none (profile defaults)", file=sys.stderr)
+
     if args.dry_run:
         print("Mode: DRY RUN", file=sys.stderr)
     print(f"{'='*80}\n", file=sys.stderr)
-    
+
     # Get subjects list
     if args.subjects:
         subjects = args.subjects
@@ -171,11 +238,14 @@ Examples:
             batch_subjects=batch_subjects,
             batch_num=batch_num,
             total_batches=total_batches,
-            config_file=args.config,
-            profile_dir=args.profile,
+            profile=args.profile,
             log_dir=log_dir,
             batch_size=args.batch_size,
             pipeline_dir=args.pipeline_dir,
+            jobs=args.jobs,
+            cores=args.cores,
+            set_threads=args.set_threads,
+            set_resources=args.set_resources,
             dry_run=args.dry_run
         )
         
@@ -185,10 +255,13 @@ Examples:
     # Run aggregation if all batches succeeded
     if not failed_batches and not args.dry_run:
         aggregation_success = run_aggregation(
-            config_file=args.config,
-            profile_dir=args.profile,
+            profile=args.profile,
             log_dir=log_dir,
             pipeline_dir=args.pipeline_dir,
+            jobs=args.jobs,
+            cores=args.cores,
+            set_threads=args.set_threads,
+            set_resources=args.set_resources,
             dry_run=args.dry_run
         )
         
@@ -198,9 +271,7 @@ Examples:
     # Cleanup intermediate files if requested and pipeline succeeded
     if args.cleanup and not failed_batches:
         # Need to get derivatives_root from config
-        with open(args.config, 'r') as f:
-            config = yaml.safe_load(f)
-        derivatives_root = config.get('derivatives_root', '/data/derivatives')
+        derivatives_root = config_data.get('derivatives_root', '/data/derivatives')
         
         cleanup_success = cleanup_with_confirmation(
             derivatives_root=derivatives_root,

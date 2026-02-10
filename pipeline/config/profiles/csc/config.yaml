@@ -19,12 +19,13 @@ cluster: >
   --error=logs/slurm/%x-%j.err
 
 # Default resources for each job
+# Note: Individual rules specify their own mem_mb, threads, and time.
+# These are fallbacks and cluster-specific settings.
 default-resources:
-  - mem_mb=8000
-  - time="04:00:00"
-  - partition="serial"
-  - account="project_2001234"        # Replace with your project ID
-  - threads=4
+  mem_mb: 4000                      # Default memory (rules override this)
+  time: "01:00:00"                  # Default time limit (rules override this)
+  partition: "serial"               # Slurm partition
+  account: "project_2001234"        # Replace with your CSC project ID
 
 # Software deployment: Use Apptainer
 use-conda: false

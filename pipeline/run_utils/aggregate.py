@@ -7,15 +7,16 @@ import os
 import subprocess
 
 
-def run_aggregation(config_file, profile_dir, log_dir, pipeline_dir,
+def run_aggregation(profile, log_dir, pipeline_dir,
+                    jobs=None, cores=None,
+                    set_threads=None, set_resources=None,
                     dry_run=False):
     """
     Run the aggregation step after all batches are complete.
     This combines features from all subjects into final output files.
     
     Args:
-        config_file: Path to config.yaml
-        profile_dir: Snakemake profile directory (required)
+        profile: Path to Snakemake profile config
         log_dir: Directory for logs
         pipeline_dir: Working directory for Snakemake
         dry_run: If True, don't execute, just show commands
@@ -31,25 +32,37 @@ def run_aggregation(config_file, profile_dir, log_dir, pipeline_dir,
     print(f"{'='*80}\n", file=sys.stderr)
     
     # Run aggregation for all subjects (batch_size=0 means process all)
+    if not profile:
+        print("ERROR: --profile is required", file=sys.stderr)
+        return False
+
     cmd = [
         "snakemake",
         "--snakefile", "workflow/Snakefile",
-        "--configfile", config_file,
+        "--profile", profile,
         "--config",
         f"batch_size=0",
-        f"log_dir={log_dir}",
-        "--rerun-incomplete",
-        "aggregate_all_subjects"
+        f"log_dir={log_dir}"
     ]
-    
-    if profile_dir:
-        cmd.extend(["--profile", profile_dir])
-    else:
-        print("ERROR: --profile is required", file=sys.stderr)
-        return False
-    
+
+    # Add Snakemake execution flags (profile provides other defaults)
+    if jobs is not None:
+        cmd.extend(["--jobs", str(jobs)])
+    if cores is not None:
+        cmd.extend(["--cores", str(cores)])
+    # if set_threads:
+    #     for entry in set_threads:
+    #         cmd.extend(["--set-threads", entry])
+    # if set_resources:
+    #     for entry in set_resources:
+    #         cmd.extend(["--set-resources", entry])
     if dry_run:
         cmd.append("--dry-run")
+
+    # Add target rule at the end (after all flags)
+    cmd.append("aggregate_all_subjects")
+    
+    if dry_run:
         print(f"DRY RUN: {' '.join(cmd)}", file=sys.stderr)
         return True
     
