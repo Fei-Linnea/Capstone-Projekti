@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docker Usage Guide - Hippocampus Radiomics Pipeline &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Pipeline Deployment Strategies: Tyks vs CSC" href="deployment_strategy_comparison.html" />
+    <link rel="prev" title="User and Develeper Guide" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">User and Develeper Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Docker Usage Guide - Hippocampus Radiomics Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#build-the-docker-image">Build the Docker Image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-the-pipeline">Run the Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#recommended-automatic-batch-processing"><strong>Recommended: Automatic Batch Processing</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#powershell-example-windows">PowerShell Example (Windows)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#smaller-batches-lower-memory">Smaller Batches (Lower Memory)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#process-all-subjects-at-once-no-batching">Process All Subjects at Once (No Batching)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#resume-from-specific-batch">Resume from Specific Batch</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#output-structure">Output Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logs">Logs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#useful-commands">Useful Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#check-pipeline-help">Check Pipeline Help</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dry-run-preview-what-will-execute">Dry Run (Preview What Will Execute)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#skip-final-aggregation">Skip Final Aggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#out-of-memory-exit-code-9">Out of Memory (Exit Code -9)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#no-subjects-found">No Subjects Found</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mesh-generation-warnings">Mesh Generation Warnings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#empty-masks-failed-processing">Empty Masks/Failed Processing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#permission-issues-on-linux">Permission Issues on Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#basic-settings">Basic Settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hsf-segmentation-parameters">HSF Segmentation Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mesh-generation">Mesh Generation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#batch-processing-optional">Batch Processing (Optional)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#performance-notes">Performance Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="deployment_strategy_comparison.html">Pipeline Deployment Strategies: Tyks vs CSC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tyks_apptainer_conversion.html">For local testing,</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tyks_apptainer_conversion.html#converting-docker-image-to-apptainer-sif-for-csc-tyks">Converting Docker Image to Apptainer SIF for CSC/TYKS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rulegraph_explanation.html">Rule Graph Explanation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="planning.html">Conda Installaton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="planning.html#snakemake-installation-using-conda">Snakemake installation using Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="planning.html#use-linter-while-working-on-snakemake">Use Linter while working on Snakemake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="planning.html#proposal-architecture-for-using-snakemake">Proposal architecture for using Snakemake</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#pipeline">pipeline</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User and Develeper Guide</a></li>
+      <li class="breadcrumb-item active">Docker Usage Guide - Hippocampus Radiomics Pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/docker_usage.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="docker-usage-guide-hippocampus-radiomics-pipeline">
+<h1>Docker Usage Guide - Hippocampus Radiomics Pipeline<a class="headerlink" href="#docker-usage-guide-hippocampus-radiomics-pipeline" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>This guide shows how to run the hippocampal segmentation and radiomics feature extraction pipeline using Docker with your BIDS-formatted MRI dataset.</p>
+<p>The pipeline performs:</p>
+<ol class="arabic simple">
+<li><p><strong>HSF Segmentation</strong> - Hippocampal subfield segmentation</p></li>
+<li><p><strong>Data Processing</strong> - Label splitting and mask generation</p></li>
+<li><p><strong>Mesh Generation</strong> - 3D mesh creation from segmentations</p></li>
+<li><p><strong>Feature Extraction</strong> - PyRadiomics and curvature features</p></li>
+<li><p><strong>Aggregation</strong> - Combined feature summary across all subjects</p></li>
+</ol>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul>
+<li><p>Docker Desktop installed and running</p></li>
+<li><p>BIDS-formatted dataset with T1w images</p></li>
+<li><p>At least 8GB RAM allocated to Docker</p></li>
+<li><p>Expected structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset/
+├── sub-01/
+│   └── ses-1/
+│       └── anat/
+│           ├── sub-01_ses-1_T1w.nii.gz
+│           └── sub-01_ses-1_T1w.json
+├── sub-02/
+│   └── ses-1/
+│       └── anat/
+│           ├── sub-02_ses-1_T1w.nii.gz
+│           └── sub-02_ses-1_T1w.json
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="build-the-docker-image">
+<h2>Build the Docker Image<a class="headerlink" href="#build-the-docker-image" title="Link to this heading"></a></h2>
+<p>From the project root directory:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">build</span> <span class="o">-f</span> <span class="n">pipeline</span><span class="p">/</span><span class="n">Dockerfile</span> <span class="n">-t</span> <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">.</span>
+</pre></div>
+</div>
+<p>Build time: ~5-10 minutes (first time only)</p>
+</section>
+<section id="run-the-pipeline">
+<h2>Run the Pipeline<a class="headerlink" href="#run-the-pipeline" title="Link to this heading"></a></h2>
+<section id="recommended-automatic-batch-processing">
+<h3><strong>Recommended: Automatic Batch Processing</strong><a class="headerlink" href="#recommended-automatic-batch-processing" title="Link to this heading"></a></h3>
+<p>The pipeline includes automatic batching to handle large datasets efficiently:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Your\BIDS_Dataset:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">50</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span>
+</pre></div>
+</div>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--batch-size</span> <span class="pre">50</span></code> - Process 50 subjects per batch (adjust based on memory)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--cores</span> <span class="pre">4</span></code> - Use 4 CPU cores</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--memory=&quot;8g&quot;</span></code> - Allocate 8GB RAM to Docker</p></li>
+</ul>
+<p><strong>What happens:</strong></p>
+<ul class="simple">
+<li><p>Automatically discovers all subjects in dataset</p></li>
+<li><p>Processes them in batches of 50</p></li>
+<li><p>Continues to next batch automatically</p></li>
+<li><p>Runs final aggregation when complete</p></li>
+</ul>
+</section>
+<section id="powershell-example-windows">
+<h3>PowerShell Example (Windows)<a class="headerlink" href="#powershell-example-windows" title="Link to this heading"></a></h3>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># Full dataset processing with batching</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Work\BigBrain\data\Fulldataset:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">50</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span>
+</pre></div>
+</div>
+</section>
+<section id="smaller-batches-lower-memory">
+<h3>Smaller Batches (Lower Memory)<a class="headerlink" href="#smaller-batches-lower-memory" title="Link to this heading"></a></h3>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># Process 10 subjects per batch (safer for 8GB RAM)</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Work\BigBrain\data\Fulldataset:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">10</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span>
+</pre></div>
+</div>
+</section>
+<section id="process-all-subjects-at-once-no-batching">
+<h3>Process All Subjects at Once (No Batching)<a class="headerlink" href="#process-all-subjects-at-once-no-batching" title="Link to this heading"></a></h3>
+<p>⚠️ Only for small datasets (&lt;50 subjects) or high-memory systems:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;16g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Work\BigBrain\data\Fulldataset:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">0</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">8</span>
+</pre></div>
+</div>
+</section>
+<section id="resume-from-specific-batch">
+<h3>Resume from Specific Batch<a class="headerlink" href="#resume-from-specific-batch" title="Link to this heading"></a></h3>
+<p>If processing was interrupted, resume from a specific batch:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Work\BigBrain\data\Fulldataset:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">50</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-start-batch</span> <span class="n">5</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="output-structure">
+<h2>Output Structure<a class="headerlink" href="#output-structure" title="Link to this heading"></a></h2>
+<p>Results are saved in your dataset directory under <code class="docutils literal notranslate"><span class="pre">derivatives/</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset/
+├── sub-01/
+│   └── ses-1/
+│       └── anat/
+│           └── sub-01_ses-1_T1w.nii.gz
+└── derivatives/
+    ├── sub-01/
+    │   └── ses-1/
+    │       ├── anat/                           # Segmentations &amp; masks
+    │       │   ├── *_desc-hsf_dseg.nii.gz      # Full segmentation
+    │       │   ├── *_hemi-L_seg_crop.nii.gz    # Left hemisphere
+    │       │   ├── *_hemi-R_seg_crop.nii.gz    # Right hemisphere
+    │       │   ├── *_hemi-{L|R}_label-{DG|CA1|CA2|CA3|SUB}_mask.nii.gz
+    │       │   └── *_hemi-{L|R}_mask.nii.gz    # Combined masks
+    │       ├── meshes/                          # 3D meshes + visualizations
+    │       │   ├── *_label-{DG|CA1|CA2|CA3|SUB}_mesh.vtk
+    │       │   ├── *_label-{DG|CA1|CA2|CA3|SUB}_mesh.png
+    │       │   ├── *_combined_mesh.vtk
+    │       │   └── *_combined_mesh.png
+    │       └── features/                        # Extracted features
+    │           ├── *_label-{DG|CA1|CA2|CA3|SUB}_pyradiomics.csv
+    │           ├── *_combined_pyradiomics.csv
+    │           ├── *_label-{DG|CA1|CA2|CA3|SUB}_curvature.csv
+    │           ├── *_combined_curvature.csv
+    │           └── *_all_features.csv          # Per-subject summary
+    └── summary/
+        ├── all_features.csv                     # ✅ FINAL OUTPUT
+        └── processing_issues.txt                # Quality report
+</pre></div>
+</div>
+<p><strong>Key Output Files:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">derivatives/summary/all_features.csv</span></code> - <strong>Main result</strong>: All subjects aggregated</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">derivatives/summary/processing_issues.txt</span></code> - Lists subjects with processing issues</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">derivatives/sub-XX/ses-Y/features/*_all_features.csv</span></code> - Per-subject features</p></li>
+</ul>
+</section>
+<section id="logs">
+<h2>Logs<a class="headerlink" href="#logs" title="Link to this heading"></a></h2>
+<p>Logs are written to the mounted logs directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>logs/
+├── hsf/                      # Segmentation logs
+├── data_processing/          # Label splitting logs
+├── mesh/                     # Mesh generation logs
+└── feature_extraction/       # Feature extraction logs
+</pre></div>
+</div>
+</section>
+<section id="useful-commands">
+<h2>Useful Commands<a class="headerlink" href="#useful-commands" title="Link to this heading"></a></h2>
+<section id="check-pipeline-help">
+<h3>Check Pipeline Help<a class="headerlink" href="#check-pipeline-help" title="Link to this heading"></a></h3>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">-</span><span class="n">-help</span>
+</pre></div>
+</div>
+</section>
+<section id="dry-run-preview-what-will-execute">
+<h3>Dry Run (Preview What Will Execute)<a class="headerlink" href="#dry-run-preview-what-will-execute" title="Link to this heading"></a></h3>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">10</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-skip-aggregation</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-dry-run</span>
+</pre></div>
+</div>
+</section>
+<section id="skip-final-aggregation">
+<h3>Skip Final Aggregation<a class="headerlink" href="#skip-final-aggregation" title="Link to this heading"></a></h3>
+<p>If you only want to process batches without final aggregation:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">50</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-skip-aggregation</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="out-of-memory-exit-code-9">
+<h3>Out of Memory (Exit Code -9)<a class="headerlink" href="#out-of-memory-exit-code-9" title="Link to this heading"></a></h3>
+<p>If the container crashes with “Exit code -9”:</p>
+<ul class="simple">
+<li><p><strong>Reduce batch size</strong>: Use <code class="docutils literal notranslate"><span class="pre">--batch-size</span> <span class="pre">10</span></code> instead of 50</p></li>
+<li><p><strong>Increase Docker memory</strong>: Allocate 12-16GB in Docker Desktop settings</p></li>
+<li><p><strong>Use fewer cores</strong>: Try <code class="docutils literal notranslate"><span class="pre">--cores</span> <span class="pre">2</span></code></p></li>
+</ul>
+</section>
+<section id="no-subjects-found">
+<h3>No Subjects Found<a class="headerlink" href="#no-subjects-found" title="Link to this heading"></a></h3>
+<p>Check dataset structure and discovery:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># The wrapper shows discovered subjects on startup</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">1</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">1</span>
+</pre></div>
+</div>
+<p>Look for: <code class="docutils literal notranslate"><span class="pre">[INFO]</span> <span class="pre">Found</span> <span class="pre">XXX</span> <span class="pre">subject-session</span> <span class="pre">pairs</span></code></p>
+</section>
+<section id="mesh-generation-warnings">
+<h3>Mesh Generation Warnings<a class="headerlink" href="#mesh-generation-warnings" title="Link to this heading"></a></h3>
+<p>VTK/EGL warnings like “bad X server connection” are <strong>expected and harmless</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>vtkXOpenGLRenderWindow: bad X server connection. DISPLAY=
+Failed to load EGL! Please install the EGL library...
+</pre></div>
+</div>
+<p>The pipeline uses software rendering (OSMesa) and meshes are generated correctly.</p>
+</section>
+<section id="empty-masks-failed-processing">
+<h3>Empty Masks/Failed Processing<a class="headerlink" href="#empty-masks-failed-processing" title="Link to this heading"></a></h3>
+<p>Some subjects may have empty subregion masks (e.g., CA2 too small). This is normal:</p>
+<ul class="simple">
+<li><p>Empty masks are handled gracefully</p></li>
+<li><p>Pipeline continues processing</p></li>
+<li><p>Issues are logged in <code class="docutils literal notranslate"><span class="pre">derivatives/summary/processing_issues.txt</span></code></p></li>
+</ul>
+</section>
+<section id="permission-issues-on-linux">
+<h3>Permission Issues on Linux<a class="headerlink" href="#permission-issues-on-linux" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--user<span class="w"> </span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span>:<span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--security-opt<span class="w"> </span><span class="nv">seccomp</span><span class="o">=</span>unconfined<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory<span class="o">=</span><span class="s2">&quot;8g&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;/path/to/data:/data&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/logs:/app/logs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cores<span class="w"> </span><span class="m">4</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">pipeline/config/config.yaml</span></code> to customize:</p>
+<section id="basic-settings">
+<h3>Basic Settings<a class="headerlink" href="#basic-settings" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">bids_root</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data&quot;</span>
+<span class="nt">derivatives_root</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/derivatives/&quot;</span>
+<span class="nt">cores</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="nt">memory_mb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span>
+</pre></div>
+</div>
+</section>
+<section id="hsf-segmentation-parameters">
+<h3>HSF Segmentation Parameters<a class="headerlink" href="#hsf-segmentation-parameters" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">hsf_params</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">contrast</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;t1&quot;</span>
+<span class="w">  </span><span class="nt">margin</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[8,8,8]&quot;</span>
+<span class="w">  </span><span class="nt">segmentation_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;single_fast&quot;</span><span class="w">  </span><span class="c1"># or single_accurate</span>
+<span class="w">  </span><span class="nt">ca_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1/2/3&quot;</span><span class="w">                   </span><span class="c1"># Separate CA1/CA2/CA3</span>
+</pre></div>
+</div>
+</section>
+<section id="mesh-generation">
+<h3>Mesh Generation<a class="headerlink" href="#mesh-generation" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">mesh_params</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">min_voxel_count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">  </span><span class="nt">smooth_iters</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">  </span><span class="nt">decimation_degree</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.7</span>
+</pre></div>
+</div>
+</section>
+<section id="batch-processing-optional">
+<h3>Batch Processing (Optional)<a class="headerlink" href="#batch-processing-optional" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">      </span><span class="c1"># Default batch size (0 = no batching)</span>
+<span class="nt">batch_number</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">     </span><span class="c1"># Starting batch</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="performance-notes">
+<h2>Performance Notes<a class="headerlink" href="#performance-notes" title="Link to this heading"></a></h2>
+<p><strong>Timing per subject:</strong></p>
+<ul class="simple">
+<li><p>Segmentation: ~5-10 minutes</p></li>
+<li><p>Data processing: ~1 minute</p></li>
+<li><p>Mesh generation: ~1-2 minutes</p></li>
+<li><p>Feature extraction: ~2-3 minutes</p></li>
+<li><p><strong>Total: ~10-20 minutes per subject</strong></p></li>
+</ul>
+<p><strong>For 300 subjects:</strong></p>
+<ul class="simple">
+<li><p>Sequential: ~50-100 hours</p></li>
+<li><p>With 4 cores + batching: ~12-25 hours</p></li>
+</ul>
+<p><strong>Recommendations:</strong></p>
+<ul class="simple">
+<li><p>Use batch size 50 for datasets &gt;100 subjects</p></li>
+<li><p>Use batch size 10-25 for 8GB RAM systems</p></li>
+<li><p>Allocate 16GB RAM for batch size 100+</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="User and Develeper Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="deployment_strategy_comparison.html" class="btn btn-neutral float-right" title="Pipeline Deployment Strategies: Tyks vs CSC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

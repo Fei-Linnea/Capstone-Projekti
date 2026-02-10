@@ -1,0 +1,255 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pipeline.workflow.scripts.aggregate_data &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">User and Develeper Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html#pipeline">pipeline</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pipeline.workflow.scripts.aggregate_data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pipeline.workflow.scripts.aggregate_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Aggregation utilities for radiomics and curvature feature data.</span>
+
+<span class="sd">This module provides helper functions to:</span>
+
+<span class="sd">1. Combine left/right hemisphere feature dictionaries into a structured</span>
+<span class="sd">   region-level dictionary.</span>
+<span class="sd">2. Convert aggregated feature dictionaries into a single flattened row</span>
+<span class="sd">   suitable for CSV export.</span>
+<span class="sd">3. Append structured feature rows to a CSV file, creating headers if needed.</span>
+
+<span class="sd">These functions are used during the final aggregation stage of the</span>
+<span class="sd">hippocampus radiomic feature extraction pipeline.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">re</span>
+
+
+<div class="viewcode-block" id="aggregate_region_data">
+<a class="viewcode-back" href="../../../../pipeline.workflow.scripts.html#pipeline.workflow.scripts.aggregate_data.aggregate_region_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">aggregate_region_data</span><span class="p">(</span><span class="n">hippocampus_data_L</span><span class="p">,</span> <span class="n">DG_data_L</span><span class="p">,</span> <span class="n">CA1_data_L</span><span class="p">,</span> <span class="n">CA2_data_L</span><span class="p">,</span> <span class="n">CA3_data_L</span><span class="p">,</span> <span class="n">SUB_data_L</span><span class="p">,</span>
+                          <span class="n">hippocampus_data_R</span><span class="p">,</span> <span class="n">DG_data_R</span><span class="p">,</span> <span class="n">CA1_data_R</span><span class="p">,</span> <span class="n">CA2_data_R</span><span class="p">,</span> <span class="n">CA3_data_R</span><span class="p">,</span> <span class="n">SUB_data_R</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Combine region-wise radiomics or curvature data for both hemispheres.</span>
+
+<span class="sd">    This function groups feature dictionaries by anatomical region and</span>
+<span class="sd">    hemisphere (Left/Right) into a structured nested dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        hippocampus_data_L (dict): Feature dictionary for left whole hippocampus.</span>
+<span class="sd">        DG_data_L (dict): Feature dictionary for left dentate gyrus.</span>
+<span class="sd">        CA1_data_L (dict): Feature dictionary for left CA1.</span>
+<span class="sd">        CA2_data_L (dict): Feature dictionary for left CA2.</span>
+<span class="sd">        CA3_data_L (dict): Feature dictionary for left CA3.</span>
+<span class="sd">        SUB_data_L (dict): Feature dictionary for left subiculum.</span>
+<span class="sd">        hippocampus_data_R (dict): Feature dictionary for right whole hippocampus.</span>
+<span class="sd">        DG_data_R (dict): Feature dictionary for right dentate gyrus.</span>
+<span class="sd">        CA1_data_R (dict): Feature dictionary for right CA1.</span>
+<span class="sd">        CA2_data_R (dict): Feature dictionary for right CA2.</span>
+<span class="sd">        CA3_data_R (dict): Feature dictionary for right CA3.</span>
+<span class="sd">        SUB_data_R (dict): Feature dictionary for right subiculum.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Nested dictionary structured as:</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;RegionName&quot;: {</span>
+<span class="sd">                    &quot;L&quot;: {...},</span>
+<span class="sd">                    &quot;R&quot;: {...}</span>
+<span class="sd">                }</span>
+<span class="sd">            }</span>
+
+<span class="sd">        Where region names include:</span>
+<span class="sd">        - Hippocampus</span>
+<span class="sd">        - DG</span>
+<span class="sd">        - CA1</span>
+<span class="sd">        - CA2</span>
+<span class="sd">        - CA3</span>
+<span class="sd">        - SUB</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">regions_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">regions_data</span><span class="p">[</span><span class="s1">&#39;Hippocampus&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;L&quot;</span><span class="p">:</span> <span class="n">hippocampus_data_L</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">hippocampus_data_R</span><span class="p">}</span>
+    <span class="n">regions_data</span><span class="p">[</span><span class="s1">&#39;DG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;L&quot;</span><span class="p">:</span> <span class="n">DG_data_L</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">DG_data_R</span><span class="p">}</span>
+    <span class="n">regions_data</span><span class="p">[</span><span class="s1">&#39;CA1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;L&quot;</span><span class="p">:</span> <span class="n">CA1_data_L</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">CA1_data_R</span><span class="p">}</span>
+    <span class="n">regions_data</span><span class="p">[</span><span class="s1">&#39;CA2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;L&quot;</span><span class="p">:</span> <span class="n">CA2_data_L</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">CA2_data_R</span><span class="p">}</span>
+    <span class="n">regions_data</span><span class="p">[</span><span class="s1">&#39;CA3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;L&quot;</span><span class="p">:</span> <span class="n">CA3_data_L</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">CA3_data_R</span><span class="p">}</span>
+    <span class="n">regions_data</span><span class="p">[</span><span class="s1">&#39;SUB&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;L&quot;</span><span class="p">:</span> <span class="n">SUB_data_L</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">SUB_data_R</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">regions_data</span></div>
+
+
+
+<div class="viewcode-block" id="form_row_from_data">
+<a class="viewcode-back" href="../../../../pipeline.workflow.scripts.html#pipeline.workflow.scripts.aggregate_data.form_row_from_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">form_row_from_data</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">radiomics_data</span><span class="p">,</span> <span class="n">curvature_data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flatten radiomics and curvature feature dictionaries into a single CSV row.</span>
+
+<span class="sd">    This function extracts subject and session identifiers from a BIDS-formatted</span>
+<span class="sd">    filename and combines all region- and hemisphere-specific radiomics and</span>
+<span class="sd">    curvature metrics into a single flat dictionary suitable for CSV writing.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_path (str): Path to the input image file. Expected to follow</span>
+<span class="sd">            BIDS naming convention (e.g., sub-01_ses-1_T1w.nii.gz).</span>
+<span class="sd">        radiomics_data (dict): Nested region dictionary produced by</span>
+<span class="sd">            ``aggregate_region_data`` containing radiomics features.</span>
+<span class="sd">        curvature_data (dict): Nested region dictionary produced by</span>
+<span class="sd">            ``aggregate_region_data`` containing curvature metrics.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A flattened dictionary representing one subject/session row.</span>
+<span class="sd">        Keys follow this naming structure:</span>
+
+<span class="sd">        - Radiomics_&lt;Region&gt;_&lt;Side&gt;_&lt;FeatureName&gt;</span>
+<span class="sd">        - Curvature_&lt;Region&gt;_&lt;Side&gt;_&lt;CurvatureType&gt;_curvature_&lt;Statistic&gt;</span>
+
+<span class="sd">        Additionally includes:</span>
+<span class="sd">        - Subject</span>
+<span class="sd">        - Session</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Extract subject and session identifiers from BIDS filename</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+    <span class="n">sub_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\bsub-([^_]+)&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">ses_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;ses-([^_]+)&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="n">sub_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">sub_match</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">ses_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">ses_match</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="c1"># First elements: Subject and Session</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Subject&#39;</span><span class="p">:</span> <span class="n">subject</span><span class="p">,</span> <span class="s1">&#39;Session&#39;</span><span class="p">:</span> <span class="n">session</span><span class="p">}</span>
+
+    <span class="c1"># Add data to the row</span>
+    <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Hippocampus&#39;</span><span class="p">,</span> <span class="s1">&#39;DG&#39;</span><span class="p">,</span> <span class="s1">&#39;CA1&#39;</span><span class="p">,</span> <span class="s1">&#39;CA2&#39;</span><span class="p">,</span> <span class="s1">&#39;CA3&#39;</span><span class="p">,</span> <span class="s1">&#39;SUB&#39;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">]:</span>
+            <span class="c1"># Add Radiomics features</span>
+            <span class="k">for</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">radiomics_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">side</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">clean_feature_name</span> <span class="o">=</span> <span class="n">feature_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;original_shape_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;Radiomics_</span><span class="si">{</span><span class="n">region</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">clean_feature_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="c1"># Add Curvature metrics</span>
+            <span class="k">for</span> <span class="n">curvature_type</span><span class="p">,</span> <span class="n">stats</span> <span class="ow">in</span> <span class="n">curvature_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">side</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">stat_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;Curvature_</span><span class="si">{</span><span class="n">region</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">curvature_type</span><span class="si">}</span><span class="s1">_curvature_</span><span class="si">{</span><span class="n">stat_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">row</span></div>
+
+
+
+<div class="viewcode-block" id="append_csv">
+<a class="viewcode-back" href="../../../../pipeline.workflow.scripts.html#pipeline.workflow.scripts.aggregate_data.append_csv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">append_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Append a feature row to a CSV file.</span>
+
+<span class="sd">    If the CSV file does not exist, it is created and a header row is written</span>
+<span class="sd">    automatically. If it already exists, the new row is appended.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        csv_path (str): Path to the CSV file.</span>
+<span class="sd">        row (dict): Dictionary representing one subject/session row,</span>
+<span class="sd">            typically produced by ``form_row_from_data``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_exists</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_exists</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
