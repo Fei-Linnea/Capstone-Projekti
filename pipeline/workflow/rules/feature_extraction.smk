@@ -23,6 +23,7 @@ rule extract_pyradiomics_per_label:
     resources:
         mem_mb=3000
     run:
+        from scripts.feature_extraction import extract_pyradiomics_features
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -71,6 +72,7 @@ rule extract_pyradiomics_combined:
     resources:
         mem_mb=3000
     run:
+        from scripts.feature_extraction import extract_pyradiomics_features
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -121,6 +123,7 @@ rule extract_curvature_per_label:
     resources:
         mem_mb=3000
     run:
+        from scripts.feature_extraction import extract_curvatures, calculate_curv_metrics
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -173,6 +176,7 @@ rule extract_curvature_combined:
     resources:
         mem_mb=3000
     run:
+        from scripts.feature_extraction import extract_curvatures, calculate_curv_metrics
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
         
@@ -271,6 +275,7 @@ rule aggregate_subject_features:
     resources:
         mem_mb=2000
     run:
+        from scripts.aggregate_data import aggregate_region_data, form_row_from_data
         # ===== Read RADIOMICS features =====
         # Left hemisphere
         label_radiomics_L = {}

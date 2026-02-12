@@ -21,6 +21,7 @@ rule split_label:
     resources:
         mem_mb=200
     run:
+        from scripts.nii_parse import split_one_label
         Path(output.label_mask).parent.mkdir(parents=True, exist_ok=True)
         split_one_label(input.seg_crop, output.label_mask, params.label_value)
         Path(log[0]).write_text(f"Split label {wildcards.label} (value {params.label_value}) from {input.seg_crop}\nOutput: {output.label_mask}\n")
@@ -40,6 +41,7 @@ rule combine_labels:
     resources:
         mem_mb=2000
     run:
+        from scripts.nii_parse import combine_labels
         Path(output.combined_mask).parent.mkdir(parents=True, exist_ok=True)
         combine_labels(input.seg_crop, output.combined_mask)
         Path(log[0]).write_text(f"Combined labels from {input.seg_crop}\nOutput: {output.combined_mask}\n")

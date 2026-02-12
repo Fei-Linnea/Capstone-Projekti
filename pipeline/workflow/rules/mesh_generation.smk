@@ -27,6 +27,7 @@ rule mesh_per_label:
     resources:
         mem_mb=4000
     run:
+        from scripts.voxelToMesh import nii_to_vtk
         Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
         nii_to_vtk(
             input.mask,
@@ -64,6 +65,7 @@ rule mesh_combined:
     resources:
         mem_mb=4000
     run:
+        from scripts.voxelToMesh import nii_to_vtk
         Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
         nii_to_vtk(
             input.mask,
