@@ -9,6 +9,7 @@ stages:
   - test
   - secret-detection
   - publish
+  - deploy
 variables:
   SECRET_DETECTION_ENABLED: 'true'
 secret_detection:
@@ -25,3 +26,15 @@ publish:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -f pipeline/Dockerfile -t "$CI_REGISTRY_IMAGE:hippocampus-pipeline" .
     - docker push "$CI_REGISTRY_IMAGE:hippocampus-pipeline"
+
+pages:
+  stage: deploy
+  image: python:3.11
+  script:
+    - pip install -r requirements.txt
+    - mv _build/html public
+  artifacts:
+    paths:
+      - public
+  only:
+    - development
