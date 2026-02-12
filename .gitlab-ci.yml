@@ -32,7 +32,7 @@ pages:
   image: python:3.11
   script:
     - pip install -r requirements.txt
-    - mv _build/html public
+    - mv radiomic-feature-extraction-hippocampus-morphometry/docs/build/html public
   artifacts:
     paths:
       - public
