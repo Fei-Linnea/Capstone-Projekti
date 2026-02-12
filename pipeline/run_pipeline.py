@@ -270,9 +270,17 @@ Examples:
     
     # Cleanup intermediate files if requested and pipeline succeeded
     if args.cleanup and not failed_batches:
-        # Need to get derivatives_root from config
-        derivatives_root = config_data.get('derivatives_root', '/data/derivatives')
-        
+        # Read derivatives_root from pipeline config file
+        pipeline_config_path = os.path.join(args.pipeline_dir, "config", "config.yaml")
+        derivatives_root = "/data/derivatives"
+        try:
+            with open(pipeline_config_path, "r") as f:
+                cfg = yaml.safe_load(f) or {}
+                derivatives_root = cfg.get("derivatives_root", derivatives_root)
+        except Exception:
+            # Fall back to default if config cannot be read
+            pass
+
         cleanup_success = cleanup_with_confirmation(
             derivatives_root=derivatives_root,
             dry_run=args.dry_run
