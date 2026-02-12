@@ -9,8 +9,9 @@ bids_root: "/data"
 # Derivatives output directory
 derivatives_root: "/data/derivatives/"
 
-# Logging directory (timestamped, set by wrapper script)
-log_dir: "/app/logs"
+# Logging directory - omit to use derivatives_root/logs (CSC compatible)
+# For Docker: set via run_pipeline.py wrapper
+# log_dir: "/app/logs"
 
 # HSF segmentation parameters
 hsf_params:
