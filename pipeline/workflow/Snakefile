@@ -26,7 +26,8 @@ container: CONTAINER_IMAGE
 # Extract configuration values
 BIDS_ROOT = config["bids_root"]
 DERIVATIVES_ROOT = config["derivatives_root"]
-LOG_DIR = config.get("log_dir", "/app/logs")
+# Default log dir: use derivatives/logs for CSC compatibility (not /app/logs which is read-only)
+LOG_DIR = config.get("log_dir", os.path.join(DERIVATIVES_ROOT, "logs"))
 
 # HSF segmentation parameters
 HSF_PARAMS = config["hsf_params"]
