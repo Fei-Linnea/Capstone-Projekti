@@ -12,6 +12,7 @@ from datetime import datetime
 
 # Import all utilities from run_utils package
 from run_utils import (
+    DEFAULT_CONFIG_PATH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_PIPELINE_DIR,
     DEFAULT_LOG_BASE_DIR,
@@ -270,14 +271,16 @@ Examples:
     
     # Cleanup intermediate files if requested and pipeline succeeded
     if args.cleanup and not failed_batches:
-        # Need to get derivatives_root from config
-        derivatives_root = config_data.get('derivatives_root', '/data/derivatives')
+        # Need to get derivatives_root from config/config.yaml
+        config_path = os.path.join(os.path.dirname(__file__), DEFAULT_CONFIG_PATH)
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f) or {}
+        derivatives_root = config['derivatives_root']
         
         cleanup_success = cleanup_with_confirmation(
             derivatives_root=derivatives_root,
             dry_run=args.dry_run
         )
-        
         if not cleanup_success:
             print("⚠ Warning: Cleanup encountered errors (pipeline results preserved)", file=sys.stderr)
     

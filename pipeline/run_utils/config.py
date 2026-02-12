@@ -7,6 +7,7 @@ import os
 # ============================================================================
 # Configuration defaults
 # ============================================================================
+DEFAULT_CONFIG_PATH = "config/config.yaml"
 DEFAULT_JOBS = 8
 DEFAULT_CORES = os.cpu_count() or 4
 DEFAULT_BATCH_SIZE = int(os.environ.get("PIPELINE_BATCH_SIZE", "5"))
