@@ -14,7 +14,8 @@ rule extract_pyradiomics_per_label:
         features = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_pyradiomics.csv")
     params:
-        features = ['original_shape_MeshVolume', 'original_shape_SurfaceVolumeRatio']
+        scripts_dir = os.path.join(workflow.basedir, "scripts"),
+        feature_list = "original_shape_MeshVolume original_shape_SurfaceVolumeRatio"
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
     benchmark:
@@ -22,37 +23,19 @@ rule extract_pyradiomics_per_label:
     threads: 1
     resources:
         mem_mb=3000
-    run:
-        from scripts.feature_extraction import extract_pyradiomics_features
-        # Create output directory
-        Path(output.features).parent.mkdir(parents=True, exist_ok=True)
-        
-        # Extract features
-        features_dict = extract_pyradiomics_features(
-            input.image,
-            input.mask,
-            params.features
-        )
-        
-        # Add metadata
-        features_dict['subject'] = wildcards.subject
-        features_dict['session'] = wildcards.session
-        features_dict['hemisphere'] = wildcards.hemi
-        features_dict['label'] = wildcards.label
-        
-        # Convert to DataFrame and save
-        df = pd.DataFrame([features_dict])
-        df.to_csv(output.features, index=False)
-        
-        # Write log
-        Path(log[0]).write_text(
-            f"Extracted PyRadiomics features\n"
-            f"Subject: {wildcards.subject}, Session: {wildcards.session}\n"
-            f"Hemisphere: {wildcards.hemi}, Label: {wildcards.label}\n"
-            f"Image: {input.image}\n"
-            f"Mask: {input.mask}\n"
-            f"Output: {output.features}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/feature_extraction.py pyradiomics \
+            --image {input.image} \
+            --mask {input.mask} \
+            --features {params.feature_list} \
+            --subject {wildcards.subject} \
+            --session {wildcards.session} \
+            --hemisphere {wildcards.hemi} \
+            --label {wildcards.label} \
+            --output {output.features} \
+            > {log} 2>&1
+        """
 
 
 rule extract_pyradiomics_combined:
@@ -63,7 +46,8 @@ rule extract_pyradiomics_combined:
         features = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                "sub-{subject}_ses-{session}_hemi-{hemi}_combined_pyradiomics.csv")
     params:
-        features = ['original_shape_MeshVolume', 'original_shape_SurfaceVolumeRatio']
+        scripts_dir = os.path.join(workflow.basedir, "scripts"),
+        feature_list = "original_shape_MeshVolume original_shape_SurfaceVolumeRatio"
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
     benchmark:
@@ -71,37 +55,19 @@ rule extract_pyradiomics_combined:
     threads: 1
     resources:
         mem_mb=3000
-    run:
-        from scripts.feature_extraction import extract_pyradiomics_features
-        # Create output directory
-        Path(output.features).parent.mkdir(parents=True, exist_ok=True)
-        
-        # Extract features
-        features_dict = extract_pyradiomics_features(
-            input.image,
-            input.mask,
-            params.features
-        )
-        
-        # Add metadata
-        features_dict['subject'] = wildcards.subject
-        features_dict['session'] = wildcards.session
-        features_dict['hemisphere'] = wildcards.hemi
-        features_dict['label'] = 'combined'
-        
-        # Convert to DataFrame and save
-        df = pd.DataFrame([features_dict])
-        df.to_csv(output.features, index=False)
-        
-        # Write log
-        Path(log[0]).write_text(
-            f"Extracted PyRadiomics features (combined)\n"
-            f"Subject: {wildcards.subject}, Session: {wildcards.session}\n"
-            f"Hemisphere: {wildcards.hemi}\n"
-            f"Image: {input.image}\n"
-            f"Mask: {input.mask}\n"
-            f"Output: {output.features}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/feature_extraction.py pyradiomics \
+            --image {input.image} \
+            --mask {input.mask} \
+            --features {params.feature_list} \
+            --subject {wildcards.subject} \
+            --session {wildcards.session} \
+            --hemisphere {wildcards.hemi} \
+            --label combined \
+            --output {output.features} \
+            > {log} 2>&1
+        """
 
 
 # ============================================================================
@@ -115,6 +81,8 @@ rule extract_curvature_per_label:
     output:
         features = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.csv")
+    params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.log")
     benchmark:
@@ -122,43 +90,17 @@ rule extract_curvature_per_label:
     threads: 1
     resources:
         mem_mb=3000
-    run:
-        from scripts.feature_extraction import extract_curvatures, calculate_curv_metrics
-        # Create output directory
-        Path(output.features).parent.mkdir(parents=True, exist_ok=True)
-        
-        # Extract curvatures from VTK mesh
-        curvature_df = extract_curvatures(input.vtk)
-        
-        # Calculate curvature metrics (statistics)
-        metrics_dict = calculate_curv_metrics(curvature_df)
-        
-        # Flatten the nested dict for CSV storage
-        # From {'Mean': {'median': 0.5, ...}, ...} to {'Mean_median': 0.5, ...}
-        flat_metrics = {}
-        for curv_type, stats in metrics_dict.items():
-            for stat_name, value in stats.items():
-                # Convert numpy types to Python float
-                flat_metrics[f'{curv_type}_{stat_name}'] = float(value)
-        
-        # Add metadata
-        flat_metrics['subject'] = wildcards.subject
-        flat_metrics['session'] = wildcards.session
-        flat_metrics['hemisphere'] = wildcards.hemi
-        flat_metrics['label'] = wildcards.label
-        
-        # Convert to DataFrame and save
-        df = pd.DataFrame([flat_metrics])
-        df.to_csv(output.features, index=False)
-        
-        # Write log
-        Path(log[0]).write_text(
-            f"Extracted curvature features\n"
-            f"Subject: {wildcards.subject}, Session: {wildcards.session}\n"
-            f"Hemisphere: {wildcards.hemi}, Label: {wildcards.label}\n"
-            f"VTK: {input.vtk}\n"
-            f"Output: {output.features}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/feature_extraction.py curvature \
+            --vtk {input.vtk} \
+            --subject {wildcards.subject} \
+            --session {wildcards.session} \
+            --hemisphere {wildcards.hemi} \
+            --label {wildcards.label} \
+            --output {output.features} \
+            > {log} 2>&1
+        """
 
 
 rule extract_curvature_combined:
@@ -168,6 +110,8 @@ rule extract_curvature_combined:
     output:
         features = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.csv")
+    params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.log")
     benchmark:
@@ -175,43 +119,17 @@ rule extract_curvature_combined:
     threads: 1
     resources:
         mem_mb=3000
-    run:
-        from scripts.feature_extraction import extract_curvatures, calculate_curv_metrics
-        # Create output directory
-        Path(output.features).parent.mkdir(parents=True, exist_ok=True)
-        
-        # Extract curvatures from VTK mesh
-        curvature_df = extract_curvatures(input.vtk)
-        
-        # Calculate curvature metrics (statistics)
-        metrics_dict = calculate_curv_metrics(curvature_df)
-        
-        # Flatten the nested dict for CSV storage
-        # From {'Mean': {'median': 0.5, ...}, ...} to {'Mean_median': 0.5, ...}
-        flat_metrics = {}
-        for curv_type, stats in metrics_dict.items():
-            for stat_name, value in stats.items():
-                # Convert numpy types to Python float
-                flat_metrics[f'{curv_type}_{stat_name}'] = float(value)
-        
-        # Add metadata
-        flat_metrics['subject'] = wildcards.subject
-        flat_metrics['session'] = wildcards.session
-        flat_metrics['hemisphere'] = wildcards.hemi
-        flat_metrics['label'] = 'combined'
-        
-        # Convert to DataFrame and save
-        df = pd.DataFrame([flat_metrics])
-        df.to_csv(output.features, index=False)
-        
-        # Write log
-        Path(log[0]).write_text(
-            f"Extracted curvature features (combined)\n"
-            f"Subject: {wildcards.subject}, Session: {wildcards.session}\n"
-            f"Hemisphere: {wildcards.hemi}\n"
-            f"VTK: {input.vtk}\n"
-            f"Output: {output.features}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/feature_extraction.py curvature \
+            --vtk {input.vtk} \
+            --subject {wildcards.subject} \
+            --session {wildcards.session} \
+            --hemisphere {wildcards.hemi} \
+            --label combined \
+            --output {output.features} \
+            > {log} 2>&1
+        """
 
 
 # ============================================================================
@@ -267,6 +185,8 @@ rule aggregate_subject_features:
     output:
         aggregated = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                                  "sub-{subject}_ses-{session}_all_features.csv")
+    params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "sub-{subject}_ses-{session}_aggregate.log")
     benchmark:
@@ -274,132 +194,21 @@ rule aggregate_subject_features:
     threads: 1
     resources:
         mem_mb=2000
-    run:
-        from scripts.aggregate_data import aggregate_region_data, form_row_from_data
-        # ===== Read RADIOMICS features =====
-        # Left hemisphere
-        label_radiomics_L = {}
-        for csv_file in input.label_radiomics_L:
-            df = pd.read_csv(csv_file)
-            label = df['label'].values[0]
-            feature_dict = {k: v for k, v in df.to_dict('records')[0].items() 
-                          if k not in ['subject', 'session', 'hemisphere', 'label']}
-            label_radiomics_L[label] = feature_dict
-        
-        combined_rad_df_L = pd.read_csv(input.combined_radiomics_L)
-        combined_radiomics_L = {k: v for k, v in combined_rad_df_L.to_dict('records')[0].items() 
-                               if k not in ['subject', 'session', 'hemisphere', 'label']}
-        
-        # Right hemisphere
-        label_radiomics_R = {}
-        for csv_file in input.label_radiomics_R:
-            df = pd.read_csv(csv_file)
-            label = df['label'].values[0]
-            feature_dict = {k: v for k, v in df.to_dict('records')[0].items() 
-                          if k not in ['subject', 'session', 'hemisphere', 'label']}
-            label_radiomics_R[label] = feature_dict
-        
-        combined_rad_df_R = pd.read_csv(input.combined_radiomics_R)
-        combined_radiomics_R = {k: v for k, v in combined_rad_df_R.to_dict('records')[0].items() 
-                               if k not in ['subject', 'session', 'hemisphere', 'label']}
-        
-        # ===== Read CURVATURE features =====
-        # Helper function to restructure curvature data from flat CSV to nested dict
-        def restructure_curvature_dict(flat_dict):
-            """
-            Convert flat dict like {'Mean_median': 0.5, 'Mean_mean': 0.6, ...}
-            to nested dict like {'Mean': {'median': 0.5, 'mean': 0.6, ...}, ...}
-            """
-            nested = {}
-            for key, value in flat_dict.items():
-                # Split on first underscore: 'Mean_median' -> ['Mean', 'median']
-                parts = key.split('_', 1)
-                if len(parts) == 2:
-                    curv_type, stat_name = parts
-                    if curv_type not in nested:
-                        nested[curv_type] = {}
-                    nested[curv_type][stat_name] = value
-            return nested
-        
-        # Left hemisphere
-        label_curvature_L = {}
-        for csv_file in input.label_curvature_L:
-            df = pd.read_csv(csv_file)
-            label = df['label'].values[0]
-            flat_dict = {k: v for k, v in df.to_dict('records')[0].items() 
-                        if k not in ['subject', 'session', 'hemisphere', 'label']}
-            label_curvature_L[label] = restructure_curvature_dict(flat_dict)
-        
-        combined_curv_df_L = pd.read_csv(input.combined_curvature_L)
-        flat_combined_L = {k: v for k, v in combined_curv_df_L.to_dict('records')[0].items() 
-                          if k not in ['subject', 'session', 'hemisphere', 'label']}
-        combined_curvature_L = restructure_curvature_dict(flat_combined_L)
-        
-        # Right hemisphere
-        label_curvature_R = {}
-        for csv_file in input.label_curvature_R:
-            df = pd.read_csv(csv_file)
-            label = df['label'].values[0]
-            flat_dict = {k: v for k, v in df.to_dict('records')[0].items() 
-                        if k not in ['subject', 'session', 'hemisphere', 'label']}
-            label_curvature_R[label] = restructure_curvature_dict(flat_dict)
-        
-        combined_curv_df_R = pd.read_csv(input.combined_curvature_R)
-        flat_combined_R = {k: v for k, v in combined_curv_df_R.to_dict('records')[0].items() 
-                          if k not in ['subject', 'session', 'hemisphere', 'label']}
-        combined_curvature_R = restructure_curvature_dict(flat_combined_R)
-        
-        # ===== Aggregate using aggregate_region_data function =====
-        # Aggregate radiomics data
-        radiomics_data = aggregate_region_data(
-            combined_radiomics_L, 
-            label_radiomics_L.get('DG', {}), 
-            label_radiomics_L.get('CA1', {}), 
-            label_radiomics_L.get('CA2', {}), 
-            label_radiomics_L.get('CA3', {}), 
-            label_radiomics_L.get('SUB', {}),
-            combined_radiomics_R, 
-            label_radiomics_R.get('DG', {}), 
-            label_radiomics_R.get('CA1', {}), 
-            label_radiomics_R.get('CA2', {}), 
-            label_radiomics_R.get('CA3', {}), 
-            label_radiomics_R.get('SUB', {})
-        )
-        
-        # Aggregate curvature data
-        curvature_data = aggregate_region_data(
-            combined_curvature_L, 
-            label_curvature_L.get('DG', {}), 
-            label_curvature_L.get('CA1', {}), 
-            label_curvature_L.get('CA2', {}), 
-            label_curvature_L.get('CA3', {}), 
-            label_curvature_L.get('SUB', {}),
-            combined_curvature_R, 
-            label_curvature_R.get('DG', {}), 
-            label_curvature_R.get('CA1', {}), 
-            label_curvature_R.get('CA2', {}), 
-            label_curvature_R.get('CA3', {}), 
-            label_curvature_R.get('SUB', {})
-        )
-        
-        # ===== Use form_row_from_data to create the final row =====
-        row = form_row_from_data(input.t1w_image, radiomics_data, curvature_data)
-        
-        # Create output directory
-        Path(output.aggregated).parent.mkdir(parents=True, exist_ok=True)
-        
-        # Save aggregated features
-        df_out = pd.DataFrame([row])
-        df_out.to_csv(output.aggregated, index=False)
-        
-        # Write log
-        Path(log[0]).write_text(
-            f"Aggregated features for sub-{wildcards.subject}_ses-{wildcards.session}\n"
-            f"Regions: Hippocampus, DG, CA1, CA2, CA3, SUB\n"
-            f"Hemispheres: L, R\n"
-            f"Features: Radiomics + Curvature\n"
-            f"Output: {output.aggregated}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/cli_aggregate.py subject \
+            --label-radiomics-L {input.label_radiomics_L} \
+            --label-radiomics-R {input.label_radiomics_R} \
+            --combined-radiomics-L {input.combined_radiomics_L} \
+            --combined-radiomics-R {input.combined_radiomics_R} \
+            --label-curvature-L {input.label_curvature_L} \
+            --label-curvature-R {input.label_curvature_R} \
+            --combined-curvature-L {input.combined_curvature_L} \
+            --combined-curvature-R {input.combined_curvature_R} \
+            --t1w-image {input.t1w_image} \
+            --output {output.aggregated} \
+            > {log} 2>&1
+        """
 
 
 rule aggregate_all_subjects:
@@ -410,6 +219,8 @@ rule aggregate_all_subjects:
     output:
         summary = os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
         issues = os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
+    params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts")
     log:
         os.path.join(LOG_DIR, "feature_extraction", "aggregate_all.log")
     benchmark:
@@ -417,54 +228,12 @@ rule aggregate_all_subjects:
     threads: 1
     resources:
         mem_mb=2000
-    run:
-        # Create output directory
-        Path(output.summary).parent.mkdir(parents=True, exist_ok=True)
-        
-        # Read all subject feature files and track issues
-        all_dfs = []
-        issues_found = []
-        
-        for csv_file in input.subject_features:
-            df = pd.read_csv(csv_file)
-            all_dfs.append(df)
-            
-            # Check for NaN values (indicates empty masks/failed processing)
-            nan_columns = df.columns[df.isna().any()].tolist()
-            if nan_columns:
-                subject_id = df['Subject'].values[0] if 'Subject' in df.columns else 'unknown'
-                session_id = df['Session'].values[0] if 'Session' in df.columns else 'unknown'
-                issues_found.append(f"sub-{subject_id}_ses-{session_id}: Empty masks or processing failures in {len(nan_columns)} features")
-        
-        # Concatenate all dataframes
-        combined_df = pd.concat(all_dfs, ignore_index=True)
-        
-        # Sort by Subject, Session
-        combined_df = combined_df.sort_values(['Subject', 'Session'])
-        
-        # Save combined CSV
-        combined_df.to_csv(output.summary, index=False)
-        
-        # Save issues report
-        with open(output.issues, 'w') as f:
-            f.write("=" * 80 + "\n")
-            f.write("PROCESSING ISSUES REPORT\n")
-            f.write("=" * 80 + "\n\n")
-            if issues_found:
-                f.write(f"Found {len(issues_found)} subjects with processing issues:\n\n")
-                for issue in issues_found:
-                    f.write(f"  - {issue}\n")
-                f.write("\nNote: NaN values indicate empty masks (likely too few voxels in subregion)\n")
-            else:
-                f.write("No processing issues detected. All subjects completed successfully!\n")
-            f.write("\n" + "=" * 80 + "\n")
-        
-        # Write log
-        Path(log[0]).write_text(
-            f"Aggregated {len(all_dfs)} subject feature files\n"
-            f"Total rows: {len(combined_df)}\n"
-            f"Subjects with issues: {len(issues_found)}\n"
-            f"Output: {output.summary}\n"
-            f"Issues report: {output.issues}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/cli_aggregate.py all \
+            --input-files {input.subject_features} \
+            --output-summary {output.summary} \
+            --output-issues {output.issues} \
+            > {log} 2>&1
+        """
 

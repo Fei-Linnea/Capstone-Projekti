@@ -205,3 +205,25 @@ def nii_to_vtk(
             except Exception as e:
                 print(f"Warning: Failed to plot interactively: {e}")
 
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Convert NIfTI mask to VTK mesh")
+    parser.add_argument("--input", required=True, help="Input NIfTI mask")
+    parser.add_argument("--output", required=True, help="Output VTK mesh")
+    parser.add_argument("--min-voxel-count", type=int, default=20)
+    parser.add_argument("--smooth-iters", type=int, default=50)
+    parser.add_argument("--plot-png", default=None, help="Path for PNG rendering")
+
+    args = parser.parse_args()
+    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    nii_to_vtk(
+        args.input,
+        args.output,
+        min_voxel_count=args.min_voxel_count,
+        smooth_iters=args.smooth_iters,
+        plot_png_path=args.plot_png,
+        enable_interactive_plot=False,
+    )
+

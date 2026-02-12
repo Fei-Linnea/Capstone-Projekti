@@ -195,3 +195,58 @@ def calculate_curv_metrics(df):
                 }
 
     return stats
+
+
+if __name__ == "__main__":
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser(description="Feature extraction utilities")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # PyRadiomics subcommand
+    pyrad = subparsers.add_parser("pyradiomics", help="Extract PyRadiomics shape features")
+    pyrad.add_argument("--image", required=True, help="Input image path")
+    pyrad.add_argument("--mask", required=True, help="Input mask path")
+    pyrad.add_argument("--features", nargs="+", required=True, help="Feature names")
+    pyrad.add_argument("--subject", required=True)
+    pyrad.add_argument("--session", required=True)
+    pyrad.add_argument("--hemisphere", required=True)
+    pyrad.add_argument("--label", required=True)
+    pyrad.add_argument("--output", required=True, help="Output CSV path")
+
+    # Curvature subcommand
+    curv = subparsers.add_parser("curvature", help="Extract curvature features from VTK mesh")
+    curv.add_argument("--vtk", required=True, help="Input VTK mesh path")
+    curv.add_argument("--subject", required=True)
+    curv.add_argument("--session", required=True)
+    curv.add_argument("--hemisphere", required=True)
+    curv.add_argument("--label", required=True)
+    curv.add_argument("--output", required=True, help="Output CSV path")
+
+    args = parser.parse_args()
+
+    if args.command == "pyradiomics":
+        features_dict = extract_pyradiomics_features(args.image, args.mask, args.features)
+        features_dict['subject'] = args.subject
+        features_dict['session'] = args.session
+        features_dict['hemisphere'] = args.hemisphere
+        features_dict['label'] = args.label
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        df = pd.DataFrame([features_dict])
+        df.to_csv(args.output, index=False)
+
+    elif args.command == "curvature":
+        curvature_df = extract_curvatures(args.vtk)
+        metrics_dict = calculate_curv_metrics(curvature_df)
+        flat_metrics = {}
+        for curv_type, stats in metrics_dict.items():
+            for stat_name, value in stats.items():
+                flat_metrics[f'{curv_type}_{stat_name}'] = float(value)
+        flat_metrics['subject'] = args.subject
+        flat_metrics['session'] = args.session
+        flat_metrics['hemisphere'] = args.hemisphere
+        flat_metrics['label'] = args.label
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        df = pd.DataFrame([flat_metrics])
+        df.to_csv(args.output, index=False)

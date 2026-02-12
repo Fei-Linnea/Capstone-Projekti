@@ -110,3 +110,28 @@ def split_one_label(input_path, output_path, label):
     out_img = nib.Nifti1Image(mask, img.affine, img.header)
 
     nib.save(out_img, output_path)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="NIfTI mask processing utilities")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    split_parser = subparsers.add_parser("split", help="Extract a single label")
+    split_parser.add_argument("--input", required=True, help="Input multi-label mask")
+    split_parser.add_argument("--output", required=True, help="Output binary mask")
+    split_parser.add_argument("--label", type=int, required=True, help="Label value")
+
+    combine_parser = subparsers.add_parser("combine", help="Combine all labels")
+    combine_parser.add_argument("--input", required=True, help="Input multi-label mask")
+    combine_parser.add_argument("--output", required=True, help="Output combined mask")
+
+    args = parser.parse_args()
+
+    if args.command == "split":
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        split_one_label(args.input, args.output, args.label)
+    elif args.command == "combine":
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        combine_labels(args.input, args.output)

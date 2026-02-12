@@ -23,6 +23,7 @@ rule hsf_segmentation:
     resources:
         mem_mb=12000
     params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts"),
         subject_anat_dir = lambda wildcards: os.path.join(BIDS_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),
         output_dir = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),
         contrast = HSF_PARAMS["contrast"],
@@ -33,5 +34,24 @@ rule hsf_segmentation:
         hsf_right = lambda wildcards: os.path.join(BIDS_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat", f"sub-{wildcards.subject}_ses-{wildcards.session}_T1w_right_hippocampus_seg.nii.gz"),
         hsf_left_crop = lambda wildcards: os.path.join(BIDS_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat", "hsf_outputs", f"sub-{wildcards.subject}_ses-{wildcards.session}_T1w_left_hippocampus_seg_crop.nii.gz"),
         hsf_right_crop = lambda wildcards: os.path.join(BIDS_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat", "hsf_outputs", f"sub-{wildcards.subject}_ses-{wildcards.session}_T1w_right_hippocampus_seg_crop.nii.gz")
-    script:
-        "../scripts/hsf_wrapper.py"
+    shell:
+        """
+        python {params.scripts_dir}/hsf_wrapper.py \
+            --input-t1w {input.t1w} \
+            --output-seg {output.seg} \
+            --output-left-crop {output.left_crop} \
+            --output-right-crop {output.right_crop} \
+            --subject-anat-dir {params.subject_anat_dir} \
+            --output-dir {params.output_dir} \
+            --contrast {params.contrast} \
+            --margin {params.margin} \
+            --seg-mode {params.seg_mode} \
+            --ca-mode {params.ca_mode} \
+            --hsf-left {params.hsf_left} \
+            --hsf-right {params.hsf_right} \
+            --hsf-left-crop {params.hsf_left_crop} \
+            --hsf-right-crop {params.hsf_right_crop} \
+            --subject {wildcards.subject} \
+            --session {wildcards.session} \
+            --log-file {log}
+        """

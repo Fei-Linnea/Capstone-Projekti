@@ -14,11 +14,10 @@ rule mesh_per_label:
         png = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
                            "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mesh.png")
     params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts"),
         min_voxel_count = config["mesh_params"]["min_voxel_count"],
         smooth_iters = config["mesh_params"]["smooth_iters"],
-        decimation_degree = config["mesh_params"]["decimation_degree"],
-        html_path = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "meshes",
-                                                    f"sub-{wildcards.subject}_ses-{wildcards.session}_space-T1w_desc-hsf_hemi-{wildcards.hemi}_label-{wildcards.label}_mesh.html")
+        decimation_degree = config["mesh_params"]["decimation_degree"]
     log:
         os.path.join(LOG_DIR, "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
     benchmark:
@@ -26,22 +25,16 @@ rule mesh_per_label:
     threads: 1
     resources:
         mem_mb=4000
-    run:
-        from scripts.voxelToMesh import nii_to_vtk
-        Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
-        nii_to_vtk(
-            input.mask,
-            output.vtk,
-            min_voxel_count=params.min_voxel_count,
-            smooth_iters=params.smooth_iters,
-            plot_png_path=output.png,
-            # plot_html_path=params.html_path,
-            enable_interactive_plot=False,
-        )
-        Path(log[0]).write_text(
-            f"Generated mesh for label {wildcards.label} from {input.mask}\n"
-            f"VTK: {output.vtk}\nPNG: {output.png}\nHTML: {params.html_path}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/voxelToMesh.py \
+            --input {input.mask} \
+            --output {output.vtk} \
+            --min-voxel-count {params.min_voxel_count} \
+            --smooth-iters {params.smooth_iters} \
+            --plot-png {output.png} \
+            > {log} 2>&1
+        """
 
 rule mesh_combined:
     input:
@@ -52,11 +45,10 @@ rule mesh_combined:
         png = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
                            "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_combined_mesh.png")
     params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts"),
         min_voxel_count = config["mesh_params"]["min_voxel_count"],
         smooth_iters = config["mesh_params"]["smooth_iters"],
-        decimation_degree = config["mesh_params"]["decimation_degree"],
-        # html_path = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "meshes",
-        #             f"sub-{wildcards.subject}_ses-{ses-{session}_space-T1w_desc-hsf_hemi-{wildcards.hemi}_combined_mesh.html")
+        decimation_degree = config["mesh_params"]["decimation_degree"]
     log:
         os.path.join(LOG_DIR, "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
     benchmark:
@@ -64,19 +56,13 @@ rule mesh_combined:
     threads: 1
     resources:
         mem_mb=4000
-    run:
-        from scripts.voxelToMesh import nii_to_vtk
-        Path(output.vtk).parent.mkdir(parents=True, exist_ok=True)
-        nii_to_vtk(
-            input.mask,
-            output.vtk,
-            min_voxel_count=params.min_voxel_count,
-            smooth_iters=params.smooth_iters,
-            plot_png_path=output.png,
-            # plot_html_path=params.html_path,
-            enable_interactive_plot=False,
-        )
-        Path(log[0]).write_text(
-            f"Generated combined mesh from {input.mask}\n"
-            f"VTK: {output.vtk}\nPNG: {output.png}\n"
-        )
+    shell:
+        """
+        python {params.scripts_dir}/voxelToMesh.py \
+            --input {input.mask} \
+            --output {output.vtk} \
+            --min-voxel-count {params.min_voxel_count} \
+            --smooth-iters {params.smooth_iters} \
+            --plot-png {output.png} \
+            > {log} 2>&1
+        """

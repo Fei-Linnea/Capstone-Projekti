@@ -7,11 +7,9 @@
 # ============================================================================
 
 import os, glob, re, sys
-import pandas as pd
-from pathlib import Path
 
-# NOTE: Heavy imports (SimpleITK, pyradiomics, pyvista) are done inside run blocks
-# This allows Snakemake to parse the workflow on login nodes without those dependencies
+# NOTE: Heavy imports (SimpleITK, pyradiomics, pyvista, pandas) are NOT needed
+# in the Snakefile. All processing logic runs inside container via shell: directives.
 
 # Load configuration - use path relative to workflow directory
 configfile: os.path.join(workflow.basedir, "..", "config", "config.yaml")
