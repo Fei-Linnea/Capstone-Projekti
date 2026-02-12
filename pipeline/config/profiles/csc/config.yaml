@@ -24,4 +24,6 @@ default-resources:
 software-deployment-method:
   - apptainer
 
-apptainer-args: "--bind /scratch,/projappl,/users --env HSF_HOME=/users/$USER/.hsf"
+# CSC already binds /scratch and /projappl by default
+# Only set HSF cache location
+apptainer-args: "--env HSF_HOME=/users/$USER/.hsf"
