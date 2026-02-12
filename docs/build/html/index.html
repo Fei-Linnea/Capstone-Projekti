@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>radiomic feature extraction hippocampus pipeline documentation &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+  <title>Hippocampus Radiomic Feature Extraction Pipeline &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="User and Develeper Guide" href="modules.html" /> 
+    <link rel="next" title="User Guides / Tutorials" href="modules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,8 +43,12 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">User and Develeper Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html#pipeline">pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a></li>
 </ul>
 
         </div>
@@ -61,7 +65,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">radiomic feature extraction hippocampus pipeline documentation</li>
+      <li class="breadcrumb-item active">Hippocampus Radiomic Feature Extraction Pipeline</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -71,27 +75,55 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="radiomic-feature-extraction-hippocampus-pipeline-documentation">
-<h1>radiomic feature extraction hippocampus pipeline documentation<a class="headerlink" href="#radiomic-feature-extraction-hippocampus-pipeline-documentation" title="Link to this heading"></a></h1>
-<p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
-<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
-documentation for details.</p>
+  <section id="hippocampus-radiomic-feature-extraction-pipeline">
+<h1>Hippocampus Radiomic Feature Extraction Pipeline<a class="headerlink" href="#hippocampus-radiomic-feature-extraction-pipeline" title="Link to this heading"></a></h1>
+<p>Welcome to the official documentation for the <strong>Hippocampus Radiomic Feature Extraction Pipeline</strong>.
+This pipeline is designed to automate robust, reproducible extraction of radiomic and geometric features
+from hippocampal MRI data organized in BIDS format.</p>
+<p>Whether you are running locally or on an HPC system, this guide will walk you through configuring,
+executing, and extending the pipeline.</p>
+<p><strong>Features include:</strong></p>
+<ul class="simple">
+<li><p><strong>HSF segmentation</strong> of hippocampal subregions (DG, CA1, CA2, CA3, SUB)</p></li>
+<li><p><strong>Containerized execution</strong> with Apptainer/Singularity</p></li>
+<li><p><strong>Batch processing</strong> with Snakemake profiles</p></li>
+<li><p><strong>Mesh Generation</strong> 3D meshes from voxel maps</p></li>
+<li><p><strong>Feature extraction</strong> (PyRadiomics and curvature-based metrics)</p></li>
+<li><p><strong>Aggregation of results per subject and across cohorts</strong></p></li>
+</ul>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">User and Develeper Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="docker_usage.html">Docker Usage Guide - Hippocampus Radiomics Pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment_strategy_comparison.html">Pipeline Deployment Strategies: Tyks vs CSC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tyks_apptainer_conversion.html">For local testing,</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tyks_apptainer_conversion.html#converting-docker-image-to-apptainer-sif-for-csc-tyks">Converting Docker Image to Apptainer SIF for CSC/TYKS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rulegraph_explanation.html">Rule Graph Explanation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="planning.html">Conda Installaton</a></li>
-<li class="toctree-l2"><a class="reference internal" href="planning.html#snakemake-installation-using-conda">Snakemake installation using Conda</a></li>
-<li class="toctree-l2"><a class="reference internal" href="planning.html#use-linter-while-working-on-snakemake">Use Linter while working on Snakemake</a></li>
-<li class="toctree-l2"><a class="reference internal" href="planning.html#proposal-architecture-for-using-snakemake">Proposal architecture for using Snakemake</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a><ul class="simple">
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html#pipeline">pipeline</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runner">Main Pipeline Runner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rules.html">HSF Segmentation Rule (Step 1)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rules.html#data-processing-rules-step-2">Data Processing Rules (Step 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rules.html#mesh-generation-rules-step-3">Mesh Generation Rules (Step 3)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rules.html#feature-extraction-and-aggregation-rules-steps-46">Feature Extraction and Aggregation Rules (Steps 4–6)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docker.html">Full Dockerfile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docker.html#explanation-of-instructions">Explanation of Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Pipeline Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-tyks-single-machine-execution">Snakemake Profile: TYKS Single-Machine Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-csc-cluster-execution-slurm-apptainer">Snakemake Profile: CSC Cluster Execution (Slurm + Apptainer)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pipeline.run_utils.html">run_utils functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pipeline.workflow.scripts.html">data_analysis scripts</a></li>
 </ul>
@@ -104,7 +136,7 @@ documentation for details.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="modules.html" class="btn btn-neutral float-right" title="User and Develeper Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="modules.html" class="btn btn-neutral float-right" title="User Guides / Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

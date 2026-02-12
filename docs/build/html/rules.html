@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSF Segmentation Rule (Step 1) &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Full Dockerfile" href="docker.html" />
+    <link rel="prev" title="Overview" href="pipelinemain.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">HSF Segmentation Rule (Step 1)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-processing-rules-step-2">Data Processing Rules (Step 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mesh-generation-rules-step-3">Mesh Generation Rules (Step 3)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#feature-extraction-and-aggregation-rules-steps-46">Feature Extraction and Aggregation Rules (Steps 4–6)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
+      <li class="breadcrumb-item active">HSF Segmentation Rule (Step 1)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <p>The workflow consists of four main stages:</p>
+<section id="hsf-segmentation-rule-step-1">
+<h1>HSF Segmentation Rule (Step 1)<a class="headerlink" href="#hsf-segmentation-rule-step-1" title="Link to this heading"></a></h1>
+<p>This rule performs <strong>hippocampal segmentation</strong> using HSF (Hippocampal Segmentation Factory).</p>
+<ul class="simple">
+<li><p>Generates <strong>left and right hippocampus segmentations</strong> for each subject/session.</p></li>
+<li><p>Outputs:
+- Full hippocampus segmentation (<cite>*_dseg.nii.gz</cite>)
+- Cropped left hemisphere segmentation (<cite>*_hemi-L_seg_crop.nii.gz</cite>)
+- Cropped right hemisphere segmentation (<cite>*_hemi-R_seg_crop.nii.gz</cite>)</p></li>
+<li><p>Uses <cite>hsf_wrapper.py</cite> script to execute segmentation.</p></li>
+<li><p>Logs operations and benchmarks execution time.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rule</span> <span class="n">hsf_segmentation</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">t1w</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">wildcards</span><span class="p">:</span> <span class="n">get_input_path</span><span class="p">(</span><span class="n">wildcards</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">seg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;anat&quot;</span><span class="p">,</span>
+                          <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_dseg.nii.gz&quot;</span><span class="p">),</span>
+        <span class="n">left_crop</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;anat&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-L_seg_crop.nii.gz&quot;</span><span class="p">),</span>
+        <span class="n">right_crop</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;anat&quot;</span><span class="p">,</span>
+                                 <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-R_seg_crop.nii.gz&quot;</span><span class="p">)</span>
+    <span class="n">script</span><span class="p">:</span>
+        <span class="s2">&quot;../scripts/hsf_wrapper.py&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="data-processing-rules-step-2">
+<h1>Data Processing Rules (Step 2)<a class="headerlink" href="#data-processing-rules-step-2" title="Link to this heading"></a></h1>
+<p>These rules process HSF hippocampal segmentations:</p>
+<ul class="simple">
+<li><p><strong>split_label</strong>: Splits a cropped hippocampal segmentation into individual labels
+(DG, CA1, CA2, CA3, SUB) and saves each label as a separate mask.</p></li>
+<li><p><strong>combine_labels</strong>: Combines all individual labels into a single hippocampus
+mask for each hemisphere.</p></li>
+</ul>
+<p>Each rule logs its operations and benchmarks execution time.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rule</span> <span class="n">split_label</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">seg_crop</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">wildcards</span><span class="p">:</span> <span class="n">get_seg_crop_output</span><span class="p">(</span><span class="n">wildcards</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">hemi</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">label_mask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;anat&quot;</span><span class="p">,</span>
+                                  <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_label-</span><span class="si">{label}</span><span class="s2">_mask.nii.gz&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">split_one_label</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">seg_crop</span><span class="p">,</span> <span class="n">output</span><span class="o">.</span><span class="n">label_mask</span><span class="p">,</span> <span class="n">LABELS</span><span class="p">[</span><span class="n">wildcards</span><span class="o">.</span><span class="n">label</span><span class="p">])</span>
+
+
+<span class="n">rule</span> <span class="n">combine_labels</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">seg_crop</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">wildcards</span><span class="p">:</span> <span class="n">get_seg_crop_output</span><span class="p">(</span><span class="n">wildcards</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">hemi</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">combined_mask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;anat&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_mask.nii.gz&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">combine_labels</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">seg_crop</span><span class="p">,</span> <span class="n">output</span><span class="o">.</span><span class="n">combined_mask</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="mesh-generation-rules-step-3">
+<h1>Mesh Generation Rules (Step 3)<a class="headerlink" href="#mesh-generation-rules-step-3" title="Link to this heading"></a></h1>
+<p>These rules generate <strong>VTK meshes</strong> from hippocampal segmentation masks and
+produce PNG visualizations for inclusion in reports:</p>
+<ul class="simple">
+<li><p><strong>mesh_per_label</strong>: Generates meshes for each individual label (DG, CA1, CA2, CA3, SUB)
+and outputs corresponding VTK and PNG files.</p></li>
+<li><p><strong>mesh_combined</strong>: Generates a single mesh combining all labels for each hemisphere.</p></li>
+<li><p>Both rules log operations and support benchmarking.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rule</span> <span class="n">mesh_per_label</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">wildcards</span><span class="p">:</span> <span class="n">label_mask_output</span><span class="p">(</span><span class="n">wildcards</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">hemi</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">vtk</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;meshes&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_label-</span><span class="si">{label}</span><span class="s2">_mesh.vtk&quot;</span><span class="p">),</span>
+        <span class="n">png</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;meshes&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_label-</span><span class="si">{label}</span><span class="s2">_mesh.png&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">vtk</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">nii_to_vtk</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">vtk</span><span class="p">,</span>
+            <span class="n">min_voxel_count</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">min_voxel_count</span><span class="p">,</span>
+            <span class="n">smooth_iters</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">smooth_iters</span><span class="p">,</span>
+            <span class="n">plot_png_path</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">png</span><span class="p">,</span>
+            <span class="n">enable_interactive_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<span class="n">rule</span> <span class="n">mesh_combined</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">wildcards</span><span class="p">:</span> <span class="n">combined_mask_output</span><span class="p">(</span><span class="n">wildcards</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">wildcards</span><span class="o">.</span><span class="n">hemi</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">vtk</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;meshes&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_combined_mesh.vtk&quot;</span><span class="p">),</span>
+        <span class="n">png</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;meshes&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_combined_mesh.png&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">vtk</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">nii_to_vtk</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">vtk</span><span class="p">,</span>
+            <span class="n">min_voxel_count</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">min_voxel_count</span><span class="p">,</span>
+            <span class="n">smooth_iters</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">smooth_iters</span><span class="p">,</span>
+            <span class="n">plot_png_path</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">png</span><span class="p">,</span>
+            <span class="n">enable_interactive_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="feature-extraction-and-aggregation-rules-steps-46">
+<h1>Feature Extraction and Aggregation Rules (Steps 4–6)<a class="headerlink" href="#feature-extraction-and-aggregation-rules-steps-46" title="Link to this heading"></a></h1>
+<p>These rules extract <strong>radiomic and curvature features</strong> from hippocampal segmentations
+and aggregate them across regions and subjects.</p>
+<ul class="simple">
+<li><p><strong>extract_pyradiomics_per_label</strong>: Extracts PyRadiomics features (e.g., MeshVolume,
+SurfaceVolumeRatio) for each individual label (DG, CA1, CA2, CA3, SUB).</p></li>
+<li><p><strong>extract_pyradiomics_combined</strong>: Extracts PyRadiomics features for combined hippocampal masks.</p></li>
+<li><p><strong>extract_curvature_per_label</strong>: Computes curvature metrics from VTK meshes per label.</p></li>
+<li><p><strong>extract_curvature_combined</strong>: Computes curvature metrics for combined meshes.</p></li>
+<li><p><strong>aggregate_subject_features</strong>: Aggregates radiomics and curvature features for a
+single subject/session into a single CSV.</p></li>
+<li><p><strong>aggregate_all_subjects</strong>: Combines all subjects’ aggregated features into a summary CSV
+and creates a processing issues report.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Radiomics per label</span>
+<span class="n">rule</span> <span class="n">extract_pyradiomics_per_label</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">get_seg_crop_output</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">hemi</span><span class="p">),</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">label_mask_output</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">hemi</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_hemi-</span><span class="si">{hemi}</span><span class="s2">_label-</span><span class="si">{label}</span><span class="s2">_pyradiomics.csv&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">features_dict</span> <span class="o">=</span> <span class="n">extract_pyradiomics_features</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
+                                                     <span class="p">[</span><span class="s1">&#39;original_shape_MeshVolume&#39;</span><span class="p">,</span> <span class="s1">&#39;original_shape_SurfaceVolumeRatio&#39;</span><span class="p">])</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">features_dict</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Radiomics combined</span>
+<span class="n">rule</span> <span class="n">extract_pyradiomics_combined</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">get_seg_crop_output</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">hemi</span><span class="p">),</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">combined_mask_output</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">hemi</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_hemi-</span><span class="si">{hemi}</span><span class="s2">_combined_pyradiomics.csv&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">features_dict</span> <span class="o">=</span> <span class="n">extract_pyradiomics_features</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
+                                                     <span class="p">[</span><span class="s1">&#39;original_shape_MeshVolume&#39;</span><span class="p">,</span> <span class="s1">&#39;original_shape_SurfaceVolumeRatio&#39;</span><span class="p">])</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">features_dict</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Curvature per label</span>
+<span class="n">rule</span> <span class="n">extract_curvature_per_label</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">vtk</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;meshes&quot;</span><span class="p">,</span>
+                          <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_label-</span><span class="si">{label}</span><span class="s2">_mesh.vtk&quot;</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_hemi-</span><span class="si">{hemi}</span><span class="s2">_label-</span><span class="si">{label}</span><span class="s2">_curvature.csv&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">curvature_df</span> <span class="o">=</span> <span class="n">extract_curvatures</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">vtk</span><span class="p">)</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">calculate_curv_metrics</span><span class="p">(</span><span class="n">curvature_df</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">metrics</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Curvature combined</span>
+<span class="n">rule</span> <span class="n">extract_curvature_combined</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">vtk</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;meshes&quot;</span><span class="p">,</span>
+                          <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_space-T1w_desc-hsf_hemi-</span><span class="si">{hemi}</span><span class="s2">_combined_mesh.vtk&quot;</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_hemi-</span><span class="si">{hemi}</span><span class="s2">_combined_curvature.csv&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">curvature_df</span> <span class="o">=</span> <span class="n">extract_curvatures</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">vtk</span><span class="p">)</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">calculate_curv_metrics</span><span class="p">(</span><span class="n">curvature_df</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">metrics</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Aggregate per subject</span>
+<span class="n">rule</span> <span class="n">aggregate_subject_features</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">label_radiomics_L</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">label_radiomics_R</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
+        <span class="n">combined_radiomics_L</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">combined_radiomics_R</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
+        <span class="n">label_curvature_L</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">label_curvature_R</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
+        <span class="n">combined_curvature_L</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">combined_curvature_R</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
+        <span class="n">t1w_image</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">get_input_path</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">aggregated</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;ses-</span><span class="si">{session}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span>
+                                 <span class="s2">&quot;sub-</span><span class="si">{subject}</span><span class="s2">_ses-</span><span class="si">{session}</span><span class="s2">_all_features.csv&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">form_row_from_data</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">t1w_image</span><span class="p">,</span> <span class="n">radiomics_data</span><span class="p">,</span> <span class="n">curvature_data</span><span class="p">)</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">aggregated</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">row</span><span class="p">])</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">aggregated</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Aggregate across all subjects</span>
+<span class="n">rule</span> <span class="n">aggregate_all_subjects</span><span class="p">:</span>
+    <span class="nb">input</span><span class="p">:</span>
+        <span class="n">subject_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;sub-</span><span class="si">{</span><span class="n">subject</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ses-</span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span>
+                                         <span class="sa">f</span><span class="s2">&quot;sub-</span><span class="si">{</span><span class="n">subject</span><span class="si">}</span><span class="s2">_ses-</span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2">_all_features.csv&quot;</span><span class="p">)</span>
+                           <span class="k">for</span> <span class="n">subject</span><span class="p">,</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">SUBJECT_SESSION_PAIRS</span><span class="p">]</span>
+    <span class="n">output</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;summary&quot;</span><span class="p">,</span> <span class="s2">&quot;all_features.csv&quot;</span><span class="p">),</span>
+        <span class="n">issues</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DERIVATIVES_ROOT</span><span class="p">,</span> <span class="s2">&quot;summary&quot;</span><span class="p">,</span> <span class="s2">&quot;processing_issues.txt&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">combined_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">input</span><span class="o">.</span><span class="n">subject_features</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">combined_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">summary</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pipelinemain.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="docker.html" class="btn btn-neutral float-right" title="Full Dockerfile" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

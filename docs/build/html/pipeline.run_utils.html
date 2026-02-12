@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="data_analysis scripts" href="pipeline.workflow.scripts.html" />
-    <link rel="prev" title="Conda Installaton" href="planning.html" /> 
+    <link rel="prev" title="Pipeline Configuration File" href="configuration.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,8 +44,12 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="modules.html">User and Develeper Guide</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html#pipeline">pipeline</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#api">API</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">run_utils functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.aggregate">aggregate</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.aggregate.run_aggregation"><code class="docutils literal notranslate"><span class="pre">run_aggregation()</span></code></a></li>
@@ -68,11 +72,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.progress">progress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.progress.parse_progress"><code class="docutils literal notranslate"><span class="pre">parse_progress()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.progress.print_progress_bar"><code class="docutils literal notranslate"><span class="pre">print_progress_bar()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.snakemake_profile">snakemake_profile</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.snakemake_profile.get_snakemake_args"><code class="docutils literal notranslate"><span class="pre">get_snakemake_args()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.snakemake_profile.print_snakemake_config"><code class="docutils literal notranslate"><span class="pre">print_snakemake_config()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.subjects">subjects</a><ul>
@@ -100,7 +99,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">User and Develeper Guide</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
       <li class="breadcrumb-item active">run_utils functions</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/pipeline.run_utils.rst.txt" rel="nofollow"> View page source</a>
@@ -118,14 +117,13 @@
 <p>Snakemake aggregation step after batch processing</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pipeline.run_utils.aggregate.run_aggregation">
-<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.aggregate.</span></span><span class="sig-name descname"><span class="pre">run_aggregation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/aggregate.html#run_aggregation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.aggregate.run_aggregation" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.aggregate.</span></span><span class="sig-name descname"><span class="pre">run_aggregation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/aggregate.html#run_aggregation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.aggregate.run_aggregation" title="Link to this definition"></a></dt>
 <dd><p>Run the aggregation step after all batches are complete.
 This combines features from all subjects into final output files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config_file</strong> – Path to config.yaml</p></li>
-<li><p><strong>profile_dir</strong> – Snakemake profile directory (required)</p></li>
+<li><p><strong>profile</strong> – Path to Snakemake profile config</p></li>
 <li><p><strong>log_dir</strong> – Directory for logs</p></li>
 <li><p><strong>pipeline_dir</strong> – Working directory for Snakemake</p></li>
 <li><p><strong>dry_run</strong> – If True, don’t execute, just show commands</p></li>
@@ -143,7 +141,7 @@ This combines features from all subjects into final output files.</p>
 <p>Snakemake batch execution</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pipeline.run_utils.batchExecutor.run_snakemake_batch">
-<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.batchExecutor.</span></span><span class="sig-name descname"><span class="pre">run_snakemake_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_subjects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_batches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/batchExecutor.html#run_snakemake_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.batchExecutor.run_snakemake_batch" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.batchExecutor.</span></span><span class="sig-name descname"><span class="pre">run_snakemake_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_subjects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_batches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/batchExecutor.html#run_snakemake_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.batchExecutor.run_snakemake_batch" title="Link to this definition"></a></dt>
 <dd><p>Run Snakemake for a batch of subjects with progress tracking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -151,8 +149,7 @@ This combines features from all subjects into final output files.</p>
 <li><p><strong>batch_subjects</strong> – List of subject IDs for this batch</p></li>
 <li><p><strong>batch_num</strong> – Batch number (1-indexed)</p></li>
 <li><p><strong>total_batches</strong> – Total number of batches</p></li>
-<li><p><strong>config_file</strong> – Path to config.yaml</p></li>
-<li><p><strong>profile_dir</strong> – Snakemake profile directory (required)</p></li>
+<li><p><strong>profile</strong> – Path to Snakemake profile config</p></li>
 <li><p><strong>log_dir</strong> – Directory for logs</p></li>
 <li><p><strong>batch_size</strong> – Size of batch (for config)</p></li>
 <li><p><strong>pipeline_dir</strong> – Working directory for Snakemake</p></li>
@@ -214,7 +211,7 @@ This combines features from all subjects into final output files.</p>
 <section id="module-pipeline.run_utils.config">
 <span id="config"></span><h2>config<a class="headerlink" href="#module-pipeline.run_utils.config" title="Link to this heading"></a></h2>
 <p>Configuration defaults and constants for the pipeline runner.
-Can be overridden via CLI args or environment variables.</p>
+Can be overridden via CLI args where applicable.</p>
 </section>
 <section id="module-pipeline.run_utils.logger">
 <span id="logger"></span><h2>logger<a class="headerlink" href="#module-pipeline.run_utils.logger" title="Link to this heading"></a></h2>
@@ -277,55 +274,6 @@ and tracks current job and subject being processed.</p>
 </dd></dl>
 
 </section>
-<section id="module-pipeline.run_utils.snakemake_profile">
-<span id="snakemake-profile"></span><h2>snakemake_profile<a class="headerlink" href="#module-pipeline.run_utils.snakemake_profile" title="Link to this heading"></a></h2>
-<p>Snakemake profile and arguments builder for dynamic configuration.</p>
-<p>Allows runtime configuration of Snakemake parameters via environment variables,
-enabling container images to remain immutable while still being configurable.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pipeline.run_utils.snakemake_profile.get_snakemake_args">
-<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.snakemake_profile.</span></span><span class="sig-name descname"><span class="pre">get_snakemake_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/pipeline/run_utils/snakemake_profile.html#get_snakemake_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.snakemake_profile.get_snakemake_args" title="Link to this definition"></a></dt>
-<dd><p>Build Snakemake command-line arguments with dynamic resource configuration.</p>
-<p>Reads resource settings from environment variables and overrides the config file values.
-This allows the container image to remain static while being configurable at runtime.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>profile_path</strong> – Path to Snakemake profile (e.g., ‘config/profiles/tyks’)</p></li>
-<li><p><strong>batch_size</strong> – Optional batch size for pipeline processing</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of Snakemake arguments to pass to subprocess</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>Environment Variables (optional):</dt><dd><p>SNAKEMAKE_JOBS: Number of parallel jobs (default: 8)
-SNAKEMAKE_CORES: Total CPU cores to use (default: 16)
-SNAKEMAKE_MEM_MB: Memory per job in MB (default: 4000)
-SNAKEMAKE_THREADS: Threads per job (default: 2)</p>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">args</span> <span class="o">=</span> <span class="n">get_snakemake_args</span><span class="p">(</span><span class="s1">&#39;config/profiles/tyks&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Returns: [&#39;--profile&#39;, &#39;config/profiles/tyks&#39;, &#39;--jobs&#39;, &#39;8&#39;, &#39;--cores&#39;, &#39;16&#39;, ...]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pipeline.run_utils.snakemake_profile.print_snakemake_config">
-<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.snakemake_profile.</span></span><span class="sig-name descname"><span class="pre">print_snakemake_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pipeline/run_utils/snakemake_profile.html#print_snakemake_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.snakemake_profile.print_snakemake_config" title="Link to this definition"></a></dt>
-<dd><p>Print the effective Snakemake configuration (for debugging/logging).</p>
-<p>Shows which values come from environment variables vs defaults.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>profile_path</strong> – Path to Snakemake profile</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 <section id="module-pipeline.run_utils.subjects">
 <span id="subjects"></span><h2>subjects<a class="headerlink" href="#module-pipeline.run_utils.subjects" title="Link to this heading"></a></h2>
 <p>Subject discovery utilities for BIDS datasets.</p>
@@ -353,7 +301,7 @@ SNAKEMAKE_THREADS: Threads per job (default: 2)</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="planning.html" class="btn btn-neutral float-left" title="Conda Installaton" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Pipeline Configuration File" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="pipeline.workflow.scripts.html" class="btn btn-neutral float-right" title="data_analysis scripts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

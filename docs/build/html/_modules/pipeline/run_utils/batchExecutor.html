@@ -41,8 +41,12 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">User and Develeper Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pipeline">pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api">API</a></li>
 </ul>
 
         </div>
@@ -82,13 +86,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">RULE_DISPLAY_NAMES</span><span class="p">,</span> <span class="n">SPINNER_FRAMES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">tail_log_file</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_progress</span><span class="p">,</span> <span class="n">print_progress_bar</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.snakemake_profile</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_snakemake_args</span><span class="p">,</span> <span class="n">print_snakemake_config</span>
-
 
 <div class="viewcode-block" id="run_snakemake_batch">
 <a class="viewcode-back" href="../../../pipeline.run_utils.html#pipeline.run_utils.batchExecutor.run_snakemake_batch">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_snakemake_batch</span><span class="p">(</span><span class="n">batch_subjects</span><span class="p">,</span> <span class="n">batch_num</span><span class="p">,</span> <span class="n">total_batches</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> 
-                        <span class="n">profile_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">pipeline_dir</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_snakemake_batch</span><span class="p">(</span><span class="n">batch_subjects</span><span class="p">,</span> <span class="n">batch_num</span><span class="p">,</span> <span class="n">total_batches</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span>
+                        <span class="n">log_dir</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">pipeline_dir</span><span class="p">,</span>
+                        <span class="n">jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">set_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_resources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run Snakemake for a batch of subjects with progress tracking.</span>
@@ -97,8 +101,7 @@
 <span class="sd">        batch_subjects: List of subject IDs for this batch</span>
 <span class="sd">        batch_num: Batch number (1-indexed)</span>
 <span class="sd">        total_batches: Total number of batches</span>
-<span class="sd">        config_file: Path to config.yaml</span>
-<span class="sd">        profile_dir: Snakemake profile directory (required)</span>
+<span class="sd">        profile: Path to Snakemake profile config</span>
 <span class="sd">        log_dir: Directory for logs</span>
 <span class="sd">        batch_size: Size of batch (for config)</span>
 <span class="sd">        pipeline_dir: Working directory for Snakemake</span>
@@ -120,35 +123,34 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Log: </span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
     
-    <span class="c1"># Print effective Snakemake configuration (on first batch)</span>
-    <span class="k">if</span> <span class="n">batch_num</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">profile_dir</span><span class="p">:</span>
-        <span class="n">print_snakemake_config</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">)</span>
-    
     <span class="c1"># Build Snakemake command with batch parameters</span>
     <span class="c1"># Note: batch_number is 0-indexed for Snakefile</span>
     <span class="c1"># All config values must be in a single --config argument</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;snakemake&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--snakefile&quot;</span><span class="p">,</span> <span class="s2">&quot;workflow/Snakefile&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--configfile&quot;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
-        <span class="s2">&quot;--config&quot;</span><span class="p">,</span> 
+        <span class="s2">&quot;--profile&quot;</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span>
+        <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;batch_number=</span><span class="si">{</span><span class="n">batch_num</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">&quot;log_dir=</span><span class="si">{</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--rerun-incomplete&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--keep-going&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;log_dir=</span><span class="si">{</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">]</span>
-    
-    <span class="c1"># Add dynamic Snakemake profile and resource arguments</span>
-    <span class="k">if</span> <span class="n">profile_dir</span><span class="p">:</span>
-        <span class="n">dynamic_args</span> <span class="o">=</span> <span class="n">get_snakemake_args</span><span class="p">(</span><span class="n">profile_dir</span><span class="p">)</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dynamic_args</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: --profile is required&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    
+
+    <span class="c1"># Add Snakemake execution flags (profile provides other defaults)</span>
+    <span class="k">if</span> <span class="n">jobs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--jobs&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">jobs</span><span class="p">)])</span>
+    <span class="k">if</span> <span class="n">cores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--cores&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">cores</span><span class="p">)])</span>
+    <span class="k">if</span> <span class="n">set_threads</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">set_threads</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--set-threads&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">set_resources</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">set_resources</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--set-resources&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--dry-run&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DRY RUN: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     
