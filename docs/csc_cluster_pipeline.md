@@ -1,8 +1,49 @@
-# CSC HPC Cluster Pipeline with Multi-Container Deployment
+# CSC HPC Cluster Pipeline
 
-This guide describes the **CSC-specific pipeline version** for running on Puhti/Mahti HPC clusters using **Snakemake with per-rule containers** (Apptainer/Singularity), which is fundamentally different from the single-container Tyks approach.
+This guide describes how to run the hippocampus pipeline on CSC Puhti/Mahti using **Snakemake + SLURM + Apptainer**. Each Snakemake rule is submitted as a separate SLURM job that runs inside the container.
 
-## Key Differences: CSC vs Tyks
+## Quick Start
+
+```bash
+# 1. SSH to CSC Puhti
+ssh yourname@puhti.csc.fi
+
+# 2. Set up project directories (one-time)
+PROJECT=project_2001988
+mkdir -p /projappl/$PROJECT/containers
+mkdir -p /scratch/$PROJECT/hippocampus-pipeline
+
+# 3. Copy or pull the container (one-time)
+cd /projappl/$PROJECT/containers
+# Option A: Pull from registry
+apptainer pull hippocampus-pipeline.sif docker://ghcr.io/bigbrain/hippocampus-pipeline:latest
+# Option B: Build from local tarball (if Docker image exported)
+# apptainer build hippocampus-pipeline.sif docker-archive://hippocampus-pipeline.tar.gz
+
+# 4. Clone/copy the pipeline code
+cd /scratch/$PROJECT/hippocampus-pipeline
+git clone <repo-url> .
+
+# 5. Run the pipeline (from login node)
+cd pipeline
+module load snakemake/7.32.4
+snakemake --profile config/profiles/csc \
+  --config \
+    bids_root=/scratch/$PROJECT/my_study/bids \
+    derivatives_root=/scratch/$PROJECT/my_study/derivatives \
+    container_image=/projappl/$PROJECT/containers/hippocampus-pipeline.sif
+
+# 6. Monitor jobs
+squeue -u $USER
+```
+
+That's it! Snakemake will submit each subject/rule as a separate SLURM job.
+
+---
+
+## Detailed Guide
+
+### Key Differences: CSC vs Tyks
 
 | Aspect | Tyks (Single Container) | CSC (Multi-Container) |
 |--------|------------------------|----------------------|

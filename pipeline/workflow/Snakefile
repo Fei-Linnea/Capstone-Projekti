@@ -3,6 +3,7 @@
 # ============================================================================
 # Simplified pipeline using HSF (Hippocampal Segmentation Factory)
 # No conda environments - HSF installed directly in Docker image
+# Supports both local Docker and CSC Apptainer execution
 # ============================================================================
 
 import os, glob, re, sys
@@ -13,8 +14,15 @@ from scripts.feature_extraction import extract_pyradiomics_features, extract_cur
 from scripts.aggregate_data import aggregate_region_data, form_row_from_data
 from scripts.voxelToMesh import nii_to_vtk
 
-# Load configuration
-configfile: "/app/pipeline/config/config.yaml"
+# Load configuration - use path relative to workflow directory
+configfile: os.path.join(workflow.basedir, "..", "config", "config.yaml")
+
+# Container image for CSC execution
+# When using Snakemake 8.x with --software-deployment-method apptainer,
+# each rule runs inside this container
+# Set via config or use default
+CONTAINER_IMAGE = config.get("container_image", "docker://ghcr.io/bigbrain/hippocampus-pipeline:latest")
+container: CONTAINER_IMAGE
 
 # Extract configuration values
 BIDS_ROOT = config["bids_root"]
