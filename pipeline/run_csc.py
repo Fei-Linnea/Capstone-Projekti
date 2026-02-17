@@ -102,28 +102,90 @@ def prompt(label, default=None):
 # Prerequisites
 # ---------------------------------------------------------------------------
 
-def check_snakemake():
-    """Verify that Snakemake >= 8 is on PATH and return the version string."""
+def _module_load(module_name):
+    """Run 'module load <name>' via bash so the shell-function works.
+
+    On CSC (Lmod), 'module' is a shell function.  We source the init script
+    and print the resulting PATH so we can update the current process env.
+    """
+    # Lmod init script location (standard on CSC / most HPC)
+    init_script = "/usr/share/lmod/lmod/init/bash"
+    if not os.path.isfile(init_script):
+        # Fallback: try the profile-based init
+        init_script = "/usr/share/lmod/lmod/init/profile"
+    cmd = (
+        f'source {init_script} 2>/dev/null; '
+        f'module load {module_name} 2>&1; '
+        f'echo "===PATH===$PATH"'
+    )
+    try:
+        r = subprocess.run(
+            ["bash", "-c", cmd],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+        output = r.stdout
+        # Extract the updated PATH from the output
+        for line in output.splitlines():
+            if line.startswith("===PATH==="):
+                new_path = line[len("===PATH==="):]
+                os.environ["PATH"] = new_path
+                return True
+    except Exception:
+        pass
+    return False
+
+
+def _get_snakemake_version():
+    """Return snakemake version string, or None if not available."""
     try:
         r = subprocess.run(
             ["snakemake", "--version"],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             universal_newlines=True, check=True,
         )
-        ver = r.stdout.strip()
+        return r.stdout.strip()
+    except (FileNotFoundError, subprocess.CalledProcessError, ValueError):
+        return None
+
+
+def check_snakemake():
+    """Verify that Snakemake >= 8 is on PATH and return the version string.
+
+    If snakemake is missing or too old, attempt ``module load snakemake``
+    automatically (works on CSC Puhti / any Lmod-based cluster).
+    """
+    ver = _get_snakemake_version()
+
+    # --- not found at all → try module load ---
+    if ver is None:
+        info("snakemake not in PATH — trying 'module load snakemake' ...")
+        if _module_load("snakemake"):
+            ver = _get_snakemake_version()
+        if ver is None:
+            err("snakemake still not found after 'module load snakemake'")
+            info("Install manually: pip install 'snakemake>=8' or ask your admin.")
+            return None
+
+    # --- found but too old → try loading a newer module ---
+    major = int(ver.split(".")[0])
+    if major < MIN_SNAKEMAKE_MAJOR:
+        info(f"Snakemake {ver} found (need >= {MIN_SNAKEMAKE_MAJOR}) "
+             f"— trying 'module load snakemake' for a newer version ...")
+        if _module_load("snakemake"):
+            ver2 = _get_snakemake_version()
+            if ver2:
+                major2 = int(ver2.split(".")[0])
+                if major2 >= MIN_SNAKEMAKE_MAJOR:
+                    ver = ver2
         major = int(ver.split(".")[0])
         if major < MIN_SNAKEMAKE_MAJOR:
-            err(f"Snakemake {ver} found — need >= {MIN_SNAKEMAKE_MAJOR}.0.0")
-            info("Try: module load snakemake/8.x  or  pip install 'snakemake>=8'")
+            err(f"Snakemake {ver} — need >= {MIN_SNAKEMAKE_MAJOR}.0.0")
+            info("Try: module load snakemake/<version>  or  "
+                 "pip install 'snakemake>=8'")
             return None
-        return ver
-    except FileNotFoundError:
-        err("snakemake not found in PATH")
-        info("Try: module load snakemake")
-        return None
-    except (subprocess.CalledProcessError, ValueError):
-        err("Could not determine snakemake version")
-        return None
+
+    return ver
 
 
 # ---------------------------------------------------------------------------
