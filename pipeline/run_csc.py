@@ -43,7 +43,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROFILE_DIR = os.path.join(SCRIPT_DIR, "config", "profiles", "csc")
 PROFILE_PATH = os.path.join(PROFILE_DIR, "config.yaml")
 
-SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+SPINNER = ["|", "/", "-", "\\"]
 
 RULE_DISPLAY = {
     "hsf_segmentation": "HSF Seg",
@@ -79,11 +79,11 @@ def info(msg):
 
 
 def ok(msg):
-    print(f"  ✓ {msg}", file=sys.stderr)
+    print(f"  [OK] {msg}", file=sys.stderr)
 
 
 def err(msg):
-    print(f"  ✗ {msg}", file=sys.stderr)
+    print(f"  [FAIL] {msg}", file=sys.stderr)
 
 
 def prompt(label, default=None):
@@ -213,11 +213,8 @@ def gather_config(args):
     if not bids_root:
         bids_root = prompt("BIDS dataset root", f"{base}/Dataset")
 
-    # --- Derivatives ---
-    deriv_default = os.path.join(bids_root, "derivatives")
-    derivatives_root = args.derivatives_root or (
-        prompt("Derivatives output dir", deriv_default) if interactive else deriv_default
-    )
+    # --- Derivatives (always <bids_root>/derivatives) ---
+    derivatives_root = os.path.join(bids_root, "derivatives")
 
     # --- SIF path ---
     sif_default = f"{base}/Containers/hippocampus-pipeline.sif"
@@ -248,7 +245,7 @@ def gather_config(args):
 
 def print_summary(cfg):
     """Print configuration summary table."""
-    sep = "─" * 55
+    sep = "-" * 55
     print(f"\n  {sep}", file=sys.stderr)
     for label, value in [
         ("Project", cfg["project"]),
@@ -394,7 +391,7 @@ def render_bar(st, prefix="Pipeline"):
         pct = min(100, int(100 * done / total))
         blen = 40
         filled = int(blen * done / total)
-        bar = "█" * filled + "░" * (blen - filled)
+        bar = "#" * filled + "." * (blen - filled)
         print(
             f"\r  {prefix} [{done}/{total}] |{bar}| {pct}% {spin}{tag}     ",
             end="", file=sys.stderr, flush=True,
@@ -532,7 +529,8 @@ def run_pipeline(cfg, profile_path, *, dry_run=False, force=False, clean=False):
 
     if result.returncode == 0 and not errors:
         ok("Pipeline completed successfully")
-        info(f"Output:    {cfg['derivatives_root']}/summary/all_features.csv")
+        out_csv = os.path.join(cfg['derivatives_root'], 'summary', 'all_features.csv')
+        info(f"Output:    {out_csv}")
         return True
     else:
         err(f"Pipeline failed (exit code {result.returncode})")
@@ -572,7 +570,6 @@ def main():
     # Required-ish (prompted interactively if absent)
     parser.add_argument("--project", help="CSC project number (e.g., 2001988)")
     parser.add_argument("--bids-root", help="BIDS dataset root directory")
-    parser.add_argument("--derivatives-root", help="Derivatives output (default: <bids>/derivatives)")
     parser.add_argument("--sif", help="Path to Apptainer .sif container")
 
     # SLURM tuning
