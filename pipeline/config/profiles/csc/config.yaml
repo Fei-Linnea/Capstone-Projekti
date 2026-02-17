@@ -14,16 +14,20 @@ rerun-incomplete: true
 local-cores: 1
 
 # Default SLURM resources
+# tmpdir must be on shared storage (/scratch) — not /tmp which is node-local.
+# Snakemake adds tmpdir to SINGULARITY_BIND; if it points to a login-node /tmp
+# path the compute node can't mount it and Apptainer fails.
 default-resources:
   - slurm_account=project_2001988
   - slurm_partition=small
   - mem_mb=8000
   - runtime=120
+  - "tmpdir='/scratch/project_2001988/tarizw/tmp'"
 
 # Apptainer container support
 software-deployment-method:
   - apptainer
 
-# CSC already binds /scratch and /projappl by default
-# Only set HSF cache location
-apptainer-args: "--env HSF_HOME=/users/$USER/.hsf"
+# Explicitly bind /scratch as read-write (Snakemake's auto-binds may be read-only)
+# Also set HSF cache location inside the container
+apptainer-args: "--bind /scratch/project_2001988:/scratch/project_2001988:rw --env HSF_HOME=/users/$USER/.hsf"

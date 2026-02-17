@@ -152,7 +152,7 @@ if __name__ == "__main__":
     parser.add_argument("--subject-anat-dir", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--contrast", required=True)
-    parser.add_argument("--margin", type=int, required=True)
+    parser.add_argument("--margin", type=str, required=True)
     parser.add_argument("--seg-mode", required=True)
     parser.add_argument("--ca-mode", required=True)
     parser.add_argument("--hsf-left", required=True)

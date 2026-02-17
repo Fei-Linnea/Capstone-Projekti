@@ -44,9 +44,9 @@ rule hsf_segmentation:
             --subject-anat-dir {params.subject_anat_dir} \
             --output-dir {params.output_dir} \
             --contrast {params.contrast} \
-            --margin {params.margin} \
+            --margin '{params.margin}' \
             --seg-mode {params.seg_mode} \
-            --ca-mode {params.ca_mode} \
+            --ca-mode '{params.ca_mode}' \
             --hsf-left {params.hsf_left} \
             --hsf-right {params.hsf_right} \
             --hsf-left-crop {params.hsf_left_crop} \
