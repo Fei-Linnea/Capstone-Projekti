@@ -107,7 +107,8 @@ def check_snakemake():
     try:
         r = subprocess.run(
             ["snakemake", "--version"],
-            capture_output=True, text=True, check=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True, check=True,
         )
         ver = r.stdout.strip()
         major = int(ver.split(".")[0])
