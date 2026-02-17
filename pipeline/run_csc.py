@@ -311,9 +311,10 @@ def write_profile(cfg):
         apptainer-args: "--bind {sp}:{sp}:rw --env HSF_HOME=/users/$USER/.hsf"
     """)
 
+    os.makedirs(PROFILE_DIR, exist_ok=True)
     with open(PROFILE_PATH, "w") as f:
         f.write(content)
-    return PROFILE_PATH
+    return PROFILE_DIR
 
 
 # ---------------------------------------------------------------------------
