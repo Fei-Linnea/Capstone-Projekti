@@ -270,3 +270,7 @@ logs/<timestamp>/rulegraph.svg
 ## Technical Documentation Guide
 
 Add instructions here how to access technical HTML doc.
+
+## References:
+
+- [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)
