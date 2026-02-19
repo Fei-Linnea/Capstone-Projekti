@@ -35,6 +35,7 @@ import textwrap
 import threading
 import time
 from datetime import datetime
+from run_utils.cleanup import cleanup_with_confirmation
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -216,6 +217,15 @@ def gather_config(args):
     # --- Derivatives (always <bids_root>/derivatives) ---
     derivatives_root = os.path.join(bids_root, "derivatives")
 
+    # --- Optional BIDS glob pattern (relative to BIDS root) ---
+    # Keep this optional to preserve current behavior; Snakefile has a default.
+    bids_pattern = args.bids_pattern
+    if interactive and not bids_pattern:
+        bids_pattern = prompt(
+            "BIDS file glob pattern (relative to BIDS root)",
+            "sub-*/ses-*/anat/*_T1w.nii.gz",
+        )
+
     # --- SIF path ---
     sif_default = f"{base}/Containers/hippocampus-pipeline.sif"
     sif_path = args.sif or (
@@ -233,6 +243,7 @@ def gather_config(args):
         "username": username,
         "bids_root": bids_root,
         "derivatives_root": derivatives_root,
+        "bids_pattern": bids_pattern,
         "sif_path": sif_path,
         "partition": partition,
         "tmpdir": f"{base}/tmp",
@@ -251,6 +262,7 @@ def print_summary(cfg):
         ("Project", cfg["project"]),
         ("Username", cfg["username"]),
         ("BIDS root", cfg["bids_root"]),
+        ("BIDS pattern", cfg.get("bids_pattern") or "(default)"),
         ("Derivatives", cfg["derivatives_root"]),
         ("Container", cfg["sif_path"]),
         ("Partition", cfg["partition"]),
@@ -435,6 +447,8 @@ def run_pipeline(cfg, profile_path, *, dry_run=False, force=False, clean=False):
         f"derivatives_root={cfg['derivatives_root']}",
         f"container_image={cfg['sif_path']}",
     ]
+    if cfg.get("bids_pattern"):
+        cmd.append(f"bids_pattern={cfg['bids_pattern']}")
     if dry_run:
         cmd.append("--dry-run")
     if force:
@@ -570,6 +584,14 @@ def main():
     # Required-ish (prompted interactively if absent)
     parser.add_argument("--project", help="CSC project number (e.g., 2001988)")
     parser.add_argument("--bids-root", help="BIDS dataset root directory")
+    parser.add_argument(
+        "--bids-pattern",
+        default=None,
+        help=(
+            "Glob pattern to match T1w files under BIDS root "
+            "(relative path; default is handled in the Snakefile)"
+        ),
+    )
     parser.add_argument("--sif", help="Path to Apptainer .sif container")
 
     # SLURM tuning
@@ -583,6 +605,14 @@ def main():
     parser.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
     parser.add_argument("--force", action="store_true", help="Force re-run all rules (--forceall)")
     parser.add_argument("--clean", action="store_true", help="Remove .snakemake/ metadata before running")
+    parser.add_argument(
+        "--cleanup",
+        action="store_true",
+        help=(
+            "Remove intermediate outputs after successful completion, preserving "
+            "summary/all_features.csv and summary/processing_issues.txt"
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -630,6 +660,19 @@ def main():
         force=args.force,
         clean=args.clean,
     )
+
+    # 7. Optional cleanup of intermediates after a successful run
+    if args.cleanup and success:
+        cleanup_success = cleanup_with_confirmation(
+            derivatives_root=cfg["derivatives_root"],
+            dry_run=args.dry_run,
+        )
+        if not cleanup_success:
+            print(
+                "\n⚠ Warning: Cleanup encountered errors (pipeline results preserved)",
+                file=sys.stderr,
+            )
+
     sys.exit(0 if success else 1)
 
 

@@ -37,6 +37,7 @@ python3 run_csc.py
 The script will prompt you for:
 1. **CSC project number** (e.g., `2001988`)
 2. **BIDS dataset path** (e.g., `/scratch/project_2001988/user/Dataset`)
+3. **BIDS file pattern** (default: `sub-*/ses-*/anat/*_T1w.nii.gz`)
 3. **Container SIF path** (e.g., `/scratch/project_2001988/user/Containers/hippocampus-pipeline.sif`)
 4. **SLURM partition** (default: `small`)
 
@@ -63,6 +64,7 @@ python3 run_csc.py -n
 |--------|-------------|---------|
 | `--project` | CSC project number | prompted |
 | `--bids-root` | BIDS dataset root directory | prompted |
+| `--bids-pattern` | Glob pattern (relative to BIDS root) to discover T1w inputs | `sub-*/ses-*/anat/*_T1w.nii.gz` |
 | `--sif` | Path to `.sif` container | prompted |
 | `--partition` | SLURM partition | `small` |
 | `--jobs` | Max concurrent SLURM jobs | `100` |
@@ -72,6 +74,7 @@ python3 run_csc.py -n
 | `-y`, `--yes` | Skip confirmation prompt | off |
 | `--force` | Force re-run all rules | off |
 | `--clean` | Remove `.snakemake/` metadata before running | off |
+| `--cleanup` | Delete intermediate outputs after success, keeping `summary/all_features.csv` and `summary/processing_issues.txt` | off |
 
 ## What the Script Does Automatically
 

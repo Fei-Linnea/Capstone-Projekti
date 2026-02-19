@@ -37,9 +37,8 @@ LABELS = config["labels"]
 # Auto-discover subjects and sessions from BIDS structure
 def discover_subjects():
     """Discover subjects and sessions from BIDS dataset"""
-    pattern = os.path.join(BIDS_ROOT, "sub-*/ses-*/anat/*_T1w.nii.gz")
-    # bids_pattern = config.get("bids_pattern", "sub-*/ses-*/anat/*_T1w.nii.gz")
-    # pattern = os.path.join(BIDS_ROOT, bids_pattern)
+    bids_pattern = config.get("bids_pattern", "sub-*/ses-*/anat/*_T1w.nii.gz")
+    pattern = os.path.join(BIDS_ROOT, bids_pattern)
     files = glob.glob(pattern)
     
     subject_session_pairs = []
@@ -84,7 +83,7 @@ def discover_subjects():
     batch_number = int(config.get("batch_number", 0))
     
     # Debug output to stderr so it appears in logs
-    # print(f"[DEBUG] Config bids_pattern: {config.get('bids_pattern', 'NOT SET')} -> {bids_pattern}", file=sys.stderr)
+    print(f"[DEBUG] Config bids_pattern: {config.get('bids_pattern', 'NOT SET')} -> {bids_pattern}", file=sys.stderr)
     print(f"[DEBUG] Config subjects: {config.get('subjects', 'NOT SET')}", file=sys.stderr)
     print(f"[DEBUG] Config batch_size: {config.get('batch_size', 'NOT SET')} -> {batch_size}", file=sys.stderr)
     print(f"[DEBUG] Config batch_number: {config.get('batch_number', 'NOT SET')} -> {batch_number}", file=sys.stderr)
