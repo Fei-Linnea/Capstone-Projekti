@@ -1,22 +1,39 @@
 # Configuration layout
 
-- `config.yaml`: Primary default values.
-- `profiles/`: Snakemake profiles for different environments. Activate with `--profile pipeline/config/profiles/<name>`.
+This folder contains:
 
-## Profiles (Slurm and local)
+- `config.yaml`: Pipeline configuration defaults (BIDS/derivatives paths, parameters).
+- `profiles/`: Snakemake execution profiles for different environments.
+
+Profile path depends on how you run:
+
+- Using the pipeline wrapper inside the container: `--profile config/profiles/<name>`
+- Running Snakemake directly from the repo root: `--profile pipeline/config/profiles/<name>`
+
+## Profiles
 
 ### CSC
 - Path: `pipeline/config/profiles/csc`
-- Runs on CSC Slurm with Snakemake preinstalled (no top-level Docker).
-- Uses rule-level `container:` directives (Singularity enabled in profile); no conda.
+- Intended for CSC Puhti/Slurm.
+- Uses the Snakemake executor-style profile (`executor: slurm`), which requires a Snakemake version that supports this profile format.
+- Uses Apptainer via `software-deployment-method: apptainer`.
+
+You will likely need to update these defaults for your project:
+
+- `slurm_account`, `slurm_partition`
+- `mem_mb`, `runtime`
+- `tmpdir` (must be on shared storage visible to compute nodes)
+- `apptainer-args` binds and environment variables
 
 ### TYKS
 - Path: `pipeline/config/profiles/tyks`
-- Runs inside the main Docker image (no per-rule containers, no conda); local execution.
+- Intended for single-machine local execution inside the main container image.
+- No per-rule containers and no conda; runs with local bash execution.
+- Sets a default `cores: 16` (adjust for your machine).
 
-Both profiles are templates: update `partition`, `account`, `mem_mb`, and `time` to your case, then run:
-```
-snakemake --profile pipeline/config/profiles/csc ...
-```
+## Notes
 
-Profiles only affect execution (cores/cluster submission/logging).
+- Snakemake `--cores` supports special behavior: `--cores` without a value (or `--cores all`) means “use all available CPU cores”.
+	- In this pipeline wrapper, omit `--cores` to use the profile default, or pass `--cores` (no value) to use all available cores.
+
+Profiles mainly affect execution (local vs Slurm, scheduling defaults, logging/latency/retries). Pipeline inputs and parameters live in `config.yaml`.

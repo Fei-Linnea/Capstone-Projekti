@@ -113,15 +113,17 @@ def cleanup_intermediate_files(derivatives_root, dry_run=False, keep_summary=Tru
 
 
 def cleanup_with_confirmation(derivatives_root, dry_run=False):
-    """
-    Cleanup with user confirmation prompt.
-    
+    """Cleanup intermediate files.
+
+    If --cleanup is provided, we assume the user intends deletion.
+    A preview (dry run) is still printed for transparency.
+
     Args:
         derivatives_root: Path to the derivatives directory
         dry_run: If True, only show what would be deleted
-        
+
     Returns:
-        bool: True if cleanup succeeded or was skipped, False on error
+        bool: True if cleanup succeeded, False on error
     """
     if dry_run:
         print("\n⚠ DRY RUN MODE: No files will be deleted\n", file=sys.stderr)
@@ -134,20 +136,10 @@ def cleanup_with_confirmation(derivatives_root, dry_run=False):
     
     # Show what will be deleted
     print("\n⚠ WARNING: This will delete all intermediate files!", file=sys.stderr)
-    print("Only the final summary/all_features.csv will be preserved.\n", file=sys.stderr)
-    
-    # First do a dry run to show user what will be deleted
+    print("Only summary/all_features.csv and summary/processing_issues.txt will be preserved.\n", file=sys.stderr)
+
+    # First do a dry run to show what will be deleted
     cleanup_intermediate_files(derivatives_root, dry_run=True, keep_summary=True)
-    
-    # Ask for confirmation
-    try:
-        response = input("\nProceed with cleanup? (yes/no): ").strip().lower()
-        if response not in ['yes', 'y']:
-            print("Cleanup cancelled.", file=sys.stderr)
-            return True  # Not an error, just cancelled
-    except (EOFError, KeyboardInterrupt):
-        print("\nCleanup cancelled.", file=sys.stderr)
-        return True
     
     # Perform actual cleanup
     success, deleted, preserved = cleanup_intermediate_files(

@@ -54,8 +54,6 @@ rule mesh_combined:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     threads: 1
-    resources:
-        mem_mb=4000
     shell:
         """
         python {params.scripts_dir}/voxelToMesh.py \

@@ -53,8 +53,6 @@ rule extract_pyradiomics_combined:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     threads: 1
-    resources:
-        mem_mb=3000
     shell:
         """
         python {params.scripts_dir}/feature_extraction.py pyradiomics \
@@ -117,8 +115,6 @@ rule extract_curvature_combined:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.txt")
     threads: 1
-    resources:
-        mem_mb=3000
     shell:
         """
         python {params.scripts_dir}/feature_extraction.py curvature \
@@ -226,8 +222,6 @@ rule aggregate_all_subjects:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "aggregate_all.txt")
     threads: 1
-    resources:
-        mem_mb=2000
     shell:
         """
         python {params.scripts_dir}/cli_aggregate.py all \

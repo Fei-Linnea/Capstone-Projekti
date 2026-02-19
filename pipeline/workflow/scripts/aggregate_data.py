@@ -102,7 +102,8 @@ def form_row_from_data(image_path, radiomics_data, curvature_data):
     session = ses_match.group(1) if ses_match else None
 
     # First elements: Subject and Session
-    row = {'Subject': subject, 'Session': session}
+    # Ensure they are stored as strings to preserve leading zeros (e.g., '001' not 1)
+    row = {'Subject': str(subject) if subject else None, 'Session': str(session) if session else None}
 
     # Add data to the row
     for region in ['Hippocampus', 'DG', 'CA1', 'CA2', 'CA3', 'SUB']:

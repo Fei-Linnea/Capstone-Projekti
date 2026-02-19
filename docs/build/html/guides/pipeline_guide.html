@@ -1,0 +1,681 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radiomic Feature Extraction Pipeline - Complete Guide &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Overview" href="../pipelinemain.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../guides.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../modules.html">User Guides / Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Radiomic Feature Extraction Pipeline - Complete Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pipeline-overview">Pipeline Overview</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#step-1-hsf-segmentation">Step 1: HSF Segmentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-2-data-processing">Step 2: Data Processing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-3-mesh-generation">Step 3: Mesh Generation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-4-pyradiomics-feature-extraction">Step 4: PyRadiomics Feature Extraction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-5-curvature-feature-extraction">Step 5: Curvature Feature Extraction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-6-data-aggregation">Step 6: Data Aggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#build-instructions">Build Instructions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#build-docker-image">Build Docker Image</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#run-instructions">Run Instructions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#recommended-automatic-batch-processing">Recommended: Automatic Batch Processing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#small-dataset-no-batching">Small Dataset (No Batching)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linux-example">Linux Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#advanced-options">Advanced Options</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#resume-from-specific-batch">Resume from Specific Batch</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#skip-final-aggregation">Skip Final Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#adjust-memory-and-cores">Adjust Memory and Cores</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#output-structure">Output Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#directory-layout">Directory Layout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output-files-explained">Output Files Explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-options">Configuration Options</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#basic-settings">Basic Settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#batch-processing">Batch Processing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hsf-segmentation">HSF Segmentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mesh-generation">Mesh Generation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#subfield-labels">Subfield Labels</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#out-of-memory-exit-code-9">Out of Memory (Exit Code -9)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#no-subjects-found">No Subjects Found</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mesh-generation-warnings">Mesh Generation Warnings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#empty-masks-processing-issues">Empty Masks / Processing Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#permission-issues-linux">Permission Issues (Linux)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#performance-notes">Performance Notes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#timing-per-subject">Timing per Subject</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#large-dataset-example">Large Dataset Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#resource-requirements">Resource Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#output-analysis">Output Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#final-dataset">Final Dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#analysis-tools">Analysis Tools</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-analysis">Example Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#workflow-visualization">Workflow Visualization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rule-graph-dag-svg">Rule Graph (dag.svg)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../modules.html">User Guides / Tutorials</a></li>
+          <li class="breadcrumb-item"><a href="../guides.html">&lt;no title&gt;</a></li>
+      <li class="breadcrumb-item active">Radiomic Feature Extraction Pipeline - Complete Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/pipeline_guide.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="radiomic-feature-extraction-pipeline-complete-guide">
+<h1>Radiomic Feature Extraction Pipeline - Complete Guide<a class="headerlink" href="#radiomic-feature-extraction-pipeline-complete-guide" title="Link to this heading"></a></h1>
+<section id="pipeline-overview">
+<h2>Pipeline Overview<a class="headerlink" href="#pipeline-overview" title="Link to this heading"></a></h2>
+<p>This pipeline performs comprehensive radiomics and morphometric analysis of hippocampal subfields:</p>
+<section id="step-1-hsf-segmentation">
+<h3>Step 1: HSF Segmentation<a class="headerlink" href="#step-1-hsf-segmentation" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Uses HSF (Hippocampal Segmentation Factory) to segment hippocampal subfields</p></li>
+<li><p>Outputs: Full segmentation + cropped hemispheres (left/right)</p></li>
+</ul>
+</section>
+<section id="step-2-data-processing">
+<h3>Step 2: Data Processing<a class="headerlink" href="#step-2-data-processing" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Splits segmentations into individual subfield labels (DG, CA1, CA2, CA3, SUB)</p></li>
+<li><p>Combines all labels into whole-hippocampus masks</p></li>
+<li><p>Outputs: Binary masks per label and hemisphere</p></li>
+</ul>
+</section>
+<section id="step-3-mesh-generation">
+<h3>Step 3: Mesh Generation<a class="headerlink" href="#step-3-mesh-generation" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Converts segmentation masks to 3D VTK mesh files</p></li>
+<li><p>Generates PNG visualizations for each mesh</p></li>
+<li><p>Applies smoothing, decimation, and mesh optimization</p></li>
+<li><p>Handles empty/small masks gracefully</p></li>
+</ul>
+</section>
+<section id="step-4-pyradiomics-feature-extraction">
+<h3>Step 4: PyRadiomics Feature Extraction<a class="headerlink" href="#step-4-pyradiomics-feature-extraction" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Extracts shape-based radiomics features from each label mask</p></li>
+<li><p>Features: MeshVolume, SurfaceVolumeRatio, and more</p></li>
+<li><p>Outputs: CSV files for each label and combined mask per hemisphere</p></li>
+</ul>
+</section>
+<section id="step-5-curvature-feature-extraction">
+<h3>Step 5: Curvature Feature Extraction<a class="headerlink" href="#step-5-curvature-feature-extraction" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Calculates curvature metrics from 3D meshes</p></li>
+<li><p>Features: Mean curvature, Gaussian curvature</p></li>
+<li><p>Outputs: CSV files with curvature statistics per label</p></li>
+</ul>
+</section>
+<section id="step-6-data-aggregation">
+<h3>Step 6: Data Aggregation<a class="headerlink" href="#step-6-data-aggregation" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Combines radiomics and curvature features per subject</p></li>
+<li><p>Merges all hemispheres and labels into single-row summary</p></li>
+<li><p>Final aggregation combines all subjects into master CSV</p></li>
+</ul>
+</section>
+</section>
+<section id="build-instructions">
+<h2>Build Instructions<a class="headerlink" href="#build-instructions" title="Link to this heading"></a></h2>
+<section id="build-docker-image">
+<h3>Build Docker Image<a class="headerlink" href="#build-docker-image" title="Link to this heading"></a></h3>
+<p>From the project root directory:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">build</span> <span class="o">-f</span> <span class="n">pipeline</span><span class="p">/</span><span class="n">Dockerfile</span> <span class="n">-t</span> <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">.</span>
+</pre></div>
+</div>
+<p><strong>Expected output:</strong></p>
+<ul class="simple">
+<li><p>Image size: ~800MB</p></li>
+<li><p>Build time: 5-10 minutes</p></li>
+<li><p>Contains: HSF, PyRadiomics, PyVista, VTK, Snakemake, Python wrapper</p></li>
+</ul>
+</section>
+<section id="verify-installation">
+<h3>Verify Installation<a class="headerlink" href="#verify-installation" title="Link to this heading"></a></h3>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">-</span><span class="n">-help</span>
+</pre></div>
+</div>
+<p>You should see the batch processing wrapper help message.</p>
+</section>
+</section>
+<section id="run-instructions">
+<h2>Run Instructions<a class="headerlink" href="#run-instructions" title="Link to this heading"></a></h2>
+<section id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h3>
+<p>Ensure your dataset follows BIDS structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="o">/</span>
+  <span class="n">sub</span><span class="o">-</span><span class="mi">01</span><span class="o">/</span>
+    <span class="n">ses</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span>
+      <span class="n">anat</span><span class="o">/</span>
+        <span class="n">sub</span><span class="o">-</span><span class="mi">01</span><span class="n">_ses</span><span class="o">-</span><span class="mi">1</span><span class="n">_T1w</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span>
+        <span class="n">sub</span><span class="o">-</span><span class="mi">01</span><span class="n">_ses</span><span class="o">-</span><span class="mi">1</span><span class="n">_T1w</span><span class="o">.</span><span class="n">json</span>
+  <span class="n">sub</span><span class="o">-</span><span class="mi">02</span><span class="o">/</span>
+    <span class="n">ses</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span>
+      <span class="n">anat</span><span class="o">/</span>
+        <span class="n">sub</span><span class="o">-</span><span class="mi">02</span><span class="n">_ses</span><span class="o">-</span><span class="mi">1</span><span class="n">_T1w</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span>
+        <span class="n">sub</span><span class="o">-</span><span class="mi">02</span><span class="n">_ses</span><span class="o">-</span><span class="mi">1</span><span class="n">_T1w</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
+</section>
+<section id="recommended-automatic-batch-processing">
+<h3>Recommended: Automatic Batch Processing<a class="headerlink" href="#recommended-automatic-batch-processing" title="Link to this heading"></a></h3>
+<p><strong>For large datasets (50+ subjects):</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">50</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span>
+</pre></div>
+</div>
+<p><strong>What this does:</strong></p>
+<ul class="simple">
+<li><p>Automatically discovers all subjects</p></li>
+<li><p>Processes them in batches of 50</p></li>
+<li><p>Runs all 6 pipeline steps for each batch</p></li>
+<li><p>Aggregates all results at the end</p></li>
+</ul>
+</section>
+<section id="small-dataset-no-batching">
+<h3>Small Dataset (No Batching)<a class="headerlink" href="#small-dataset-no-batching" title="Link to this heading"></a></h3>
+<p><strong>For datasets &lt;50 subjects:</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">0</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span>
+</pre></div>
+</div>
+</section>
+<section id="linux-example">
+<h3>Linux Example<a class="headerlink" href="#linux-example" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--security-opt<span class="w"> </span><span class="nv">seccomp</span><span class="o">=</span>unconfined<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory<span class="o">=</span><span class="s2">&quot;8g&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;/path/to/data:/data&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/logs:/app/logs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>tarizw/hippocampus-pipeline:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cores<span class="w"> </span><span class="m">4</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-options">
+<h2>Advanced Options<a class="headerlink" href="#advanced-options" title="Link to this heading"></a></h2>
+<section id="resume-from-specific-batch">
+<h3>Resume from Specific Batch<a class="headerlink" href="#resume-from-specific-batch" title="Link to this heading"></a></h3>
+<p>If processing was interrupted:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">50</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-start-batch</span> <span class="n">5</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span>
+</pre></div>
+</div>
+</section>
+<section id="skip-final-aggregation">
+<h3>Skip Final Aggregation<a class="headerlink" href="#skip-final-aggregation" title="Link to this heading"></a></h3>
+<p>Process batches only, aggregate manually later:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;8g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">50</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">4</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-skip-aggregation</span>
+</pre></div>
+</div>
+</section>
+<section id="adjust-memory-and-cores">
+<h3>Adjust Memory and Cores<a class="headerlink" href="#adjust-memory-and-cores" title="Link to this heading"></a></h3>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># More memory, more cores</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-security-opt</span> <span class="n">seccomp</span><span class="p">=</span><span class="n">unconfined</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;16g&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;${PWD}/logs:/app/logs&quot;</span> <span class="p">\</span>
+  <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">100</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">8</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="output-structure">
+<h2>Output Structure<a class="headerlink" href="#output-structure" title="Link to this heading"></a></h2>
+<section id="directory-layout">
+<h3>Directory Layout<a class="headerlink" href="#directory-layout" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset/
+├── derivatives/
+│   ├── sub-01/
+│   │   └── ses-1/
+│   │       ├── anat/                    # Step 1-2: Segmentations &amp; masks
+│   │       │   ├── *_desc-hsf_dseg.nii.gz
+│   │       │   ├── *_hemi-L_seg_crop.nii.gz
+│   │       │   ├── *_hemi-R_seg_crop.nii.gz
+│   │       │   ├── *_hemi-{L|R}_label-{DG|CA1|CA2|CA3|SUB}_mask.nii.gz
+│   │       │   └── *_hemi-{L|R}_mask.nii.gz (combined)
+│   │       ├── meshes/                  # Step 3: 3D meshes + visualizations
+│   │       │   ├── *_hemi-{L|R}_label-{DG|CA1|CA2|CA3|SUB}_mesh.vtk
+│   │       │   ├── *_hemi-{L|R}_label-{DG|CA1|CA2|CA3|SUB}_mesh.png
+│   │       │   ├── *_hemi-{L|R}_combined_mesh.vtk
+│   │       │   └── *_hemi-{L|R}_combined_mesh.png
+│   │       └── features/                # Steps 4-6: Extracted features
+│   │           ├── *_hemi-{L|R}_label-{DG|CA1|CA2|CA3|SUB}_pyradiomics.csv
+│   │           ├── *_hemi-{L|R}_combined_pyradiomics.csv
+│   │           ├── *_hemi-{L|R}_label-{DG|CA1|CA2|CA3|SUB}_curvature.csv
+│   │           ├── *_hemi-{L|R}_combined_curvature.csv
+│   │           └── *_all_features.csv   # ⭐ Per-subject summary
+│   ├── sub-02/
+│   │   └── ... (same structure)
+│   └── summary/
+│       ├── all_features.csv             # ✅ FINAL OUTPUT: All subjects
+│       └── processing_issues.txt        # Quality report
+└── logs/
+    ├── &lt;timestamp&gt;/
+      ├── hsf/                         # Step 1 logs
+      ├── data_processing/             # Step 2 logs
+      ├── mesh/                        # Step 3 logs
+      ├── feature_extraction/          # Steps 4-6 logs
+      ├── benchmarks/                # Performance metrics
+      │   ├── hsf/
+      │   ├── data_processing/
+      │   ├── mesh/
+      │   └── feature_extraction/
+      ├── snakemake_batch_001.log
+      └── snakemake_aggregation.log
+</pre></div>
+</div>
+</section>
+<section id="output-files-explained">
+<h3>Output Files Explained<a class="headerlink" href="#output-files-explained" title="Link to this heading"></a></h3>
+<p><strong>Segmentations (Step 1):</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">*_dseg.nii.gz</span></code>: Full HSF segmentation (all subfields labeled)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*_hemi-{L|R}_seg_crop.nii.gz</span></code>: Hemisphere-specific cropped segmentation</p></li>
+</ul>
+<p><strong>Masks (Step 2):</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">*_label-{DG|CA1|CA2|CA3|SUB}_mask.nii.gz</span></code>: Binary mask for each subfield</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*_mask.nii.gz</span></code>: Combined whole-hippocampus mask</p></li>
+</ul>
+<p><strong>Meshes (Step 3):</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.vtk</span></code>: 3D polygon mesh for curvature analysis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.png</span></code>: 2D rendering for visual inspection</p></li>
+</ul>
+<p><strong>Features (Steps 4-6):</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">*_pyradiomics.csv</span></code>: Shape features (volume, surface area, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*_curvature.csv</span></code>: Curvature metrics (mean, Gaussian)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*_all_features.csv</span></code>: Combined per-subject features</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary/all_features.csv</span></code>: <strong>Final dataset</strong> with all subjects</p></li>
+</ul>
+<p><strong>Benchmarks:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">logs/&lt;timestamp&gt;/benchmarks/</span></code>: Performance metrics for each job</p></li>
+<li><p>Tab-delimited files with columns:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: Runtime in seconds</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h:m:s</span></code>: Formatted time (hours:minutes:seconds)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_rss</span></code>: Maximum resident set size (memory)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_vms</span></code>: Maximum virtual memory size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_uss</span></code>, <code class="docutils literal notranslate"><span class="pre">max_pss</span></code>: Memory usage details</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">io_in</span></code>, <code class="docutils literal notranslate"><span class="pre">io_out</span></code>: I/O read/write in MB</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean_load</span></code>: Average CPU load</p></li>
+</ul>
+</li>
+<li><p>Use these files to identify bottlenecks and optimize batch sizes</p></li>
+</ul>
+</section>
+</section>
+<section id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading"></a></h2>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">pipeline/config/config.yaml</span></code> to customize:</p>
+<section id="basic-settings">
+<h3>Basic Settings<a class="headerlink" href="#basic-settings" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">bids_root</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data&quot;</span>
+<span class="nt">derivatives_root</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/derivatives/&quot;</span>
+<span class="nt">cores</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="nt">memory_mb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span>
+</pre></div>
+</div>
+</section>
+<section id="batch-processing">
+<h3>Batch Processing<a class="headerlink" href="#batch-processing" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">      </span><span class="c1"># Subjects per batch (0 = no batching)</span>
+<span class="nt">batch_number</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">     </span><span class="c1"># Starting batch number</span>
+</pre></div>
+</div>
+</section>
+<section id="hsf-segmentation">
+<h3>HSF Segmentation<a class="headerlink" href="#hsf-segmentation" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">hsf_params</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">contrast</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;t1&quot;</span>
+<span class="w">  </span><span class="nt">margin</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[8,8,8]&quot;</span>
+<span class="w">  </span><span class="nt">segmentation_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;single_fast&quot;</span><span class="w">  </span><span class="c1"># or single_accurate, bagging_fast, bagging_accurate</span>
+<span class="w">  </span><span class="nt">ca_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1/2/3&quot;</span><span class="w">                   </span><span class="c1"># Separate CA1, CA2, CA3</span>
+</pre></div>
+</div>
+</section>
+<section id="mesh-generation">
+<h3>Mesh Generation<a class="headerlink" href="#mesh-generation" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">mesh_params</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">min_voxel_count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w">      </span><span class="c1"># Minimum voxels for valid mesh</span>
+<span class="w">  </span><span class="nt">smooth_iters</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">         </span><span class="c1"># Smoothing iterations</span>
+<span class="w">  </span><span class="nt">decimation_degree</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.7</span><span class="w">   </span><span class="c1"># Mesh reduction ratio</span>
+</pre></div>
+</div>
+</section>
+<section id="subfield-labels">
+<h3>Subfield Labels<a class="headerlink" href="#subfield-labels" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">hemis</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;L&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;R&quot;</span><span class="p p-Indicator">]</span>
+<span class="nt">labels</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">DG</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">    </span><span class="c1"># Dentate Gyrus</span>
+<span class="w">  </span><span class="nt">CA1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">   </span><span class="c1"># Cornu Ammonis 1</span>
+<span class="w">  </span><span class="nt">CA2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">   </span><span class="c1"># Cornu Ammonis 2</span>
+<span class="w">  </span><span class="nt">CA3</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w">   </span><span class="c1"># Cornu Ammonis 3</span>
+<span class="w">  </span><span class="nt">SUB</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w">   </span><span class="c1"># Subiculum</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="out-of-memory-exit-code-9">
+<h3>Out of Memory (Exit Code -9)<a class="headerlink" href="#out-of-memory-exit-code-9" title="Link to this heading"></a></h3>
+<p><strong>Symptom:</strong> Container crashes during “Building DAG of jobs…”</p>
+<p><strong>Solution:</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># Reduce batch size</span>
+<span class="p">-</span><span class="n">-batch-size</span> <span class="n">10</span>
+
+<span class="c"># Or increase Docker memory</span>
+<span class="p">-</span><span class="n">-memory</span><span class="p">=</span><span class="s2">&quot;12g&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="no-subjects-found">
+<h3>No Subjects Found<a class="headerlink" href="#no-subjects-found" title="Link to this heading"></a></h3>
+<p><strong>Check:</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># Wrapper shows discovered subjects</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="p">-</span><span class="n">-rm</span> <span class="p">\</span>
+  <span class="n">-v</span> <span class="s2">&quot;D:\Path\To\Data:/data&quot;</span> <span class="p">\</span>
+  <span class="n">tarizw</span><span class="p">/</span><span class="n">hippocampus-pipeline</span><span class="p">:</span><span class="n">latest</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-batch-size</span> <span class="n">1</span> <span class="p">\</span>
+  <span class="p">-</span><span class="n">-cores</span> <span class="n">1</span>
+</pre></div>
+</div>
+<p>Look for: <code class="docutils literal notranslate"><span class="pre">[INFO]</span> <span class="pre">Found</span> <span class="pre">XXX</span> <span class="pre">subject-session</span> <span class="pre">pairs</span></code></p>
+</section>
+<section id="mesh-generation-warnings">
+<h3>Mesh Generation Warnings<a class="headerlink" href="#mesh-generation-warnings" title="Link to this heading"></a></h3>
+<p>VTK/EGL warnings are <strong>expected and harmless</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>vtkXOpenGLRenderWindow: bad X server connection
+Failed to load EGL! Please install the EGL library...
+</pre></div>
+</div>
+<p>Pipeline uses OSMesa (software rendering). Meshes are generated correctly.</p>
+</section>
+<section id="empty-masks-processing-issues">
+<h3>Empty Masks / Processing Issues<a class="headerlink" href="#empty-masks-processing-issues" title="Link to this heading"></a></h3>
+<p>Some subjects may have empty subregion masks (too small to segment). This is normal:</p>
+<ul class="simple">
+<li><p>Empty masks handled gracefully (empty VTK files created)</p></li>
+<li><p>Pipeline continues processing other subjects</p></li>
+<li><p>Issues logged in <code class="docutils literal notranslate"><span class="pre">derivatives/summary/processing_issues.txt</span></code></p></li>
+</ul>
+<p>Check the issues report:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">cat </span><span class="s2">&quot;D:\Path\To\Data\derivatives\summary\processing_issues.txt&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="permission-issues-linux">
+<h3>Permission Issues (Linux)<a class="headerlink" href="#permission-issues-linux" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--user<span class="w"> </span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span>:<span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--security-opt<span class="w"> </span><span class="nv">seccomp</span><span class="o">=</span>unconfined<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory<span class="o">=</span><span class="s2">&quot;8g&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;/path/to/data:/data&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/logs:/app/logs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>tarizw/hippocampus-pipeline:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cores<span class="w"> </span><span class="m">4</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="performance-notes">
+<h2>Performance Notes<a class="headerlink" href="#performance-notes" title="Link to this heading"></a></h2>
+<section id="timing-per-subject">
+<h3>Timing per Subject<a class="headerlink" href="#timing-per-subject" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Step 1 (Segmentation): ~5-10 minutes</p></li>
+<li><p>Step 2 (Data Processing): ~30 seconds</p></li>
+<li><p>Step 3 (Mesh Generation): ~1-2 minutes</p></li>
+<li><p>Step 4 (PyRadiomics): ~1-2 minutes</p></li>
+<li><p>Step 5 (Curvature): ~1 minute</p></li>
+<li><p>Step 6 (Aggregation): &lt;10 seconds</p></li>
+<li><p><strong>Total: ~10-20 minutes per subject</strong></p></li>
+</ul>
+</section>
+<section id="large-dataset-example">
+<h3>Large Dataset Example<a class="headerlink" href="#large-dataset-example" title="Link to this heading"></a></h3>
+<p><strong>300 subjects with 4 cores:</strong></p>
+<ul class="simple">
+<li><p>Sequential: ~50-100 hours</p></li>
+<li><p>With batching (batch_size=50): ~60-75 hours</p></li>
+<li><p>Faster processing: Use 8 cores, reduce to ~30-40 hours</p></li>
+</ul>
+</section>
+<section id="resource-requirements">
+<h3>Resource Requirements<a class="headerlink" href="#resource-requirements" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Docker image:</strong> ~800MB</p></li>
+<li><p><strong>Memory per job:</strong> ~3-4GB</p></li>
+<li><p><strong>Recommended:</strong> 8GB RAM for batch_size=50, 16GB for batch_size=100</p></li>
+</ul>
+</section>
+</section>
+<section id="output-analysis">
+<h2>Output Analysis<a class="headerlink" href="#output-analysis" title="Link to this heading"></a></h2>
+<section id="final-dataset">
+<h3>Final Dataset<a class="headerlink" href="#final-dataset" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">derivatives/summary/all_features.csv</span></code> contains:</p>
+<ul class="simple">
+<li><p><strong>Subject/Session identifiers</strong></p></li>
+<li><p><strong>Radiomics features</strong> per region/hemisphere:</p>
+<ul>
+<li><p>MeshVolume, SurfaceArea, SurfaceVolumeRatio</p></li>
+<li><p>Shape elongation, flatness, sphericity</p></li>
+</ul>
+</li>
+<li><p><strong>Curvature features</strong> per region/hemisphere:</p>
+<ul>
+<li><p>Mean curvature (average, min, max, std)</p></li>
+<li><p>Gaussian curvature (average, min, max, std)</p></li>
+</ul>
+</li>
+<li><p><strong>Regions:</strong> DG, CA1, CA2, CA3, SUB (left/right + combined)</p></li>
+</ul>
+</section>
+<section id="analysis-tools">
+<h3>Analysis Tools<a class="headerlink" href="#analysis-tools" title="Link to this heading"></a></h3>
+<p>Use standard data analysis tools:</p>
+<ul class="simple">
+<li><p><strong>Python:</strong> pandas, scikit-learn, matplotlib</p></li>
+<li><p><strong>R:</strong> tidyverse, ggplot2, statistical tests</p></li>
+<li><p><strong>SPSS/SAS:</strong> Import CSV directly</p></li>
+</ul>
+</section>
+<section id="example-analysis">
+<h3>Example Analysis<a class="headerlink" href="#example-analysis" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># Load final results</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;derivatives/summary/all_features.csv&#39;</span><span class="p">)</span>
+
+<span class="c1"># Check for processing issues</span>
+<span class="n">issues</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;derivatives/summary/processing_issues.txt&#39;</span><span class="p">,</span> 
+                     <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">,</span> <span class="s1">&#39;issue&#39;</span><span class="p">])</span>
+
+<span class="c1"># Analyze hippocampus volumes</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;Subject&#39;</span><span class="p">,</span> <span class="s1">&#39;L_Hippocampus_MeshVolume&#39;</span><span class="p">,</span> <span class="s1">&#39;R_Hippocampus_MeshVolume&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+
+<span class="c1"># Statistical comparisons</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">ttest_ind</span>
+<span class="n">left_vol</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;L_Hippocampus_MeshVolume&#39;</span><span class="p">]</span>
+<span class="n">right_vol</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;R_Hippocampus_MeshVolume&#39;</span><span class="p">]</span>
+<span class="n">ttest_ind</span><span class="p">(</span><span class="n">left_vol</span><span class="p">,</span> <span class="n">right_vol</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="workflow-visualization">
+<h2>Workflow Visualization<a class="headerlink" href="#workflow-visualization" title="Link to this heading"></a></h2>
+<section id="rule-graph-dag-svg">
+<h3>Rule Graph (dag.svg)<a class="headerlink" href="#rule-graph-dag-svg" title="Link to this heading"></a></h3>
+<p>After pipeline completion, a workflow rule graph is automatically generated and saved to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">logs</span><span class="o">/&lt;</span><span class="n">timestamp</span><span class="o">&gt;/</span><span class="n">dag</span><span class="o">.</span><span class="n">svg</span>
+</pre></div>
+</div>
+<p><strong>What it shows:</strong></p>
+<ul class="simple">
+<li><p>Complete pipeline structure showing all rules and their dependencies</p></li>
+<li><p>Visual representation of workflow stages: HSF Segmentation → Data Processing → Mesh Generation → Feature Extraction → Aggregation</p></li>
+<li><p>Scalable diagram optimized for large datasets (shows rule relationships, not individual subject jobs)</p></li>
+</ul>
+<p><strong>Note:</strong> The rule graph generates after aggregation completes, ensuring it represents the entire pipeline execution across all batches.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../guides.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pipelinemain.html" class="btn btn-neutral float-right" title="Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

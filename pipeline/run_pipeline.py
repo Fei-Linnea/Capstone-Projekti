@@ -32,26 +32,37 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run with defaults from profile
-  python run_pipeline.py
+    # Full command example, run with defaults from profile
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks
 
-  # Run with custom batch size
-  python run_pipeline.py --batch-size 20
+    # Run with custom batch size
+    Flag: --batch-size 20
 
-  # Override jobs and cores at runtime
-  python run_pipeline.py --jobs 16 --cores 32
+    # Override cores at runtime
+    Flags: --cores 32
 
-  # Override rule threads for specific rule
-  python run_pipeline.py --set-threads hsf_segmentation=4
+    # Override rule threads for specific rule
+    Flag: --set-threads hsf_segmentation=4
 
-  # Dry run (show what would be done)
-  python run_pipeline.py --dry-run
+    # Dry run (show what would be done)
+    Flag: --dry-run
 
-  # Process specific subjects
-  python run_pipeline.py --subjects 01 02 03 04 05
+    # Process specific subjects
+    Flag: --subjects 01 02 03 04 05
 
-  # Complete example with multiple overrides
-  python run_pipeline.py --batch-size 10 --jobs 8 --cores 16 --dry-run
+    # Use a custom BIDS pattern
+    Flag: --bids-pattern "sub-*/ses-1/anat/*_T1w.nii.gz"
+
+    # Complete example with multiple overrides
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks --batch-size 10 --cores 16 --set-threads hsf_segmentation=4
         """
     )
     
@@ -59,7 +70,7 @@ Examples:
     parser.add_argument(
         "--profile",
         required=True,
-        help="Snakemake profile config (e.g., config/profiles/tyks/config.yaml)"
+        help="Snakemake profile directory (e.g., config/profiles/tyks). A config.yaml path inside the profile is also accepted."
     )
     
     # Processing arguments
@@ -72,16 +83,14 @@ Examples:
 
     # Snakemake overrides (optional)
     parser.add_argument(
-        "--jobs",
-        type=int,
-        default=None,
-        help="Override Snakemake jobs (default from config/config.yaml)"
-    )
-    parser.add_argument(
         "--cores",
-        type=int,
+        nargs="?",
+        const="all",
         default=None,
-        help="Override Snakemake cores (default from config/config.yaml)"
+        help=(
+            "Override Snakemake cores (default from the selected Snakemake profile). "
+            "Provide a number (e.g., --cores 16) or pass --cores without a value to use all available cores."
+        )
     )
     parser.add_argument(
         "--set-threads",
@@ -89,33 +98,11 @@ Examples:
         default=None,
         help="Override rule threads (e.g., hsf_segmentation=4). Can be used multiple times."
     )
-    parser.add_argument(
-        "--set-resources",
-        action="append",
-        default=None,
-        help="Override rule resources (e.g., hsf_segmentation:mem_mb=16000). Can be used multiple times."
-    )
     
-    # Path arguments
-    parser.add_argument(
-        "--pipeline-dir",
-        default=DEFAULT_PIPELINE_DIR,
-        help=f"Pipeline working directory (default: {DEFAULT_PIPELINE_DIR})"
-    )
-    parser.add_argument(
-        "--log-dir",
-        default=DEFAULT_LOG_BASE_DIR,
-        help=f"Base directory for logs (default: {DEFAULT_LOG_BASE_DIR})"
-    )
-    parser.add_argument(
-        "--data-dir",
-        default=DEFAULT_DATA_DIR,
-        help=f"BIDS data directory (default: {DEFAULT_DATA_DIR})"
-    )
     parser.add_argument(
         "--bids-pattern",
         default=DEFAULT_BIDS_PATTERN,
-        help=f"BIDS glob pattern for T1w files (default: {DEFAULT_BIDS_PATTERN})"
+        help=f"BIDS glob pattern under /data (default: {DEFAULT_BIDS_PATTERN})"
     )
     
     # Execution control
@@ -127,7 +114,7 @@ Examples:
     parser.add_argument(
         "--subjects",
         nargs="+",
-        help="Specific subjects to process (default: auto-discover from data-dir)"
+        help="Specific subjects to process (default: auto-discover from /data)"
     )
     parser.add_argument(
         "--cleanup",
@@ -136,10 +123,15 @@ Examples:
     )
     
     args = parser.parse_args()
+
+    # Fixed container paths (end users shouldn't need to set these)
+    pipeline_dir = DEFAULT_PIPELINE_DIR
+    log_base_dir = DEFAULT_LOG_BASE_DIR
+    data_dir = DEFAULT_DATA_DIR
     
     # Create timestamped log directory
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_dir = os.path.join(args.log_dir, timestamp)
+    log_dir = os.path.join(log_base_dir, timestamp)
     os.makedirs(log_dir, exist_ok=True)
     
     # Print startup banner
@@ -149,24 +141,34 @@ Examples:
     print(f"Start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", file=sys.stderr)
     print(f"Log directory: {log_dir}", file=sys.stderr)
     print(f"Profile: {args.profile}", file=sys.stderr)
-    print(f"Pipeline dir: {args.pipeline_dir}", file=sys.stderr)
-    print(f"Data dir: {args.data_dir}", file=sys.stderr)
     print(f"Batch size: {args.batch_size}", file=sys.stderr)
     # Load profile to display effective defaults
     # Support both directory paths (e.g. config/profiles/tyks) and
     # direct file paths (e.g. config/profiles/tyks/config.yaml).
-    profile_path = args.profile
+    raw_profile_arg = args.profile
+    profile_path = raw_profile_arg
     # If profile is relative, resolve against pipeline_dir (inside container
     # this is typically /app/pipeline, matching the Snakemake cwd).
     if not os.path.isabs(profile_path):
-        profile_path = os.path.join(args.pipeline_dir, profile_path)
+        profile_path = os.path.join(pipeline_dir, profile_path)
 
-    # If a directory is given, assume standard Snakemake profile layout
-    # with a config.yaml file inside it.
+    # Determine the profile config file path (for reading defaults)
     if os.path.isdir(profile_path):
         profile_config_path = os.path.join(profile_path, "config.yaml")
     else:
         profile_config_path = profile_path
+
+    # Determine the Snakemake --profile argument.
+    # Snakemake expects a *directory* for --profile; if the user provided
+    # a config.yaml path, convert it to the containing directory.
+    if os.path.isdir(profile_path):
+        snakemake_profile_arg = profile_path
+    else:
+        snakemake_profile_arg = os.path.dirname(profile_path)
+
+    # Use absolute paths for robustness.
+    profile_config_path = os.path.abspath(profile_config_path)
+    snakemake_profile_arg = os.path.abspath(snakemake_profile_arg)
 
     profile_data = {}
     try:
@@ -176,32 +178,13 @@ Examples:
         print(f"ERROR: Profile not found: {profile_config_path}", file=sys.stderr)
         sys.exit(1)
 
-    effective_jobs = args.jobs if args.jobs is not None else profile_data.get("jobs")
-    effective_cores = args.cores if args.cores is not None else profile_data.get("cores")
-    mem_mb = None
-    default_resources = profile_data.get("default-resources")
-    # Snakemake profiles typically use a list like ["mem_mb=4000"]
-    # but allow dict-style as well; handle both.
-    if isinstance(default_resources, dict):
-        mem_mb = default_resources.get("mem_mb")
-    elif isinstance(default_resources, list):
-        for item in default_resources:
-            if isinstance(item, str) and item.startswith("mem_mb="):
-                value = item.split("=", 1)[1]
-                try:
-                    mem_mb = int(value)
-                except ValueError:
-                    mem_mb = value
-                break
-
-    print(f"Jobs: {effective_jobs}", file=sys.stderr)
-    print(f"Cores: {effective_cores}", file=sys.stderr)
-    print(f"Memory/job: {mem_mb if mem_mb is not None else 'n/a'}", file=sys.stderr)
+    selected_cores = args.cores if args.cores is not None else profile_data.get("cores")
+    print(f"Cores: {selected_cores}", file=sys.stderr)
     if args.set_threads:
         overrides_display = ", ".join(args.set_threads)
         print(f"Thread overrides: {overrides_display}", file=sys.stderr)
     else:
-        print("Thread overrides: none (profile defaults)", file=sys.stderr)
+        print("Thread overrides: none (using defaults)", file=sys.stderr)
 
     if args.dry_run:
         print("Mode: DRY RUN", file=sys.stderr)
@@ -213,10 +196,10 @@ Examples:
         print(f"Using specified subjects: {', '.join(subjects)}", file=sys.stderr)
     else:
         # Auto-discover subjects from BIDS data directory
-        subjects = discover_subjects(args.data_dir, args.bids_pattern)
+        subjects = discover_subjects(data_dir, args.bids_pattern)
         
         if not subjects:
-            print(f"ERROR: No subjects found in {args.data_dir}", file=sys.stderr)
+            print(f"ERROR: No subjects found in {data_dir}", file=sys.stderr)
             print(f"Pattern used: {args.bids_pattern}", file=sys.stderr)
             sys.exit(1)
         
@@ -239,14 +222,14 @@ Examples:
             batch_subjects=batch_subjects,
             batch_num=batch_num,
             total_batches=total_batches,
-            profile=args.profile,
+            profile=snakemake_profile_arg,
             log_dir=log_dir,
             batch_size=args.batch_size,
-            pipeline_dir=args.pipeline_dir,
-            jobs=args.jobs,
-            cores=args.cores,
+            pipeline_dir=pipeline_dir,
+            cores=selected_cores,
             set_threads=args.set_threads,
-            set_resources=args.set_resources,
+            subjects=subjects,
+            bids_pattern=args.bids_pattern,
             dry_run=args.dry_run
         )
         
@@ -256,13 +239,13 @@ Examples:
     # Run aggregation if all batches succeeded
     if not failed_batches and not args.dry_run:
         aggregation_success = run_aggregation(
-            profile=args.profile,
+            profile=snakemake_profile_arg,
             log_dir=log_dir,
-            pipeline_dir=args.pipeline_dir,
-            jobs=args.jobs,
-            cores=args.cores,
+            pipeline_dir=pipeline_dir,
+            cores=selected_cores,
             set_threads=args.set_threads,
-            set_resources=args.set_resources,
+            subjects=subjects,
+            bids_pattern=args.bids_pattern,
             dry_run=args.dry_run
         )
         

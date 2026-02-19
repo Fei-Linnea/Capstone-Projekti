@@ -41,8 +41,12 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">User and Develeper Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pipeline">pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api">API</a></li>
 </ul>
 
         </div>
@@ -81,15 +85,16 @@
 
 <div class="viewcode-block" id="run_aggregation">
 <a class="viewcode-back" href="../../../pipeline.run_utils.html#pipeline.run_utils.aggregate.run_aggregation">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_aggregation</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">profile_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">pipeline_dir</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_aggregation</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">pipeline_dir</span><span class="p">,</span>
+                    <span class="n">jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">set_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_resources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run the aggregation step after all batches are complete.</span>
 <span class="sd">    This combines features from all subjects into final output files.</span>
 <span class="sd">    </span>
 <span class="sd">    Args:</span>
-<span class="sd">        config_file: Path to config.yaml</span>
-<span class="sd">        profile_dir: Snakemake profile directory (required)</span>
+<span class="sd">        profile: Path to Snakemake profile config</span>
 <span class="sd">        log_dir: Directory for logs</span>
 <span class="sd">        pipeline_dir: Working directory for Snakemake</span>
 <span class="sd">        dry_run: If True, don&#39;t execute, just show commands</span>
@@ -105,25 +110,37 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
     
     <span class="c1"># Run aggregation for all subjects (batch_size=0 means process all)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">profile</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: --profile is required&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;snakemake&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--snakefile&quot;</span><span class="p">,</span> <span class="s2">&quot;workflow/Snakefile&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--configfile&quot;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
+        <span class="s2">&quot;--profile&quot;</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span>
         <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;batch_size=0&quot;</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">&quot;log_dir=</span><span class="si">{</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--rerun-incomplete&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;aggregate_all_subjects&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;log_dir=</span><span class="si">{</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">]</span>
-    
-    <span class="k">if</span> <span class="n">profile_dir</span><span class="p">:</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--profile&quot;</span><span class="p">,</span> <span class="n">profile_dir</span><span class="p">])</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: --profile is required&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    
+
+    <span class="c1"># Add Snakemake execution flags (profile provides other defaults)</span>
+    <span class="k">if</span> <span class="n">jobs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--jobs&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">jobs</span><span class="p">)])</span>
+    <span class="k">if</span> <span class="n">cores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--cores&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">cores</span><span class="p">)])</span>
+    <span class="c1"># if set_threads:</span>
+    <span class="c1">#     for entry in set_threads:</span>
+    <span class="c1">#         cmd.extend([&quot;--set-threads&quot;, entry])</span>
+    <span class="c1"># if set_resources:</span>
+    <span class="c1">#     for entry in set_resources:</span>
+    <span class="c1">#         cmd.extend([&quot;--set-resources&quot;, entry])</span>
     <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--dry-run&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Add target rule at the end (after all flags)</span>
+    <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;aggregate_all_subjects&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DRY RUN: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     

@@ -44,8 +44,6 @@ rule combine_labels:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "data_processing", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     threads: 1
-    resources:
-        mem_mb=2000
     shell:
         """
         python {params.scripts_dir}/nii_parse.py combine \

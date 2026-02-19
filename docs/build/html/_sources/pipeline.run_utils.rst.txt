@@ -43,13 +43,6 @@ progress
    :show-inheritance:
    :undoc-members:
 
-snakemake_profile
------------------
-.. automodule:: pipeline.run_utils.snakemake_profile
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 subjects
 --------
 .. automodule:: pipeline.run_utils.subjects
