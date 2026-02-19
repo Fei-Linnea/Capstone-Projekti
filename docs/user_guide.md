@@ -16,6 +16,8 @@ Create an empty logs directory in your project folder:
 
 Pull the Apptainer image from Docker Hub:
 
+**!! REMEMBER TO UPDATE THE CORRECT DOCKER IMAGE VERSION HERE !!**
+
 ```bash
 apptainer pull hippocampus-pipeline.sif docker://docker.io/tarizw/hippocampus-pipeline:v1.0.0
 ```
