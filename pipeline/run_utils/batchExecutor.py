@@ -6,6 +6,7 @@ import os
 import sys
 import subprocess
 import threading
+import json
 
 from .config import RULE_DISPLAY_NAMES, SPINNER_FRAMES
 from .logger import tail_log_file
@@ -13,8 +14,8 @@ from .progress import parse_progress, print_progress_bar
 
 def run_snakemake_batch(batch_subjects, batch_num, total_batches, profile,
                         log_dir, batch_size, pipeline_dir,
-                        jobs=None, cores=None,
-                        set_threads=None, set_resources=None,
+                        cores=None, set_threads=None,
+                        subjects=None, bids_pattern=None,
                         dry_run=False):
     """
     Run Snakemake for a batch of subjects with progress tracking.
@@ -58,17 +59,22 @@ def run_snakemake_batch(batch_subjects, batch_num, total_batches, profile,
         f"log_dir={log_dir}"
     ]
 
+    # Optional config passthrough to Snakefile
+    if subjects:
+        # IMPORTANT: Snakemake parses --config values via YAML.
+        # A value like "02" can be coerced into an int (2) by YAML parsing,
+        # which breaks subject matching (e.g., "sub-02").
+        # Encode as a JSON/YAML list of quoted strings to preserve leading zeros.
+        cmd.append(f"subjects={json.dumps([str(s) for s in subjects])}")
+    if bids_pattern:
+        cmd.append(f"bids_pattern={bids_pattern}")
+
     # Add Snakemake execution flags (profile provides other defaults)
-    if jobs is not None:
-        cmd.extend(["--jobs", str(jobs)])
     if cores is not None:
         cmd.extend(["--cores", str(cores)])
     if set_threads:
         for entry in set_threads:
             cmd.extend(["--set-threads", entry])
-    if set_resources:
-        for entry in set_resources:
-            cmd.extend(["--set-resources", entry])
     if dry_run:
         cmd.append("--dry-run")
     

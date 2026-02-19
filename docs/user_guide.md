@@ -57,15 +57,41 @@ apptainer run --writable-tmpfs --bind ./Dataset_Name:/data --bind ./logs:/app/lo
 | Option | Description | Default | Required |
 |--------|-------------|----------|----------|
 | `--profile` | Snakemake profile directory (e.g., `config/profiles/tyks`) | None | **Yes** |
+| `--help` | Show help message and exit | None | No |
 | `--batch-size` | Number of subjects per batch | 5 | No |
-| `--jobs` | Max parallel Snakemake jobs | 8| No |
-| `--cores` | Total CPU cores available to Snakemake | autodetected or 4 | No |
-| `--set-threads` | Override rule threads (e.g., `hsf_segmentation=4`) | 1 | No |
+| `--cores` | Total CPU cores available to Snakemake. Use `--cores` without a value (or `--cores all`) to use all available CPU cores. | 16 | No |
+| `--subjects` | Process specific subjects | all subjects | No |
+| `--set-threads` | Override rule threads (e.g., `hsf_segmentation=4`). | 1 except hsf_segmentation=2 | No |
+| `--bids-pattern` | BIDS pattern to discover inputs | `sub-*/ses-*/anat/*_T1w.nii.gz` | No |
 | `--cleanup` | Remove intermediate files after completion, keeping only `summary/all_features.csv` and error report | disabled | No |
 | `--dry-run` | Show what would be done without executing | disabled | No |
-| `--subjects` | Process specific subjects (e.g., `--subjects 01 02 03`) | all subjects | No |
 
 **Note:** The `--profile` flag is required to specify default execution settings. Use `config/profiles/tyks` for TYKS environment.
+
+### Performance tuning
+
+Important options:
+
+- `--batch-size`: if you run out of memory or disk space, reduce this first. This controls how many subjects are processed in one batch (i.e., how much intermediate data is created at once).
+- `--cores`: set this to the number of CPU cores you are allowed to use. This will use at most N CPU cores/jobs in parallel. If you run `--cores` without a value (or `--cores all`), Snakemake uses all CPU cores available to the machine/container.
+
+Advanced options:
+
+- `--set-threads`: advanced per-rule tuning
+
+Rule of thumb:
+
+- If the run is slow and your CPU is mostly idle, increase `--cores`.
+- If the run fails with memory-related errors, decrease `--batch-size`.
+
+**Recommended Settings for Different Machine Sizes:**
+
+| Machine RAM | batch-size | cores | 
+|-------------|-----------|--------
+| 32 GB       | 10        |  8    |       
+| 64 GB       | 20        | 16    |         
+| 128 GB      | 40        | 32    |         
+| 256 GB      | 80        | 64    |   
 
 **Example with cleanup flag:**
 ```bash
@@ -88,7 +114,17 @@ apptainer run --writable-tmpfs \
   --subjects 01 02 03 04 05
 ```
 
-**Example with custom jobs and cores and rule thread override:**
+**Example using a custom BIDS discovery pattern:**
+```bash
+apptainer run --writable-tmpfs \
+  --bind ./DatasetName:/data \
+  --bind ./logs:/app/logs \
+  hippocampus-pipeline.sif \
+  --profile config/profiles/tyks \
+  --bids-pattern "sub-*/ses-1/anat/*_T1w.nii.gz"
+```
+
+**Example with cores and rule thread override:**
 ```bash
 apptainer run --writable-tmpfs \
   --bind ./DatasetName:/data \
@@ -96,20 +132,9 @@ apptainer run --writable-tmpfs \
   hippocampus-pipeline.sif \
   --profile config/profiles/tyks \
   --batch-size 10 \
-  --jobs 12 \
   --cores 20 \
   --set-threads hsf_segmentation=4 \
 ```
-
-**Recommended Settings for Different Machine Sizes:**
-
-| Machine RAM | batch-size | jobs | cores | 
-|-------------|-----------|----------------|-----------------|
-| 32 GB       | 10        | 4              | 8               | 
-| 64 GB       | 20        | 8              | 16              | 
-| 128 GB      | 40        | 16             | 32              | 
-| 256 GB      | 80        | 32             | 64              |
-
 
 
 ## Cleanup Option
@@ -139,7 +164,7 @@ apptainer run --writable-tmpfs \
 
 The cleanup will:
 1. Show a preview of what will be deleted
-2. Ask for confirmation before proceeding
+2. Delete intermediate files automatically
 3. Only run if the pipeline completes successfully
 
 ## Output Structure

@@ -5,11 +5,12 @@ Snakemake aggregation step after batch processing
 import sys
 import os
 import subprocess
+import json
 
 
 def run_aggregation(profile, log_dir, pipeline_dir,
-                    jobs=None, cores=None,
-                    set_threads=None, set_resources=None,
+                    cores=None,set_threads=None,
+                    subjects=None, bids_pattern=None,
                     dry_run=False):
     """
     Run the aggregation step after all batches are complete.
@@ -45,22 +46,26 @@ def run_aggregation(profile, log_dir, pipeline_dir,
         f"log_dir={log_dir}"
     ]
 
+    # Optional config passthrough to Snakefile
+    if subjects:
+        # Preserve leading zeros by forcing YAML to parse as list[str]
+        cmd.append(f"subjects={json.dumps([str(s) for s in subjects])}")
+    if bids_pattern:
+        cmd.append(f"bids_pattern={bids_pattern}")
+
     # Add Snakemake execution flags (profile provides other defaults)
-    if jobs is not None:
-        cmd.extend(["--jobs", str(jobs)])
     if cores is not None:
         cmd.extend(["--cores", str(cores)])
-    # if set_threads:
-    #     for entry in set_threads:
-    #         cmd.extend(["--set-threads", entry])
-    # if set_resources:
-    #     for entry in set_resources:
-    #         cmd.extend(["--set-resources", entry])
+    if set_threads:
+        for entry in set_threads:
+            cmd.extend(["--set-threads", entry])
     if dry_run:
         cmd.append("--dry-run")
 
-    # Add target rule at the end (after all flags)
-    cmd.append("aggregate_all_subjects")
+    # Do not add a positional target here (cmd.append("aggregate_all_subjects")).
+    # The workflow's default target (rule `all`) already includes the final
+    # summary outputs, and avoiding a positional target prevents Snakemake
+    # argument-parsing ambiguity with --set-threads.
     
     if dry_run:
         print(f"DRY RUN: {' '.join(cmd)}", file=sys.stderr)

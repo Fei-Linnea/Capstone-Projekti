@@ -1,35 +1,33 @@
-# Snakemake profile for CSC (Slurm, Apptainer support)
+# Snakemake 8.x Profile for CSC Puhti - SLURM + Apptainer
+# Usage: snakemake --profile config/profiles/csc --config bids_root=... derivatives_root=... container_image=...
 
-jobs: 100                           # Max parallel jobs
-keep-going: true                    # Continue on individual job failures
-latency-wait: 60                    # Wait for filesystem
-restart-times: 1
+# SLURM executor
+executor: slurm
+
+# Job settings
+jobs: 100
+keep-going: true
+latency-wait: 120
+retries: 1
 printshellcmds: true
+rerun-incomplete: true
+local-cores: 1
 
-# Slurm cluster submission configuration
-cluster: >
-  sbatch
-  -J {rule}
-  -A {resources.account}
-  -p {resources.partition}
-  -t {resources.time}
-  -c {threads}
-  --mem={resources.mem_mb}
-  --output=logs/slurm/%x-%j.out
-  --error=logs/slurm/%x-%j.err
-
-# Default resources for each job
-# Note: Individual rules specify their own mem_mb, threads, and time.
-# These are fallbacks and cluster-specific settings.
+# Default SLURM resources
+# tmpdir must be on shared storage (/scratch) — not /tmp which is node-local.
+# Snakemake adds tmpdir to SINGULARITY_BIND; if it points to a login-node /tmp
+# path the compute node can't mount it and Apptainer fails.
 default-resources:
-  mem_mb: 4000                      # Default memory (rules override this)
-  time: "01:00:00"                  # Default time limit (rules override this)
-  partition: "serial"               # Slurm partition
-  account: "project_2001234"        # Replace with your CSC project ID
+  - slurm_account=project_2001988
+  - slurm_partition=small
+  - mem_mb=8000
+  - runtime=120
+  - "tmpdir='/scratch/project_2001988/tarizw/tmp'"
 
-# Software deployment: Use Apptainer
-use-conda: false
-use-singularity: true              # Or: use-apptainer: true (Snakemake >= 7.29)
+# Apptainer container support
+software-deployment-method:
+  - apptainer
 
-# Apptainer-specific settings
-apptainer-args: "--bind=/users,/projappl,/scratch"
+# Explicitly bind /scratch as read-write (Snakemake's auto-binds may be read-only)
+# Also set HSF cache location inside the container
+apptainer-args: "--bind /scratch/project_2001988:/scratch/project_2001988:rw --env HSF_HOME=/users/$USER/.hsf"

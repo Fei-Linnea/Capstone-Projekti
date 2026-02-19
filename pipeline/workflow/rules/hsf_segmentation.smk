@@ -20,8 +20,6 @@ rule hsf_segmentation:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "hsf", "sub-{subject}_ses-{session}.txt")
     threads: 2
-    resources:
-        mem_mb=12000
     params:
         subject_anat_dir = lambda wildcards: os.path.join(BIDS_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),
         output_dir = lambda wildcards: os.path.join(DERIVATIVES_ROOT, f"sub-{wildcards.subject}", f"ses-{wildcards.session}", "anat"),

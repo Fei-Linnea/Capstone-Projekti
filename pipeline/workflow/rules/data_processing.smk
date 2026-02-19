@@ -18,8 +18,6 @@ rule split_label:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "data_processing", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
     threads: 1
-    resources:
-        mem_mb=200
     run:
         Path(output.label_mask).parent.mkdir(parents=True, exist_ok=True)
         split_one_label(input.seg_crop, output.label_mask, params.label_value)
@@ -37,8 +35,6 @@ rule combine_labels:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "data_processing", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     threads: 1
-    resources:
-        mem_mb=2000
     run:
         Path(output.combined_mask).parent.mkdir(parents=True, exist_ok=True)
         combine_labels(input.seg_crop, output.combined_mask)

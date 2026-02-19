@@ -20,8 +20,6 @@ rule extract_pyradiomics_per_label:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
     threads: 1
-    resources:
-        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -68,8 +66,6 @@ rule extract_pyradiomics_combined:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
     threads: 1
-    resources:
-        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -118,8 +114,6 @@ rule extract_curvature_per_label:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.txt")
     threads: 1
-    resources:
-        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -170,8 +164,6 @@ rule extract_curvature_combined:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.txt")
     threads: 1
-    resources:
-        mem_mb=3000
     run:
         # Create output directory
         Path(output.features).parent.mkdir(parents=True, exist_ok=True)
@@ -268,8 +260,6 @@ rule aggregate_subject_features:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "sub-{subject}_ses-{session}_aggregate.txt")
     threads: 1
-    resources:
-        mem_mb=2000
     run:
         # ===== Read RADIOMICS features =====
         # Left hemisphere
@@ -410,8 +400,6 @@ rule aggregate_all_subjects:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "feature_extraction", "aggregate_all.txt")
     threads: 1
-    resources:
-        mem_mb=2000
     run:
         # Create output directory
         Path(output.summary).parent.mkdir(parents=True, exist_ok=True)
@@ -421,7 +409,8 @@ rule aggregate_all_subjects:
         issues_found = []
         
         for csv_file in input.subject_features:
-            df = pd.read_csv(csv_file)
+            # Explicitly read Subject and Session as strings to preserve leading zeros
+            df = pd.read_csv(csv_file, dtype={'Subject': str, 'Session': str})
             all_dfs.append(df)
             
             # Check for NaN values (indicates empty masks/failed processing)
@@ -433,6 +422,10 @@ rule aggregate_all_subjects:
         
         # Concatenate all dataframes
         combined_df = pd.concat(all_dfs, ignore_index=True)
+        
+        # Ensure Subject and Session remain as strings to preserve leading zeros
+        combined_df['Subject'] = combined_df['Subject'].astype(str)
+        combined_df['Session'] = combined_df['Session'].astype(str)
         
         # Sort by Subject, Session
         combined_df = combined_df.sort_values(['Subject', 'Session'])

@@ -4,8 +4,6 @@ Utility modules for the Hippocampus Radiomic Feature Extraction Pipeline
 
 from .config import (
     DEFAULT_CONFIG_PATH,
-    DEFAULT_JOBS,
-    DEFAULT_CORES,
     DEFAULT_BATCH_SIZE,
     DEFAULT_PIPELINE_DIR,
     DEFAULT_LOG_BASE_DIR,
@@ -24,8 +22,6 @@ from .cleanup import cleanup_intermediate_files, cleanup_with_confirmation
 __all__ = [
     # Config defaults
     'DEFAULT_CONFIG_PATH',
-    'DEFAULT_JOBS',
-    'DEFAULT_CORES',
     'DEFAULT_BATCH_SIZE',
     'DEFAULT_PIPELINE_DIR',
     'DEFAULT_LOG_BASE_DIR',
