@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>slurm_status.py &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="run_utils functions" href="pipeline.run_utils.html" />
+    <link rel="prev" title="Pipeline Configuration File" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Pipeline Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-tyks-single-machine-execution">Snakemake Profile: TYKS Single-Machine Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-csc-puhti-slurm-apptainer">Snakemake Profile: CSC Puhti (SLURM + Apptainer)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">slurm_status.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#slurm-job-status-checker-for-snakemake">SLURM Job Status Checker for Snakemake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#get-job-status-jobid">get_job_status(jobid)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#recognized-slurm-states">Recognized SLURM States</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#main">main()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
+      <li class="breadcrumb-item active">slurm_status.py</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/slurm_status.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="slurm-status-py">
+<h1>slurm_status.py<a class="headerlink" href="#slurm-status-py" title="Link to this heading"></a></h1>
+<section id="slurm-job-status-checker-for-snakemake">
+<h2>SLURM Job Status Checker for Snakemake<a class="headerlink" href="#slurm-job-status-checker-for-snakemake" title="Link to this heading"></a></h2>
+<p>This script provides a SLURM job status checker designed for use with
+Snakemake cluster execution.</p>
+<p>Snakemake calls this script with a job ID to determine whether a job is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">running</span></code> — Job is pending, running, or completing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">success</span></code> — Job completed successfully</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">failed</span></code> — Job failed, was cancelled, or timed out</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p>Configured in a Snakemake profile:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">cluster-status</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slurm_status.py&quot;</span>
+</pre></div>
+</div>
+<p>Command-line usage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>slurm_status.py<span class="w"> </span>&lt;jobid&gt;
+</pre></div>
+</div>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The script works as follows:</p>
+<ol class="arabic simple">
+<li><p>Queries SLURM using <code class="docutils literal notranslate"><span class="pre">sacct</span></code> (preferred method).</p></li>
+<li><p>If necessary, falls back to <code class="docutils literal notranslate"><span class="pre">squeue</span></code>.</p></li>
+<li><p>Maps SLURM job states to one of three standardized outputs:
+<code class="docutils literal notranslate"><span class="pre">running</span></code>, <code class="docutils literal notranslate"><span class="pre">success</span></code>, or <code class="docutils literal notranslate"><span class="pre">failed</span></code>.</p></li>
+<li><p>Handles missing commands and timeouts gracefully.</p></li>
+</ol>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<section id="get-job-status-jobid">
+<h3>get_job_status(jobid)<a class="headerlink" href="#get-job-status-jobid" title="Link to this heading"></a></h3>
+<p>Query SLURM for the status of a given job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param jobid<span class="colon">:</span></dt>
+<dd class="field-odd"><p>SLURM job ID</p>
+</dd>
+<dt class="field-even">type jobid<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+<dt class="field-odd">return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>One of <code class="docutils literal notranslate"><span class="pre">running</span></code>, <code class="docutils literal notranslate"><span class="pre">success</span></code>, or <code class="docutils literal notranslate"><span class="pre">failed</span></code></p>
+</dd>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+<p><strong>Behavior</strong></p>
+<ul class="simple">
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">sacct</span></code> to retrieve job state (more reliable for completed jobs).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">sacct</span></code> fails or returns no result, attempts <code class="docutils literal notranslate"><span class="pre">squeue</span></code>.</p></li>
+<li><p>Retries <code class="docutils literal notranslate"><span class="pre">sacct</span></code> if a job disappears from the queue.</p></li>
+<li><p>Returns <code class="docutils literal notranslate"><span class="pre">running</span></code> if the state cannot be determined.</p></li>
+</ul>
+</section>
+</section>
+<section id="recognized-slurm-states">
+<h2>Recognized SLURM States<a class="headerlink" href="#recognized-slurm-states" title="Link to this heading"></a></h2>
+<p>Running States:</p>
+<ul class="simple">
+<li><p>PENDING (PD)</p></li>
+<li><p>RUNNING (R)</p></li>
+<li><p>COMPLETING (CG)</p></li>
+<li><p>CONFIGURING (CF)</p></li>
+<li><p>SUSPENDED (S)</p></li>
+<li><p>REQUEUED (RQ)</p></li>
+<li><p>RESIZING (RS)</p></li>
+</ul>
+<p>Success States:</p>
+<ul class="simple">
+<li><p>COMPLETED (CD)</p></li>
+</ul>
+<p>Failure States:</p>
+<ul class="simple">
+<li><p>BOOT_FAIL (BF)</p></li>
+<li><p>CANCELLED (CA)</p></li>
+<li><p>DEADLINE (DL)</p></li>
+<li><p>FAILED (F)</p></li>
+<li><p>NODE_FAIL (NF)</p></li>
+<li><p>OUT_OF_MEMORY (OOM)</p></li>
+<li><p>PREEMPTED (PR)</p></li>
+<li><p>TIMEOUT (TO)</p></li>
+</ul>
+<section id="main">
+<h3>main()<a class="headerlink" href="#main" title="Link to this heading"></a></h3>
+<p>Command-line entry point.</p>
+<ul class="simple">
+<li><p>Expects exactly one argument: <code class="docutils literal notranslate"><span class="pre">&lt;jobid&gt;</span></code></p></li>
+<li><p>Prints the job status to standard output</p></li>
+<li><p>Exits with code 1 if incorrect arguments are provided</p></li>
+</ul>
+</section>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>slurm_status.py<span class="w"> </span><span class="m">123456</span>
+running
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Pipeline Configuration File" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipeline.run_utils.html" class="btn btn-neutral float-right" title="run_utils functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

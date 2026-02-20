@@ -45,15 +45,18 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User Guides / Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html">Radiomic Feature Extraction Pipeline - Quick Start Guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/rulegraph_explanation.html">Rule Graph Explanation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#main-pipeline-runner">Main Pipeline Runner</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#command-line-interface">Command-Line Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain.html#notes">Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#notes">Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner (run_csc.py)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#rules-overview">Rules Overview</a><ul>
@@ -71,7 +74,8 @@
 <li class="toctree-l1"><a class="reference internal" href="#configuration-files">Configuration Files</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html">Pipeline Configuration File</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-tyks-single-machine-execution">Snakemake Profile: TYKS Single-Machine Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-csc-cluster-execution-slurm-apptainer">Snakemake Profile: CSC Cluster Execution (Slurm + Apptainer)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-csc-puhti-slurm-apptainer">Snakemake Profile: CSC Puhti (SLURM + Apptainer)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html">slurm_status.py</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#api">API</a><ul>
@@ -109,17 +113,27 @@
 <h1>User Guides / Tutorials<a class="headerlink" href="#user-guides-tutorials" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/user_guide.html">Radiomic Feature Extraction Pipeline - Quick Start Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#download-the-pipeline-image">Download the Pipeline Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#run-the-pipeline">Run the Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#cleanup-option">Cleanup Option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#output-structure">Output Structure</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="guides/pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#pipeline-overview">Pipeline Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#build-instructions">Build Instructions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#run-instructions">Run Instructions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#advanced-options">Advanced Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#output-structure">Output Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#configuration-options">Configuration Options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#troubleshooting">Troubleshooting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#performance-notes">Performance Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#output-analysis">Output Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#workflow-visualization">Workflow Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#technical-documentation-guide">Technical Documentation Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="guides/rulegraph_explanation.html">Rule Graph Explanation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guides/rulegraph_explanation.html#what-rules-can-run-in-parallel">What rules can run in parallel</a></li>
 </ul>
 </li>
 </ul>
@@ -129,11 +143,19 @@
 <h1>Main Pipeline Runner<a class="headerlink" href="#main-pipeline-runner" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain.html#command-line-interface">Command-Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain.html#workflow">Workflow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain.html#examples">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain.html#notes">Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#workflow">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#notes">Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner (run_csc.py)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#notes">Notes</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -177,11 +199,20 @@ feature extraction workflow. Rules are grouped by processing stage.</p>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#notes">Notes</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html#snakemake-profile-csc-cluster-execution-slurm-apptainer">Snakemake Profile: CSC Cluster Execution (Slurm + Apptainer)</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#snakemake-profile-csc-puhti-slurm-apptainer">Snakemake Profile: CSC Puhti (SLURM + Apptainer)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id4">Purpose</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id5">Example configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id6">Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id7">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="slurm_status.html">slurm_status.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#slurm-job-status-checker-for-snakemake">SLURM Job Status Checker for Snakemake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#recognized-slurm-states">Recognized SLURM States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#example">Example</a></li>
 </ul>
 </li>
 </ul>

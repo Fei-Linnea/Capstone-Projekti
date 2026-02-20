@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="run_utils functions" href="pipeline.run_utils.html" />
+    <link rel="next" title="slurm_status" href="slurm_status.html" />
     <link rel="prev" title="Full Dockerfile" href="docker.html" /> 
 </head>
 
@@ -63,13 +63,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#notes">Notes</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#snakemake-profile-csc-cluster-execution-slurm-apptainer">Snakemake Profile: CSC Cluster Execution (Slurm + Apptainer)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#snakemake-profile-csc-puhti-slurm-apptainer">Snakemake Profile: CSC Puhti (SLURM + Apptainer)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id4">Purpose</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id5">Example configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id6">Usage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id7">Notes</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="slurm_status.html">slurm_status</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a></li>
@@ -249,79 +250,79 @@ other single-machine systems with Apptainer.</p></li>
 </ul>
 </section>
 </section>
-<section id="snakemake-profile-csc-cluster-execution-slurm-apptainer">
-<h1>Snakemake Profile: CSC Cluster Execution (Slurm + Apptainer)<a class="headerlink" href="#snakemake-profile-csc-cluster-execution-slurm-apptainer" title="Link to this heading"></a></h1>
-<p>This Snakemake profile is designed for running the hippocampus pipeline
-on the <strong>CSC HPC cluster</strong> using <strong>Slurm</strong> for job scheduling and
-<strong>Apptainer</strong> for containerized execution.</p>
+<section id="snakemake-profile-csc-puhti-slurm-apptainer">
+<h1>Snakemake Profile: CSC Puhti (SLURM + Apptainer)<a class="headerlink" href="#snakemake-profile-csc-puhti-slurm-apptainer" title="Link to this heading"></a></h1>
+<p>This Snakemake profile is configured for running the hippocampus pipeline
+on <strong>CSC Puhti</strong> using the <strong>SLURM workload manager</strong> and <strong>Apptainer</strong>
+for containerized execution.</p>
+<p>It enables distributed execution across compute nodes while ensuring
+reproducibility through container-based software deployment.</p>
 <section id="id4">
 <h2>Purpose<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Submit pipeline rules as <strong>Slurm jobs</strong> with per-rule resources.</p></li>
-<li><p>Support containerized execution inside Apptainer/Singularity.</p></li>
-<li><p>Allow large-scale parallel execution (up to 100 concurrent jobs).</p></li>
-<li><p>Continue execution on individual job failures (<cite>keep-going: true</cite>).</p></li>
-<li><p>Automatically rerun failed or incomplete jobs (<cite>restart-times: 1</cite>).</p></li>
+<li><p>Submit pipeline rules as individual SLURM jobs.</p></li>
+<li><p>Execute rules inside an Apptainer container.</p></li>
+<li><p>Use shared <cite>/scratch</cite> storage for temporary files.</p></li>
+<li><p>Provide default resource allocations (memory, runtime, partition).</p></li>
+<li><p>Support large-scale batch processing.</p></li>
 </ul>
 </section>
 <section id="id5">
 <h2>Example configuration<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">jobs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># SLURM executor</span>
+<span class="nt">executor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">slurm</span>
+
+<span class="c1"># Job settings</span>
+<span class="nt">jobs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
 <span class="nt">keep-going</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">latency-wait</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
-<span class="nt">restart-times</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">latency-wait</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
+<span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 <span class="nt">printshellcmds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">rerun-incomplete</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">local-cores</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 
-<span class="c1"># Slurm cluster submission</span>
-<span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
-<span class="w">  </span><span class="no">sbatch</span>
-<span class="w">  </span><span class="no">-J {rule}</span>
-<span class="w">  </span><span class="no">-A {resources.account}</span>
-<span class="w">  </span><span class="no">-p {resources.partition}</span>
-<span class="w">  </span><span class="no">-t {resources.time}</span>
-<span class="w">  </span><span class="no">-c {threads}</span>
-<span class="w">  </span><span class="no">--mem={resources.mem_mb}</span>
-<span class="w">  </span><span class="no">--output=logs/slurm/%x-%j.out</span>
-<span class="w">  </span><span class="no">--error=logs/slurm/%x-%j.err</span>
-
-<span class="c1"># Default resources</span>
+<span class="c1"># Default SLURM resources</span>
 <span class="nt">default-resources</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">mem_mb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4000</span>
-<span class="w">  </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;01:00:00&quot;</span>
-<span class="w">  </span><span class="nt">partition</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;serial&quot;</span>
-<span class="w">  </span><span class="nt">account</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;project_2001234&quot;</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">slurm_account=project_2001988</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">slurm_partition=small</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mem_mb=8000</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runtime=120</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tmpdir=&#39;/scratch/project_2001988/tarizw/tmp&#39;</span>
 
-<span class="c1"># Container settings</span>
-<span class="nt">use-conda</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="nt">use-singularity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">apptainer-args</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;--bind=/users,/projappl,/scratch&quot;</span>
+<span class="c1"># Apptainer deployment</span>
+<span class="nt">software-deployment-method</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apptainer</span>
+
+<span class="c1"># Explicit scratch binding and environment variable</span>
+<span class="nt">apptainer-args</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;--bind</span><span class="nv"> </span><span class="s">/scratch/project_2001988:/scratch/project_2001988:rw</span><span class="nv"> </span><span class="s">\</span>
+<span class="w">                 </span><span class="s">--env</span><span class="nv"> </span><span class="s">HSF_HOME=/users/$USER/.hsf&quot;</span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
 <h2>Usage<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
-<ul>
-<li><p>Execute the pipeline on CSC via Slurm:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>snakemake<span class="w"> </span>--profile<span class="w"> </span>csc<span class="w"> </span>--cores<span class="w"> </span><span class="m">16</span>
+<p>Run Snakemake using the CSC profile:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>snakemake<span class="w"> </span>--profile<span class="w"> </span>config/profiles/csc<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--config<span class="w"> </span><span class="nv">bids_root</span><span class="o">=</span>/path/to/data<span class="w"> </span><span class="se">\</span>
+<span class="w">           </span><span class="nv">derivatives_root</span><span class="o">=</span>/path/to/output<span class="w"> </span><span class="se">\</span>
+<span class="w">           </span><span class="nv">container_image</span><span class="o">=</span>/path/to/image.sif
 </pre></div>
 </div>
-</li>
-<li><p>The <cite>cluster</cite> command automatically submits each rule to Slurm
-with the specified resources.</p></li>
-<li><p>Modify <cite>default-resources</cite> to set fallback memory, time, partition,
-or account if not specified in individual rules.</p></li>
-<li><p>Apptainer arguments (<cite>apptainer-args</cite>) bind necessary directories
-for containerized execution on the HPC cluster.</p></li>
-</ul>
+<p>Adjust resource parameters (<cite>jobs</cite>, <cite>mem_mb</cite>, <cite>runtime</cite>, and <cite>slurm_partition</cite>)
+according to your CSC allocation and dataset size.</p>
 </section>
 <section id="id7">
 <h2>Notes<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>Adjust <cite>jobs</cite> and <cite>cores</cite> according to your allocation and
-cluster policies.</p></li>
-<li><p>The profile ensures reproducibility and isolation using Apptainer.</p></li>
-<li><p>Always monitor <cite>logs/slurm</cite> for per-job outputs and errors.</p></li>
-<li><p>Use <cite>latency-wait</cite> to handle filesystem delays typical on HPC systems.</p></li>
+<ul>
+<li><p>The <cite>tmpdir</cite> must be located on shared storage (e.g., <cite>/scratch</cite>).
+Using <cite>/tmp</cite> may cause Apptainer mount failures on compute nodes.</p></li>
+<li><p>Replace <cite>project_2001988</cite> with your own CSC project ID.</p></li>
+<li><p>Each Snakemake rule is submitted as a separate SLURM job.</p></li>
+<li><p>Job status can be monitored using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>squeue<span class="w"> </span>-u<span class="w"> </span><span class="nv">$USER</span>
+</pre></div>
+</div>
+</li>
 </ul>
 </section>
 </section>
@@ -331,7 +332,7 @@ cluster policies.</p></li>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="docker.html" class="btn btn-neutral float-left" title="Full Dockerfile" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pipeline.run_utils.html" class="btn btn-neutral float-right" title="run_utils functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="slurm_status.html" class="btn btn-neutral float-right" title="slurm_status" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

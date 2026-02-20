@@ -81,13 +81,14 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
 
 <div class="viewcode-block" id="run_aggregation">
 <a class="viewcode-back" href="../../../pipeline.run_utils.html#pipeline.run_utils.aggregate.run_aggregation">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_aggregation</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">pipeline_dir</span><span class="p">,</span>
-                    <span class="n">jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">set_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_resources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">cores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">set_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">subjects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bids_pattern</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run the aggregation step after all batches are complete.</span>
@@ -123,22 +124,26 @@
         <span class="sa">f</span><span class="s2">&quot;log_dir=</span><span class="si">{</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">]</span>
 
+    <span class="c1"># Optional config passthrough to Snakefile</span>
+    <span class="k">if</span> <span class="n">subjects</span><span class="p">:</span>
+        <span class="c1"># Preserve leading zeros by forcing YAML to parse as list[str]</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;subjects=</span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">subjects</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bids_pattern</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bids_pattern=</span><span class="si">{</span><span class="n">bids_pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
     <span class="c1"># Add Snakemake execution flags (profile provides other defaults)</span>
-    <span class="k">if</span> <span class="n">jobs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--jobs&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">jobs</span><span class="p">)])</span>
     <span class="k">if</span> <span class="n">cores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--cores&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">cores</span><span class="p">)])</span>
-    <span class="c1"># if set_threads:</span>
-    <span class="c1">#     for entry in set_threads:</span>
-    <span class="c1">#         cmd.extend([&quot;--set-threads&quot;, entry])</span>
-    <span class="c1"># if set_resources:</span>
-    <span class="c1">#     for entry in set_resources:</span>
-    <span class="c1">#         cmd.extend([&quot;--set-resources&quot;, entry])</span>
+    <span class="k">if</span> <span class="n">set_threads</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">set_threads</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--set-threads&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--dry-run&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Add target rule at the end (after all flags)</span>
-    <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;aggregate_all_subjects&quot;</span><span class="p">)</span>
+    <span class="c1"># Do not add a positional target here (cmd.append(&quot;aggregate_all_subjects&quot;)).</span>
+    <span class="c1"># The workflow&#39;s default target (rule `all`) already includes the final</span>
+    <span class="c1"># summary outputs, and avoiding a positional target prevents Snakemake</span>
+    <span class="c1"># argument-parsing ambiguity with --set-threads.</span>
     
     <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DRY RUN: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>

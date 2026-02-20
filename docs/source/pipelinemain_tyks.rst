@@ -76,29 +76,101 @@ Workflow
 Examples
 --------
 
-Run pipeline with default batch size:
+Full command example (run with defaults from profile):
 
 .. code-block:: bash
 
-    python run_pipeline.py --profile config/profiles/tyks
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks
 
-Run with custom batch size and specific subjects:
 
-.. code-block:: bash
-
-    python run_pipeline.py --profile config/profiles/tyks --batch-size 20 --subjects 01 02 03
-
-Perform a dry run to preview execution:
-
-.. code-block:: bash
-
-    python run_pipeline.py --profile config/profiles/tyks --dry-run
-
-Override Snakemake threads for HSF segmentation:
+Run with custom batch size:
 
 .. code-block:: bash
 
-    python run_pipeline.py --profile config/profiles/tyks --set-threads hsf_segmentation=4
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks \
+        --batch-size 20
+
+
+Override cores at runtime:
+
+.. code-block:: bash
+
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks \
+        --cores 32
+
+
+Override rule threads for a specific rule:
+
+.. code-block:: bash
+
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks \
+        --set-threads hsf_segmentation=4
+
+
+Dry run (preview execution without running jobs):
+
+.. code-block:: bash
+
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks \
+        --dry-run
+
+
+Process specific subjects:
+
+.. code-block:: bash
+
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks \
+        --subjects 01 02 03 04 05
+
+
+Use a custom BIDS pattern:
+
+.. code-block:: bash
+
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks \
+        --bids-pattern "sub-*/ses-1/anat/*_T1w.nii.gz"
+
+
+Complete example with multiple overrides:
+
+.. code-block:: bash
+
+    apptainer run --writable-tmpfs \
+        --bind /path/to/bids:/data \
+        --bind /path/to/logs:/app/logs \
+        hippocampus-pipeline.sif \
+        --profile config/profiles/tyks \
+        --batch-size 10 \
+        --cores 16 \
+        --set-threads hsf_segmentation=4
 
 Notes
 -----

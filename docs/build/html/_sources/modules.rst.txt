@@ -11,7 +11,8 @@ Main Pipeline Runner
 .. toctree::
    :maxdepth: 2
 
-   pipelinemain
+   pipelinemain_tyks
+   pipelinemain_csc
 
 Rules Overview
 ==============
@@ -37,7 +38,7 @@ Configuration Files
    :maxdepth: 2
 
    configuration
-
+   slurm_status
 
 API
 ===

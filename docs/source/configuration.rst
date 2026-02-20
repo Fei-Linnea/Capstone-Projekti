@@ -152,78 +152,86 @@ Notes
   other single-machine systems with Apptainer.
 
 
-Snakemake Profile: CSC Cluster Execution (Slurm + Apptainer)
-============================================================
+Snakemake Profile: CSC Puhti (SLURM + Apptainer)
+=================================================
 
-This Snakemake profile is designed for running the hippocampus pipeline
-on the **CSC HPC cluster** using **Slurm** for job scheduling and
-**Apptainer** for containerized execution.
+This Snakemake profile is configured for running the hippocampus pipeline
+on **CSC Puhti** using the **SLURM workload manager** and **Apptainer**
+for containerized execution.
+
+It enables distributed execution across compute nodes while ensuring
+reproducibility through container-based software deployment.
+
 
 Purpose
 -------
 
-- Submit pipeline rules as **Slurm jobs** with per-rule resources.
-- Support containerized execution inside Apptainer/Singularity.
-- Allow large-scale parallel execution (up to 100 concurrent jobs).
-- Continue execution on individual job failures (`keep-going: true`).
-- Automatically rerun failed or incomplete jobs (`restart-times: 1`).
+- Submit pipeline rules as individual SLURM jobs.
+- Execute rules inside an Apptainer container.
+- Use shared `/scratch` storage for temporary files.
+- Provide default resource allocations (memory, runtime, partition).
+- Support large-scale batch processing.
+
 
 Example configuration
 ---------------------
 
 .. code-block:: yaml
 
+    # SLURM executor
+    executor: slurm
+
+    # Job settings
     jobs: 100
     keep-going: true
-    latency-wait: 60
-    restart-times: 1
+    latency-wait: 120
+    retries: 1
     printshellcmds: true
+    rerun-incomplete: true
+    local-cores: 1
 
-    # Slurm cluster submission
-    cluster: >
-      sbatch
-      -J {rule}
-      -A {resources.account}
-      -p {resources.partition}
-      -t {resources.time}
-      -c {threads}
-      --mem={resources.mem_mb}
-      --output=logs/slurm/%x-%j.out
-      --error=logs/slurm/%x-%j.err
-
-    # Default resources
+    # Default SLURM resources
     default-resources:
-      mem_mb: 4000
-      time: "01:00:00"
-      partition: "serial"
-      account: "project_2001234"
+      - slurm_account=project_2001988
+      - slurm_partition=small
+      - mem_mb=8000
+      - runtime=120
+      - tmpdir='/scratch/project_2001988/tarizw/tmp'
 
-    # Container settings
-    use-conda: false
-    use-singularity: true
-    apptainer-args: "--bind=/users,/projappl,/scratch"
+    # Apptainer deployment
+    software-deployment-method:
+      - apptainer
+
+    # Explicit scratch binding and environment variable
+    apptainer-args: "--bind /scratch/project_2001988:/scratch/project_2001988:rw \
+                     --env HSF_HOME=/users/$USER/.hsf"
+
 
 Usage
 -----
 
-- Execute the pipeline on CSC via Slurm:
+Run Snakemake using the CSC profile:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-      snakemake --profile csc --cores 16
+    snakemake --profile config/profiles/csc \
+      --config bids_root=/path/to/data \
+               derivatives_root=/path/to/output \
+               container_image=/path/to/image.sif
 
-- The `cluster` command automatically submits each rule to Slurm
-  with the specified resources.
-- Modify `default-resources` to set fallback memory, time, partition,
-  or account if not specified in individual rules.
-- Apptainer arguments (`apptainer-args`) bind necessary directories
-  for containerized execution on the HPC cluster.
+Adjust resource parameters (`jobs`, `mem_mb`, `runtime`, and `slurm_partition`)
+according to your CSC allocation and dataset size.
+
 
 Notes
 -----
 
-- Adjust `jobs` and `cores` according to your allocation and
-  cluster policies.
-- The profile ensures reproducibility and isolation using Apptainer.
-- Always monitor `logs/slurm` for per-job outputs and errors.
-- Use `latency-wait` to handle filesystem delays typical on HPC systems.
+- The `tmpdir` must be located on shared storage (e.g., `/scratch`).
+  Using `/tmp` may cause Apptainer mount failures on compute nodes.
+- Replace `project_2001988` with your own CSC project ID.
+- Each Snakemake rule is submitted as a separate SLURM job.
+- Job status can be monitored using:
+
+  .. code-block:: bash
+
+      squeue -u $USER

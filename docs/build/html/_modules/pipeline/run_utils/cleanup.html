@@ -194,15 +194,17 @@
 <div class="viewcode-block" id="cleanup_with_confirmation">
 <a class="viewcode-back" href="../../../pipeline.run_utils.html#pipeline.run_utils.cleanup.cleanup_with_confirmation">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">cleanup_with_confirmation</span><span class="p">(</span><span class="n">derivatives_root</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Cleanup with user confirmation prompt.</span>
-<span class="sd">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cleanup intermediate files.</span>
+
+<span class="sd">    If --cleanup is provided, we assume the user intends deletion.</span>
+<span class="sd">    A preview (dry run) is still printed for transparency.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        derivatives_root: Path to the derivatives directory</span>
 <span class="sd">        dry_run: If True, only show what would be deleted</span>
-<span class="sd">        </span>
+
 <span class="sd">    Returns:</span>
-<span class="sd">        bool: True if cleanup succeeded or was skipped, False on error</span>
+<span class="sd">        bool: True if cleanup succeeded, False on error</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">⚠ DRY RUN MODE: No files will be deleted</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
@@ -215,20 +217,10 @@
     
     <span class="c1"># Show what will be deleted</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">⚠ WARNING: This will delete all intermediate files!&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only the final summary/all_features.csv will be preserved.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    
-    <span class="c1"># First do a dry run to show user what will be deleted</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only summary/all_features.csv and summary/processing_issues.txt will be preserved.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+    <span class="c1"># First do a dry run to show what will be deleted</span>
     <span class="n">cleanup_intermediate_files</span><span class="p">(</span><span class="n">derivatives_root</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    
-    <span class="c1"># Ask for confirmation</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Proceed with cleanup? (yes/no): &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">response</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;yes&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cleanup cancelled.&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Not an error, just cancelled</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">EOFError</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cleanup cancelled.&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
     
     <span class="c1"># Perform actual cleanup</span>
     <span class="n">success</span><span class="p">,</span> <span class="n">deleted</span><span class="p">,</span> <span class="n">preserved</span> <span class="o">=</span> <span class="n">cleanup_intermediate_files</span><span class="p">(</span>
