@@ -26,7 +26,7 @@ git clone <repo-url> .
 
 # 5. Run the pipeline (from login node)
 cd pipeline
-module load snakemake/7.32.4
+module load snakemake
 snakemake --profile config/profiles/csc \
   --config \
     bids_root=/scratch/$PROJECT/my_study/bids \
