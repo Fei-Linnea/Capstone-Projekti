@@ -111,12 +111,12 @@ def form_row_from_data(image_path, radiomics_data, curvature_data):
             # Add Radiomics features
             for feature_name, value in radiomics_data.get(region, {}).get(side, {}).items():
                 clean_feature_name = feature_name.replace("original_shape_", "")
-                row[f'Radiomics_{region}_{side}_{clean_feature_name}'] = value
+                row[f'{region}_{side}_{clean_feature_name}'] = value
 
             # Add Curvature metrics
             for curvature_type, stats in curvature_data.get(region, {}).get(side, {}).items():
                 for stat_name, value in stats.items():
-                    row[f'Curvature_{region}_{side}_{curvature_type}_curvature_{stat_name}'] = value
+                    row[f'{region}_{side}_{curvature_type}_curvature_{stat_name}'] = value
 
     return row
 
