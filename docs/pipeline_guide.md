@@ -53,7 +53,7 @@ dataset/
         sub-02_ses-1_T1w.json
 ```
 
-For detailed run instructions, see [user_guide.md](user_guide.md).
+For detailed run instructions, see [User Guide](user_guide.md).
 
 **What the pipeline does:**
 - Provides different customizable command-line options (flags) to override default values

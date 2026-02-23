@@ -16,8 +16,6 @@ Create an empty logs directory in your project folder:
 
 Pull the Apptainer image from Docker Hub:
 
-**!! REMEMBER TO UPDATE THE CORRECT DOCKER IMAGE VERSION HERE !!**
-
 ```bash
 apptainer pull hippocampus-pipeline.sif docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
 ```
@@ -218,4 +216,4 @@ Your logs directory will contain timestamped directories with detailed execution
 
 ---
 
-For comprehensive documentation, see [pipeline_guide.md](pipeline_guide.md).
+For comprehensive documentation, see full [Pipeline Guide](pipeline_guide.md).

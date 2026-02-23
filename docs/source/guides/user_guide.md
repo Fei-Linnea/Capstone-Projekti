@@ -1,4 +1,4 @@
-# Radiomic Feature Extraction Pipeline - Quick Start Guide
+# Local Execution - Quick Start Guide
 
 ## Prerequisites
 
@@ -216,4 +216,4 @@ Your logs directory will contain timestamped directories with detailed execution
 
 ---
 
-For comprehensive documentation, see [pipeline_guide.md](pipeline_guide.md).
+For comprehensive documentation, see full [Pipeline Guide](pipeline_guide.md).
