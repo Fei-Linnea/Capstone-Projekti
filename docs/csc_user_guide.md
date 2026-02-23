@@ -89,7 +89,7 @@ python3 run_csc.py -n
 | `-y`, `--yes` | Skip confirmation prompt | off |
 | `--force` | Force re-run all rules | off |
 | `--clean` | Remove `.snakemake/` metadata before running | off |
-| `--cleanup` | Delete intermediate outputs after success, keeping `summary/all_features.csv` and `summary/processing_issues.txt` | off |
+| `--cleanup` | Delete intermediate outputs after success, keeping `summary/` and possible `logs/` folder | off |
 
 ## What the Script Does Automatically
 

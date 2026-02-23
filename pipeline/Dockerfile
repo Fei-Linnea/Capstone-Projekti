@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 
-# Dockerfile for local execution 
 # Metadata
 LABEL maintainer="BigBrain Team"
 LABEL description="Radiomic Feature Extraction Hippocampus Morphometry Pipeline"
