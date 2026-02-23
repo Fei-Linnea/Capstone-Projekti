@@ -13,9 +13,9 @@
 Apptainer needs a cache and temp directory on shared `/scratch` storage. Add these to your `~/.bashrc` (or run before every session):
 
 ```bash
-export APPTAINER_CACHEDIR=/scratch/project_<NUMBER>/$USER/.apptainer
-export APPTAINER_TMPDIR=/scratch/project_<NUMBER>/$USER/tmp
-export TMPDIR=/scratch/project_<NUMBER>/$USER/tmp
+export APPTAINER_CACHEDIR=/scratch/project_<NUMBER>/.apptainer
+export APPTAINER_TMPDIR=/scratch/project_<NUMBER>/tmp
+export TMPDIR=/scratch/project_<NUMBER>/tmp
 mkdir -p $APPTAINER_CACHEDIR $APPTAINER_TMPDIR
 ```
 
@@ -26,16 +26,16 @@ Replace `<NUMBER>` with your CSC project number (e.g., `2001988`).
 ### 2. Clone the pipeline repository
 
 ```bash
-cd /scratch/project_<NUMBER>/$USER
-git clone <repo-url> hippocampus-pipeline
+cd /scratch/project_<NUMBER>/
+git clone https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry.git hippocampus-pipeline
 cd hippocampus-pipeline/pipeline
 ```
 
 ### 3. Pull the container image
 
 ```bash
-mkdir -p /scratch/project_<NUMBER>/$USER/Containers
-cd /scratch/project_<NUMBER>/$USER/Containers
+mkdir -p /scratch/project_<NUMBER>/Containers
+cd /scratch/project_<NUMBER>/Containers
 apptainer pull hippocampus-pipeline.sif docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
 ```
 
@@ -51,9 +51,9 @@ python3 run_csc.py
 
 The script will prompt you for:
 1. **CSC project number** (e.g., `2001988`)
-2. **BIDS dataset path** (e.g., `/scratch/project_2001988/user/Dataset`)
+2. **BIDS dataset path** (e.g., `/scratch/project_2001988/Dataset`)
 3. **BIDS file pattern** (default: `sub-*/ses-*/anat/*_T1w.nii.gz`)
-3. **Container SIF path** (e.g., `/scratch/project_2001988/user/Containers/hippocampus-pipeline.sif`)
+3. **Container SIF path** (e.g., `/scratch/project_2001988/Containers/hippocampus-pipeline.sif`)
 4. **SLURM partition** (default: `small`)
 
 It then shows a configuration summary and asks for confirmation before starting.
@@ -120,40 +120,6 @@ Results are written to `<bids-root>/derivatives/`:
     logs/
       run_csc_<timestamp>.log
 ```
-
-## Troubleshooting
-
-### Pipeline was interrupted
-
-If you stop the script with `Ctrl+C`, SLURM jobs may still be running. Check and cancel them:
-
-```bash
-squeue -u $USER
-scancel -u $USER       # cancel all your jobs
-```
-
-Then clean stale metadata and re-run:
-
-```bash
-python3 run_csc.py --clean
-```
-
-### "snakemake not found" error
-
-Load the module manually and retry:
-
-```bash
-module load snakemake
-python3 run_csc.py
-```
-
-### Stale locks or incomplete files
-
-```bash
-python3 run_csc.py --clean --force
-```
-
-`--clean` removes the `.snakemake/` directory and `--force` re-runs all rules from scratch.
 
 ### Apptainer pull fails
 
