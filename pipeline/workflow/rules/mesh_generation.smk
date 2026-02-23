@@ -23,8 +23,6 @@ rule mesh_per_label:
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "mesh", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
     threads: 1
-    resources:
-        mem_mb=4000
     shell:
         """
         python {params.scripts_dir}/voxelToMesh.py \
