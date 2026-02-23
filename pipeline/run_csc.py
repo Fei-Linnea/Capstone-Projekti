@@ -16,9 +16,9 @@ Usage:
   python run_csc.py
 
   # Non-interactive
-  python run_csc.py --project 2001988 \\
-      --bids-root /scratch/project_2001988/user/Dataset \\
-      --sif /scratch/project_2001988/user/Containers/hippocampus-pipeline.sif
+  python run_csc.py --project <NUMBER> \\
+      --bids-root /scratch/project_<NUMBER>/<USER>/Dataset \\
+      --sif /scratch/project_<NUMBER>/<USER>/Containers/hippocampus-pipeline.sif
 
   # Dry run
   python run_csc.py --dry-run
@@ -212,7 +212,7 @@ def gather_config(args):
     # --- BIDS root ---
     bids_root = args.bids_root
     if not bids_root:
-        bids_root = prompt("BIDS dataset root", f"{base}/Dataset")
+        bids_root = prompt("BIDS dataset root (e.g., /scratch/project_<NUM>/<user>/MyDataset)")
 
     # --- Derivatives (always <bids_root>/derivatives) ---
     derivatives_root = os.path.join(bids_root, "derivatives")
@@ -227,10 +227,9 @@ def gather_config(args):
         )
 
     # --- SIF path ---
-    sif_default = f"{base}/Containers/hippocampus-pipeline.sif"
-    sif_path = args.sif or (
-        prompt("Container SIF path", sif_default) if interactive else sif_default
-    )
+    sif_path = args.sif
+    if not sif_path:
+        sif_path = prompt("Container SIF path (e.g., /scratch/project_<NUM>/<user>/Containers/hippocampus-pipeline.sif)")
 
     # --- Partition ---
     partition = args.partition or (
@@ -332,8 +331,16 @@ def write_profile(cfg):
 
 def setup_environment(cfg):
     """Prepare env vars for Apptainer + SLURM."""
-    os.makedirs(cfg["tmpdir"], exist_ok=True)
-    os.environ["TMPDIR"] = cfg["tmpdir"]
+    tmpdir = cfg["tmpdir"]
+    os.makedirs(tmpdir, exist_ok=True)
+    os.environ["TMPDIR"] = tmpdir
+
+    # Apptainer cache & tmpdir — must be on shared /scratch, not $HOME
+    cache_dir = os.path.join(os.path.dirname(tmpdir), ".apptainer")
+    os.makedirs(cache_dir, exist_ok=True)
+    os.environ["APPTAINER_CACHEDIR"] = cache_dir
+    os.environ["APPTAINER_TMPDIR"] = tmpdir
+
     for var in ("SINGULARITY_BIND", "APPTAINER_BIND"):
         os.environ.pop(var, None)
 
@@ -569,12 +576,12 @@ def main():
               python run_csc.py
 
               # Full CLI (no prompts)
-              python run_csc.py --project 2001988 \\
-                  --bids-root /scratch/project_2001988/user/Dataset \\
-                  --sif /scratch/project_2001988/user/Containers/pipeline.sif
+              python run_csc.py --project <NUMBER> \\
+                  --bids-root /scratch/project_<NUMBER>/$USER/Dataset \\
+                  --sif /scratch/project_<NUMBER>/$USER/Containers/pipeline.sif
 
               # Dry run to see planned jobs
-              python run_csc.py --project 2001988 -n
+              python run_csc.py --project <NUMBER> -n
 
               # Clean stale metadata and force re-run
               python run_csc.py --clean --force
@@ -648,6 +655,8 @@ def main():
     info("Setting up environment...")
     setup_environment(cfg)
     ok(f"TMPDIR = {cfg['tmpdir']}")
+    ok(f"APPTAINER_CACHEDIR = {os.environ['APPTAINER_CACHEDIR']}")
+    ok(f"APPTAINER_TMPDIR = {os.environ['APPTAINER_TMPDIR']}")
     ok("Cleared stale SINGULARITY_BIND / APPTAINER_BIND")
 
     profile = write_profile(cfg)

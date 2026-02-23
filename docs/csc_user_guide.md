@@ -8,7 +8,22 @@
 
 ## Setup
 
-### 1. Clone the pipeline repository
+### 1. Set up Apptainer cache and temp directories (mandatory, one-time)
+
+Apptainer needs a cache and temp directory on shared `/scratch` storage. Add these to your `~/.bashrc` (or run before every session):
+
+```bash
+export APPTAINER_CACHEDIR=/scratch/project_<NUMBER>/$USER/.apptainer
+export APPTAINER_TMPDIR=/scratch/project_<NUMBER>/$USER/tmp
+export TMPDIR=/scratch/project_<NUMBER>/$USER/tmp
+mkdir -p $APPTAINER_CACHEDIR $APPTAINER_TMPDIR
+```
+
+Replace `<NUMBER>` with your CSC project number (e.g., `2001988`).
+
+**Why this is required:** CSC compute nodes cannot write to `/tmp` or `$HOME` during jobs. The Apptainer cache is used when pulling the container image and the temp directory is used during container execution. Both must be on the shared `/scratch` filesystem.
+
+### 2. Clone the pipeline repository
 
 ```bash
 cd /scratch/project_<NUMBER>/$USER
@@ -16,15 +31,15 @@ git clone <repo-url> hippocampus-pipeline
 cd hippocampus-pipeline/pipeline
 ```
 
-### 2. Pull the container image
+### 3. Pull the container image
 
 ```bash
 mkdir -p /scratch/project_<NUMBER>/$USER/Containers
 cd /scratch/project_<NUMBER>/$USER/Containers
-apptainer pull hippocampus-pipeline.sif docker://docker.io/tarizw/hippocampus-pipeline:v1.0.0
+apptainer pull hippocampus-pipeline.sif docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
 ```
 
-This downloads the container image (~4.3 GiB).
+This downloads the container image (~4.3 GiB). Make sure `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` are set (Step 1), otherwise the pull may fail.
 
 ## Run the Pipeline
 
@@ -47,9 +62,9 @@ It then shows a configuration summary and asks for confirmation before starting.
 
 ```bash
 python3 run_csc.py \
-  --project 2001988 \
-  --bids-root /scratch/project_2001988/$USER/Dataset \
-  --sif /scratch/project_2001988/$USER/Containers/hippocampus-pipeline.sif
+  --project <NUMBER> \
+  --bids-root /scratch/project_<NUMBER>/$USER/Dataset \
+  --sif /scratch/project_<NUMBER>/$USER/Containers/hippocampus-pipeline.sif
 ```
 
 ### Dry run (preview without executing)
@@ -80,6 +95,7 @@ python3 run_csc.py -n
 
 - Loads the `snakemake` module if it is not already available
 - Creates a shared temp directory on `/scratch` (SLURM nodes cannot see `/tmp`)
+- Sets `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` on `/scratch`
 - Clears stale `SINGULARITY_BIND` / `APPTAINER_BIND` variables
 - Generates the Snakemake SLURM + Apptainer profile for your project
 - Shows a live progress bar during execution
@@ -138,3 +154,13 @@ python3 run_csc.py --clean --force
 ```
 
 `--clean` removes the `.snakemake/` directory and `--force` re-runs all rules from scratch.
+
+### Apptainer pull fails
+
+Make sure cache and tmp directories are set (see Setup Step 1):
+
+```bash
+export APPTAINER_CACHEDIR=/scratch/project_<NUMBER>/$USER/.apptainer
+export APPTAINER_TMPDIR=/scratch/project_<NUMBER>/$USER/tmp
+mkdir -p $APPTAINER_CACHEDIR $APPTAINER_TMPDIR
+```

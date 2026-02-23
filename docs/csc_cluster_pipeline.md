@@ -1,398 +1,415 @@
 # CSC HPC Cluster Pipeline
 
-This guide describes how to run the hippocampus pipeline on CSC Puhti/Mahti using **Snakemake + SLURM + Apptainer**. Each Snakemake rule is submitted as a separate SLURM job that runs inside the container.
+Technical documentation for running the hippocampus radiomic feature extraction pipeline on CSC Puhti using **Snakemake 8.x + SLURM + Apptainer**. Each Snakemake rule is submitted as a separate SLURM job that runs inside a single shared Apptainer container.
 
-## Quick Start
-
-```bash
-# 1. SSH to CSC Puhti
-ssh yourname@puhti.csc.fi
-
-# 2. Set up project directories (one-time)
-PROJECT=project_2001988
-mkdir -p /projappl/$PROJECT/containers
-mkdir -p /scratch/$PROJECT/hippocampus-pipeline
-
-# 3. Copy or pull the container (one-time)
-cd /projappl/$PROJECT/containers
-# Option A: Pull from registry
-apptainer pull hippocampus-pipeline.sif docker://ghcr.io/bigbrain/hippocampus-pipeline:latest
-# Option B: Build from local tarball (if Docker image exported)
-# apptainer build hippocampus-pipeline.sif docker-archive://hippocampus-pipeline.tar.gz
-
-# 4. Clone/copy the pipeline code
-cd /scratch/$PROJECT/hippocampus-pipeline
-git clone <repo-url> .
-
-# 5. Run the pipeline (from login node)
-cd pipeline
-module load snakemake
-snakemake --profile config/profiles/csc \
-  --config \
-    bids_root=/scratch/$PROJECT/my_study/bids \
-    derivatives_root=/scratch/$PROJECT/my_study/derivatives \
-    container_image=/projappl/$PROJECT/containers/hippocampus-pipeline.sif
-
-# 6. Monitor jobs
-squeue -u $USER
-```
-
-That's it! Snakemake will submit each subject/rule as a separate SLURM job.
+> **For step-by-step usage instructions, see [CSC User Guide](csc_user_guide.md).**
 
 ---
 
-## Detailed Guide
+## Architecture Overview
 
-### Key Differences: CSC vs Tyks
+### Single Container Design
 
-| Aspect | Tyks (Single Container) | CSC (Multi-Container) |
-|--------|------------------------|----------------------|
-| **Environment** | Single machine | HPC cluster (Puhti/Mahti) |
-| **Job submission** | Direct Apptainer exec | Slurm job scheduler |
-| **Containers** | One large container for all steps | Multiple optimized containers (one per rule) |
-| **Configuration** | `run_pipeline.py` wrapper | Snakemake + Slurm profile |
-| **Profiles** | Not used | **Essential** (`pipeline/config/profiles/csc/`) |
-| **Resource mgmt** | Docker flags | Slurm job parameters |
-| **Scalability** | Single machine limits | Distribute jobs across many nodes |
-| **Execution** | Sequential batches | Parallel jobs across cluster |
+The pipeline uses **one container image** for all rules. A global `container:` directive in the Snakefile points every SLURM job at the same `.sif` file:
 
-## Architecture: Why Multiple Containers?
-
-For CSC deployment, each pipeline step runs in an optimized container:
-
-```
-├── hsf_segmentation.sif       (~500MB) - HSF, ONNX, PyTorch
-├── data_processing.sif        (~200MB) - nibabel, pandas, scikit-image
-├── mesh_generation.sif        (~300MB) - VTK, PyVista, OSMesa
-├── feature_extraction.sif     (~400MB) - PyRadiomics, scipy, pandas
-└── aggregation.sif            (~150MB) - pandas only
+```python
+# In Snakefile
+CONTAINER_IMAGE = config.get("container_image", "docker://ghcr.io/bigbrain/hippocampus-pipeline:latest")
+container: CONTAINER_IMAGE
 ```
 
-**Advantages:**
-1. **Smaller images** - Faster to pull from registry
-2. **Reduced memory** - Each job uses only necessary dependencies
-3. **Faster startup** - Smaller containers load quicker
-4. **Better I/O** - Less overhead on Lustre parallel filesystem
-5. **Flexibility** - Update one container without rebuilding all
-6. **Parallelization** - Many jobs can run simultaneously on different nodes
+The container (~4.3 GiB) bundles all dependencies:
 
-## Step 1: Build Individual SIF Containers
+| Dependency | Used By |
+|-----------|---------|
+| HSF, ONNX Runtime, PyTorch (CPU) | `hsf_segmentation` |
+| nibabel, scikit-image, SimpleITK | `split_label`, `combine_labels` |
+| VTK, PyVista, OSMesa | `mesh_per_label`, `mesh_combined` |
+| PyRadiomics, scipy | `extract_pyradiomics_*`, `extract_curvature_*` |
+| pandas | `aggregate_subject_features`, `aggregate_all_subjects` |
+| Snakemake 7.32.4 | Workflow engine (inside container, used in local/Docker mode only) |
 
-First, you need to create separate Dockerfiles for each pipeline step (or modify the existing one).
+> **Why a single container?** Simpler maintenance, one build pipeline, one image to cache on CSC. All rules use `shell:` directives that call Python scripts via CLI, so there are no import-time dependency conflicts between rules.
 
-### Option A: Build Individual Containers from Docker Hub
+### Key Differences: CSC vs Tyks/Local
 
-Build and push separate optimized containers for each pipeline step:
-
-```bash
-# Local: Build individual container images
-docker build --target hsf_stage -t myusername/hsf-pipeline:latest -f pipeline/Dockerfile.multi .
-docker build --target processing_stage -t myusername/processing-pipeline:latest -f pipeline/Dockerfile.multi .
-# ... etc for each stage
-
-# Push to registry
-docker push myusername/hsf-pipeline:latest
-docker push myusername/processing-pipeline:latest
-# ... etc
-```
-
-**Pros:**
-- **Optimized sizes** - Each container contains only dependencies for its specific step
-- **Faster pulls** - Smaller images download quicker on each compute node
-- **Lower memory footprint** - Jobs consume less memory during execution
-- **Reduced I/O** - Less strain on Lustre filesystem when pulling images
-- **Targeted updates** - Modify one step's dependencies without rebuilding others
-
-**Cons:**
-- **More Dockerfiles** - Must maintain separate build targets or files
-- **Complex CI/CD** - More build/push operations to manage
-- **Higher registry storage** - Multiple images consume more space
-- **More cache management** - Each image needs separate caching on CSC
-
-### Option B: Use Single Dockerfile with a Global Container Directive
-
-Use one container for all rules by setting a **global** `container: "docker://..."` at the top of the Snakefile:
-
-**Pros:**
-- **Simple maintenance** - One Dockerfile, one build pipeline
-- **Easier updates** - Rebuild/push a single image when dependencies change
-- **Simpler caching** - One image URL cached across all rules on CSC
-- **Faster development** - No need to split dependencies across build stages
-- **Single source of truth** - All dependencies in one place
-
-**Cons:**
-- **Large image size** - Contains all dependencies even if unused by some rules
-- **Slower pulls** - Larger image takes longer to download on each node
-- **Higher memory overhead** - Each job loads unnecessary dependencies
-- **Wasteful updates** - Small changes require rebuilding entire image
-- **Resource inefficiency** - GPU libraries loaded for CPU-only tasks
+| Aspect | Tyks / Local (Docker) | CSC (SLURM + Apptainer) |
+|--------|----------------------|------------------------|
+| **Runner** | `run_pipeline.py` | `run_csc.py` |
+| **Container runtime** | Docker | Apptainer (from same image) |
+| **Snakemake version** | 7.32.4 (inside container) | 8.x (host module) |
+| **Job dispatch** | All rules in one process | Each rule = separate SLURM job |
+| **Parallelism** | Limited to local cores | Up to 100 concurrent SLURM jobs |
+| **Profile** | `config/profiles/tyks/` | `config/profiles/csc/` (auto-generated) |
+| **Batch mode** | `--batch-size` flag | Not needed (SLURM handles parallelism) |
 
 ### Why Container Directives Are Required on CSC
 
-On CSC you need the container directive because Snakemake itself is the “dispatcher,” submitting many jobs to Slurm, and each job must know which image to run. The Dockerfile alone only builds an image; it doesn’t tell Snakemake/Slurm which image to pull per rule. The container directive is how Snakemake encodes “use this image for this rule/job” when it schedules work on the cluster.
+On CSC, Snakemake runs on the **login node** as a dispatcher. It submits each rule as a separate SLURM batch job. Each compute node needs to know which container to run, and the `container:` directive is how Snakemake communicates this — it generates `apptainer exec <image> ...` commands for each job.
 
-Why two variants:
+In Docker/local mode, the `container:` directive is ignored because the Tyks profile doesn't set `software-deployment-method: apptainer`. Everything runs inside a single Docker container that already has Snakemake and all dependencies.
 
-- Tyks (single machine): one container, one command. No per-rule container selection needed.
-- CSC (cluster): many independent jobs on different nodes. Each job needs an explicit image reference. The container directive is the Snakemake-native way to declare that, so Snakemake can run `apptainer exec …` under Slurm for every rule.
+---
 
-If you want one image for all CSC rules, you can set a global container: "docker://..." at the top of the Snakefile. If you want lighter images per step (HSF vs mesh vs features), you set the directive per rule. Either way, the directive is how Snakemake/Slurm knows which image to run; the Dockerfile by itself doesn’t provide that mapping.
+## How It Works
 
-## Step 2: Configure CSC Profile
+### Pipeline Steps and Rules
 
-The `pipeline/config/profiles/csc/` folder is **essential** for CSC deployment. This profile tells Snakemake how to submit jobs to Slurm.
+All rules use `shell:` directives that invoke Python scripts via CLI (`argparse`). This is critical for CSC compatibility — `run:` and `script:` directives cause pickle serialization issues between the host Snakemake (8.x) and the container Python (3.11).
 
-Updated [pipeline/config/profiles/csc/config.yaml](../pipeline/config/profiles/csc/config.yaml):
+| Step | Rule(s) | Script | Memory | Description |
+|------|---------|--------|--------|-------------|
+| 1 | `hsf_segmentation` | `hsf_wrapper.py` | 8 GB (default) | HSF hippocampal segmentation |
+| 2 | `split_label` | `nii_parse.py split` | 200 MB | Split cropped segmentation into per-label masks |
+| 2 | `combine_labels` | `nii_parse.py combine` | 200 MB | Merge all labels into combined mask |
+| 3 | `mesh_per_label`, `mesh_combined` | `voxelToMesh.py` | 4 GB | Generate VTK meshes + PNG renders |
+| 4 | `extract_pyradiomics_*` | `feature_extraction.py pyradiomics` | 3 GB | Extract volume and surface features |
+| 5 | `extract_curvature_*` | `feature_extraction.py curvature` | 3 GB | Extract curvature metrics from meshes |
+| 6 | `aggregate_subject_features` | `cli_aggregate.py subject` | 2 GB | Combine per-subject features into one row |
+| 6 | `aggregate_all_subjects` | `cli_aggregate.py all` | 2 GB | Merge all subjects into `all_features.csv` |
 
-
-## Step 3: Update Rules with Resources
-
-Each rule should specify Slurm resources. Example:
-
-```snakemake
-rule hsf_segmentation:
-    input:
-        t1w = lambda wildcards: get_input_path(wildcards.subject, wildcards.session)
-    output:
-        seg = "...",
-        left_crop = "...",
-        right_crop = "..."
-    container:
-        "docker://myusername/hippocampus-pipeline:latest"
-    resources:
-        account = "project_2001234",
-        partition = "gpu",           # HSF can use GPU
-        time = "00:30:00",          # 30 minutes for HSF
-        mem_mb = 16000,             # 16GB memory
-        threads = 4
-    script:
-        "../scripts/hsf_wrapper.py"
-```
-
-## Step 4: Run on CSC Cluster
-
-### Method 1: Direct Snakemake Execution
-
-```bash
-# SSH to CSC
-ssh username@puhti.csc.fi
-
-# Navigate to project
-cd /scratch/project_id/hippocampus-pipeline
-
-# Run with Slurm profile
-snakemake \
-  --profile pipeline/config/profiles/csc \
-  --cores 100 \
-  --jobs 20
-```
-
-### Method 2: Submit as Batch Job
-
-Create `submit_workflow.sh`:
-
-```bash
-#!/bin/bash
-#SBATCH --job-name=snakemake_pipeline
-#SBATCH --account=project_2001234
-#SBATCH --partition=serial
-#SBATCH --time=72:00:00
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=8G
-#SBATCH --output=logs/snakemake-%j.out
-#SBATCH --error=logs/snakemake-%j.err
-
-cd /scratch/project_id/hippocampus-pipeline
-
-# Load Snakemake module (if available)
-module load snakemake
-
-# Or use conda environment with Snakemake installed
-source activate snakemake-env
-
-# Run Snakemake with profile
-snakemake \
-  --profile pipeline/config/profiles/csc \
-  --cores 100 \
-  --jobs 20 \
-  --local-cores 4 \
-  --config bids_root=/scratch/project_id/dataset \
-              derivatives_root=/scratch/project_id/dataset/derivatives
-```
-
-Submit:
-```bash
-sbatch submit_workflow.sh
-```
-
-## Step 5: Slurm Job Flow
-
-When you run the workflow, Snakemake acts as the **master job controller**:
+### SLURM Job Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Master Snakemake Job (running on login/serial node)            │
-│                                                                 │
-│  Submits individual jobs to Slurm:                             │
-│  ├─ sbatch hsf_segmentation[subject-01]  → Compute node 1      │
-│  ├─ sbatch hsf_segmentation[subject-02]  → Compute node 2      │
-│  ├─ sbatch hsf_segmentation[subject-03]  → Compute node 3      │
-│  │  (Wait for dependencies...)                                  │
-│  ├─ sbatch data_processing[subject-01]   → Compute node 1      │
-│  ├─ sbatch data_processing[subject-02]   → Compute node 2      │
-│  └─ sbatch mesh_generation[subject-01]   → Compute node 3      │
-│     (Continues until all jobs complete)                         │
-│                                                                 │
-│  Each job:                                                      │
-│  ├─ Pulls container from registry                              │
-│  ├─ Runs Apptainer with rule-specific container                │
-│  ├─ Executes step (HSF, mesh gen, feature extraction, etc)     │
-│  └─ Writes results to shared scratch filesystem                │
-└─────────────────────────────────────────────────────────────────┘
+run_csc.py (login node)
+  |
+  +--> Snakemake 8.x (login node, dispatcher)
+        |
+        +-- sbatch hsf_segmentation[sub-01]  --> compute node --> apptainer exec .sif python hsf_wrapper.py ...
+        +-- sbatch hsf_segmentation[sub-02]  --> compute node --> apptainer exec .sif python hsf_wrapper.py ...
+        +-- sbatch hsf_segmentation[sub-03]  --> compute node --> apptainer exec .sif python hsf_wrapper.py ...
+        |   (wait for dependencies...)
+        +-- sbatch split_label[sub-01,L,DG]  --> compute node --> apptainer exec .sif python nii_parse.py split ...
+        +-- sbatch split_label[sub-01,L,CA1] --> compute node --> apptainer exec .sif python nii_parse.py split ...
+        +-- sbatch mesh_per_label[sub-01,L,DG] --> ...
+        +-- ... (continues for all rules)
+        |
+        +-- sbatch aggregate_all_subjects    --> compute node --> apptainer exec .sif python cli_aggregate.py all ...
+        |
+        `--> All jobs done, results on shared /scratch
 ```
 
-## Pipeline Flow with CSC Profile
+Each SLURM job:
+1. Runs `apptainer exec <sif> <command>` on a compute node
+2. Reads/writes to shared `/scratch` filesystem
+3. Gets its own SLURM log and Snakemake benchmark file
 
-```
-Snakemake Master Process (1 serial job)
-    │
-    ├─ Rule: hsf_segmentation
-    │   ├─ Job 1 (sub-01): sbatch → node-001 (GPU) → runs apptainer
-    │   ├─ Job 2 (sub-02): sbatch → node-002 (GPU) → runs apptainer
-    │   └─ Job 3 (sub-03): sbatch → node-003 (GPU) → runs apptainer
-    │
-    ├─ Rule: data_processing (depends on hsf_segmentation)
-    │   ├─ Job 4 (sub-01): sbatch → node-004 (CPU) → runs apptainer
-    │   ├─ Job 5 (sub-02): sbatch → node-005 (CPU) → runs apptainer
-    │   └─ Job 6 (sub-03): sbatch → node-006 (CPU) → runs apptainer
-    │
-    └─ ... (continues for remaining rules)
-```
+---
 
-## Performance Optimization for CSC
+## CSC Profile (`config/profiles/csc/config.yaml`)
 
-### 1. Resource Allocation per Rule
-
-Different rules need different resources:
-
-```snakemake
-# HSF segmentation: GPU intensive
-rule hsf_segmentation:
-    resources:
-        partition = "gpu",
-        time = "00:30:00",
-        mem_mb = 16000,
-        threads = 4
-
-# Mesh generation: CPU intensive
-rule mesh_per_label:
-    resources:
-        partition = "serial",
-        time = "00:05:00",
-        mem_mb = 4000,
-        threads = 2
-
-# Feature extraction: Memory intensive
-rule extract_pyradiomics_per_label:
-    resources:
-        partition = "serial",
-        time = "00:10:00",
-        mem_mb = 8000,
-        threads = 1
-```
-
-### 2. Parallel Job Configuration
-
-In `config/profiles/csc/config.yaml`:
+The profile is **auto-generated** by `run_csc.py` with your project-specific settings. You should not need to edit it manually.
 
 ```yaml
-jobs: 100                  # Max 100 parallel jobs total
-local-cores: 4            # Master job uses 4 cores
+# Auto-generated by run_csc.py
+executor: slurm
+
+jobs: 100
+keep-going: true
+latency-wait: 120
+retries: 1
+printshellcmds: true
+rerun-incomplete: true
+local-cores: 1
+
+default-resources:
+  - slurm_account=project_<NUMBER>
+  - slurm_partition=small
+  - mem_mb=8000
+  - runtime=120
+  - "tmpdir='/scratch/project_<NUMBER>/<user>/tmp'"
+
+software-deployment-method:
+  - apptainer
+
+apptainer-args: "--bind /scratch/project_<NUMBER>:/scratch/project_<NUMBER>:rw --env HSF_HOME=/users/$USER/.hsf"
 ```
 
-This allows up to 100 independent jobs to run simultaneously across the cluster.
+Key settings:
 
-### 3. Container Caching
+| Setting | Purpose |
+|---------|---------|
+| `executor: slurm` | Submit each rule as a SLURM batch job |
+| `software-deployment-method: apptainer` | Run each job inside the container via `apptainer exec` |
+| `default-resources: mem_mb=8000` | Default memory per job (overridden per-rule where appropriate) |
+| `default-resources: tmpdir=...` | Temp dir on shared `/scratch` (compute nodes can't see `/tmp`) |
+| `apptainer-args: --bind ...` | Mount `/scratch` read-write inside the container |
+| `keep-going: true` | Don't abort if one subject fails |
+| `latency-wait: 120` | Wait up to 120s for output files to appear on Lustre |
 
-Set cache on scratch (not home directory):
+---
+
+## Building the Container
+
+### 1. Build Docker Image (locally)
 
 ```bash
-# In .bash_profile or before running
-export APPTAINER_CACHEDIR=/scratch/project_id/$USER/.apptainer
-export TMPDIR=/scratch/project_id/$USER/tmp
+cd radiomic-feature-extraction-hippocampus-morphometry
+docker build -f pipeline/Dockerfile -t hippocampus-pipeline:latest .
 ```
 
-## Advantages of CSC Multi-Container Approach
+The Dockerfile (`pipeline/Dockerfile`) is based on `python:3.11-slim` and installs all dependencies including HSF, PyRadiomics, VTK/PyVista, and Snakemake 7.32.4. Pipeline code is baked in via `COPY pipeline /app/pipeline`.
 
-1. **Scalability**: 1000+ subjects can be processed in parallel
-2. **Efficiency**: Only necessary dependencies loaded per job
-3. **Flexibility**: Update one container without rebuilding all
-4. **Resilience**: Single job failure doesn't stop workflow
-5. **Monitoring**: Each job has separate Slurm logs and benchmarks
-6. **Cost**: Pay only for compute time actually used per step
+### 2. Transfer to CSC
+
+**Option A: Push to a container registry, pull on CSC**
+
+```bash
+# Local: tag and push
+docker tag hippocampus-pipeline:latest registry.example.com/hippocampus-pipeline:latest
+docker push registry.example.com/hippocampus-pipeline:latest
+
+# On CSC:
+apptainer pull hippocampus-pipeline.sif docker://registry.example.com/hippocampus-pipeline:latest
+```
+
+**Option B: Export as tarball, copy to CSC, convert**
+
+```bash
+# Local: save Docker image
+docker save hippocampus-pipeline:latest -o hippocampus-pipeline.tar
+
+# Copy to CSC
+scp hippocampus-pipeline.tar username@puhti.csc.fi:/scratch/project_<NUMBER>/$USER/
+
+# On CSC: convert to SIF
+apptainer build hippocampus-pipeline.sif docker-archive://hippocampus-pipeline.tar
+```
+
+> **Important:** Set `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` on `/scratch` before pulling/building. See the [CSC User Guide](csc_user_guide.md) for details.
+
+---
+
+## Running the Pipeline
+
+### Primary Method: `run_csc.py`
+
+The `run_csc.py` wrapper handles everything automatically:
+
+```bash
+ssh username@puhti.csc.fi
+cd /scratch/project_<NUMBER>/$USER/hippocampus-pipeline/pipeline
+
+# Interactive (prompts for all settings)
+python3 run_csc.py
+
+# Non-interactive
+python3 run_csc.py \
+  --project <NUMBER> \
+  --bids-root /scratch/project_<NUMBER>/$USER/Dataset \
+  --sif /scratch/project_<NUMBER>/$USER/Containers/hippocampus-pipeline.sif
+
+# Dry run
+python3 run_csc.py -n
+```
+
+What `run_csc.py` does automatically:
+1. Loads the `snakemake` module (via Lmod) if not already available
+2. Verifies Snakemake >= 8.0 is installed
+3. Collects project settings (interactive prompts or CLI flags)
+4. Creates shared `TMPDIR`, `APPTAINER_CACHEDIR`, `APPTAINER_TMPDIR` on `/scratch`
+5. Clears stale `SINGULARITY_BIND` / `APPTAINER_BIND` environment variables
+6. Generates the CSC Snakemake profile with your project details
+7. Launches Snakemake with a live ASCII progress bar
+8. Reports summary with duration, job counts, and output location
+
+See [CSC User Guide - Command-Line Options](csc_user_guide.md#command-line-options) for all flags.
+
+### Alternative: Direct Snakemake (advanced)
+
+If you prefer to run Snakemake directly (e.g., for debugging), you need to set up the environment manually:
+
+```bash
+# Load snakemake
+module load snakemake
+
+# Set up temp/cache directories
+export TMPDIR=/scratch/project_<NUMBER>/$USER/tmp
+export APPTAINER_CACHEDIR=/scratch/project_<NUMBER>/$USER/.apptainer
+export APPTAINER_TMPDIR=$TMPDIR
+mkdir -p $TMPDIR $APPTAINER_CACHEDIR
+unset SINGULARITY_BIND APPTAINER_BIND
+
+# Run from the pipeline/ directory
+cd /scratch/project_<NUMBER>/$USER/hippocampus-pipeline/pipeline
+
+snakemake \
+  --snakefile workflow/Snakefile \
+  --profile config/profiles/csc \
+  --config \
+    bids_root=/scratch/project_<NUMBER>/$USER/Dataset \
+    derivatives_root=/scratch/project_<NUMBER>/$USER/Dataset/derivatives \
+    container_image=/scratch/project_<NUMBER>/$USER/Containers/hippocampus-pipeline.sif
+```
+
+> Note: You must first edit `config/profiles/csc/config.yaml` to fill in your project number and paths, or let `run_csc.py` generate it once and then use `snakemake` directly afterward.
+
+---
+
+## Resource Allocation
+
+Resources are managed at two levels:
+
+### Default Resources (CSC profile)
+
+Set in `default-resources` of the auto-generated profile:
+
+| Resource | Default Value | Purpose |
+|----------|---------------|---------|
+| `slurm_account` | Your project | SLURM billing account |
+| `slurm_partition` | `small` | SLURM partition |
+| `mem_mb` | 8000 | Memory per job (8 GB) |
+| `runtime` | 120 | Max runtime in minutes |
+| `tmpdir` | `/scratch/.../tmp` | Temp dir on shared storage |
+
+### Per-Rule Overrides
+
+Rules that need less (or more) memory override the default in their `.smk` files:
+
+| Rule | `mem_mb` | `threads` | Notes |
+|------|----------|-----------|-------|
+| `hsf_segmentation` | 8000 (default) | 2 | Uses CPU-only ONNX runtime |
+| `split_label` | 200 | 1 | Simple NIfTI masking |
+| `combine_labels` | 200 | 1 | Simple NIfTI masking |
+| `mesh_per_label` | 4000 | 1 | VTK mesh generation |
+| `mesh_combined` | 4000 | 1 | VTK mesh generation |
+| `extract_pyradiomics_*` | 3000 | 1 | PyRadiomics feature extraction |
+| `extract_curvature_*` | 3000 | 1 | Curvature computation on meshes |
+| `aggregate_subject_features` | 2000 | 1 | CSV aggregation |
+| `aggregate_all_subjects` | 2000 | 1 | CSV merge |
+
+The default 8 GB covers HSF segmentation (the most memory-intensive step) and any rules without explicit overrides. Lighter rules request less to reduce SLURM billing.
+
+---
+
+## Output Structure
+
+All results are written to `<bids_root>/derivatives/`:
+
+```
+<bids_root>/
+  derivatives/
+    sub-01/
+      ses-1/
+        anat/
+          sub-01_ses-1_space-T1w_desc-hsf_dseg.nii.gz          # HSF segmentation
+          sub-01_ses-1_space-T1w_desc-hsf_hemi-L_seg_crop.nii.gz
+          sub-01_ses-1_space-T1w_desc-hsf_hemi-L_label-DG_mask.nii.gz
+          sub-01_ses-1_space-T1w_desc-hsf_hemi-L_mask.nii.gz    # combined mask
+          ...
+        features/
+          sub-01_ses-1_hemi-L_label-DG_pyradiomics.csv
+          sub-01_ses-1_hemi-L_label-DG_curvature.csv
+          sub-01_ses-1_all_features.csv                          # per-subject aggregate
+          ...
+        meshes/
+          sub-01_ses-1_space-T1w_desc-hsf_hemi-L_label-DG_mesh.vtk
+          sub-01_ses-1_space-T1w_desc-hsf_hemi-L_label-DG_mesh.png
+          ...
+    summary/
+      all_features.csv           # Final aggregated features (all subjects)
+      processing_issues.txt      # Subjects with processing errors
+    logs/
+      run_csc_<timestamp>.log    # Snakemake execution log
+      hsf/                       # Per-rule logs
+      data_processing/
+      mesh/
+      feature_extraction/
+      benchmarks/                # Snakemake timing benchmarks per job
+```
+
+---
 
 ## Monitoring & Debugging
 
-### Check Submitted Jobs
+### Live Progress
 
-```bash
-squeue -u $USER | grep snakemake
+`run_csc.py` shows a real-time ASCII progress bar:
+
+```
+  Pipeline [42/503] |########................................| 8% / sub-03 Mesh
 ```
 
-### View Slurm Logs
+### Check SLURM Jobs
 
 ```bash
+# All your jobs
+squeue -u $USER
+
+# Jobs for your project
+squeue -A project_<NUMBER>
+```
+
+### View Logs
+
+```bash
+# Snakemake log (written by run_csc.py)
+cat <bids_root>/derivatives/logs/run_csc_<timestamp>.log
+
 # Per-rule logs
-ls -la logs/slurm/
+cat <bids_root>/derivatives/logs/hsf/sub-01_ses-1.log
+cat <bids_root>/derivatives/logs/feature_extraction/sub-01_ses-1_hemi-L_label-DG.log
 
-# View specific job log
-cat logs/slurm/hsf_segmentation-12345.out
+# Benchmarks (CPU time, memory, I/O)
+cat <bids_root>/derivatives/logs/benchmarks/hsf/sub-01_ses-1.txt
 ```
 
-### Check Snakemake Status
+### Dry Run
+
+Preview planned jobs without executing:
 
 ```bash
-# Run dry-run to check
-snakemake --profile pipeline/config/profiles/csc --dry-run
-
-# Run with detailed progress
-snakemake --profile pipeline/config/profiles/csc -v
+python3 run_csc.py -n
 ```
 
-### Troubleshoot Container Issues
+### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `snakemake: command not found` | `module load snakemake` (done automatically by `run_csc.py`) |
+| `FATAL: mount source /tmp/...` | Stale `TMPDIR` — run `run_csc.py` (auto-fixes) or manually set `TMPDIR` to `/scratch/...` |
+| Stale locks / incomplete files | `python3 run_csc.py --clean --force` |
+| `apptainer pull` fails | Set `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` on `/scratch` (see [User Guide](csc_user_guide.md)) |
+| Pipeline interrupted (`Ctrl+C`) | SLURM jobs may still run: `squeue -u $USER` then `scancel -u $USER` |
+| One subject fails, rest continue | `keep-going: true` in profile; check `processing_issues.txt` |
+
+---
+
+## Comparison: Tyks/Local vs CSC Execution
+
+### Tyks / Local (Docker)
 
 ```bash
-# Pull container manually to cache it
-apptainer pull docker://myusername/hippocampus-pipeline:latest
-
-# Test rule in container interactively
-apptainer shell docker://myusername/hippocampus-pipeline:latest
+docker run --rm \
+  -v /path/to/data:/data \
+  hippocampus-pipeline:latest \
+  --bids-root /data --batch-size 50 --cores 4
 ```
 
-## Comparison: Tyks vs CSC Execution
+- Runs `run_pipeline.py` inside a single Docker container
+- Snakemake 7.32.4 (inside container) manages all rules sequentially/locally
+- Batched processing (`--batch-size`) for memory management
 
-### Tyks Command
+### CSC (SLURM + Apptainer)
+
 ```bash
-apptainer exec \
-  --bind="/data:/data,/app/logs:/app/logs" \
-  hippocampus-pipeline.sif \
-  python3 /app/pipeline/run_pipeline.py --batch-size 50 --cores 4
+python3 run_csc.py \
+  --project <NUMBER> \
+  --bids-root /scratch/project_<NUMBER>/$USER/Dataset \
+  --sif /scratch/project_<NUMBER>/$USER/Containers/hippocampus-pipeline.sif
 ```
 
-### CSC Command
-```bash
-snakemake \
-  --profile pipeline/config/profiles/csc \
-  --cores 100 \
-  --jobs 20
-```
+- Runs `run_csc.py` on the **login node**
+- Snakemake 8.x (host module) submits each rule as a SLURM job
+- Each SLURM job runs inside the Apptainer container on a compute node
+- Up to 100 parallel jobs across the cluster (no batching needed)
 
-**Key difference**: Tyks runs everything in one container on one machine. CSC distributes jobs across the cluster and manages them via Slurm.
+---
 
 ## References
 
-- [CSC Slurm Documentation](https://docs.csc.fi/computing/running/submitting-jobs/)
-- [Snakemake Cluster Execution](https://snakemake.readthedocs.io/en/v7.19.1/executing/cluster.html)
+- [CSC SLURM Documentation](https://docs.csc.fi/computing/running/submitting-jobs/)
+- [CSC Apptainer Guide](https://docs.csc.fi/computing/containers/run-existing/)
+- [Snakemake 8.x SLURM Executor Plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html)
 - [Snakemake Container Integration](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#running-jobs-in-containers)
 - [Puhti Batch Partitions](https://docs.csc.fi/computing/running/batch-job-partitions/)
-- [Apptainer on HPC](https://docs.csc.fi/computing/containers/overview/)

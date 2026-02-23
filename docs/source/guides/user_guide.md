@@ -17,7 +17,7 @@ Create an empty logs directory in your project folder:
 Pull the Apptainer image from Docker Hub:
 
 ```bash
-apptainer pull hippocampus-pipeline.sif docker://docker.io/tarizw/hippocampus-pipeline:v1.0.0
+apptainer pull hippocampus-pipeline.sif docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
 ```
 
 This will download the container image (~4.3 GiB).
