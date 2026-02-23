@@ -1,4 +1,4 @@
-# Radiomic Feature Extraction Pipeline - Quick Start Guide
+# Local Execution - Quick Start Guide
 
 ## Prerequisites
 

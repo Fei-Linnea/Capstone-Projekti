@@ -26,11 +26,12 @@ def cleanup_intermediate_files(derivatives_root, dry_run=False, keep_summary=Tru
         print(f"ERROR: Derivatives directory not found: {derivatives_root}", file=sys.stderr)
         return False, 0, 0
     
-    # Files to preserve (relative to derivatives_root)
+    # Files/directories to preserve (relative to derivatives_root)
     preserve_files = set()
     if keep_summary:
         preserve_files.add("summary/all_features.csv")
         preserve_files.add("summary/processing_issues.txt")
+    preserve_dirs = {"logs"}
     
     # Track statistics
     deleted_count = 0
@@ -67,6 +68,11 @@ def cleanup_intermediate_files(derivatives_root, dry_run=False, keep_summary=Tru
                 else:
                     print(f"[DRY RUN] Would delete: {rel_path}/", file=sys.stderr)
                     deleted_count += 1
+
+        # Preserve logs directory if present
+        elif item.name in preserve_dirs:
+            print(f"✓ Preserving: {rel_path}/", file=sys.stderr)
+            preserved_count += 1
         
         # Delete all subject directories (sub-XX)
         elif item.name.startswith("sub-"):
@@ -136,7 +142,7 @@ def cleanup_with_confirmation(derivatives_root, dry_run=False):
     
     # Show what will be deleted
     print("\n⚠ WARNING: This will delete all intermediate files!", file=sys.stderr)
-    print("Only summary/all_features.csv and summary/processing_issues.txt will be preserved.\n", file=sys.stderr)
+    print("Only summary folder and possible logs folder will be preserved.\n", file=sys.stderr)
 
     # First do a dry run to show what will be deleted
     cleanup_intermediate_files(derivatives_root, dry_run=True, keep_summary=True)
