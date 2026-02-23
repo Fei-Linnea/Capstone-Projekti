@@ -61,12 +61,15 @@ All rules use `shell:` directives that invoke Python scripts via CLI (`argparse`
 |------|---------|--------|--------|-------------|
 | 1 | `hsf_segmentation` | `hsf_wrapper.py` | 8 GB (default) | HSF hippocampal segmentation |
 | 2 | `split_label` | `nii_parse.py split` | 200 MB | Split cropped segmentation into per-label masks |
-| 2 | `combine_labels` | `nii_parse.py combine` | 200 MB | Merge all labels into combined mask |
-| 3 | `mesh_per_label`, `mesh_combined` | `voxelToMesh.py` | 4 GB | Generate VTK meshes + PNG renders |
-| 4 | `extract_pyradiomics_*` | `feature_extraction.py pyradiomics` | 3 GB | Extract volume and surface features |
-| 5 | `extract_curvature_*` | `feature_extraction.py curvature` | 3 GB | Extract curvature metrics from meshes |
+| 2 | `combine_labels` | `nii_parse.py combine` | 8 GB (default) | Merge all labels into combined mask |
+| 3 | `mesh_per_label` | `voxelToMesh.py` | 4 GB | Generate VTK meshes + PNG renders |
+| 3 | `mesh_combined` | `voxelToMesh.py` | 8 GB (default) | Generate VTK meshes + PNG renders |
+| 4 | `extract_pyradiomics_per_label` | `feature_extraction.py pyradiomics` | 3 GB | Extract volume and surface features |
+| 4 | `extract_pyradiomics_combined` | `feature_extraction.py pyradiomics` | 8 GB (default) | Extract volume and surface features |
+| 5 | `extract_curvature_per_label` | `feature_extraction.py curvature` | 3 GB | Extract curvature metrics from meshes |
+| 5 | `extract_curvature_combined` | `feature_extraction.py curvature` | 8 GB (default) | Extract curvature metrics from meshes |
 | 6 | `aggregate_subject_features` | `cli_aggregate.py subject` | 2 GB | Combine per-subject features into one row |
-| 6 | `aggregate_all_subjects` | `cli_aggregate.py all` | 2 GB | Merge all subjects into `all_features.csv` |
+| 6 | `aggregate_all_subjects` | `cli_aggregate.py all` | 8 GB (default) | Merge all subjects into `all_features.csv` |
 
 ### SLURM Job Flow
 
@@ -270,15 +273,22 @@ Rules that need less (or more) memory override the default in their `.smk` files
 |------|----------|-----------|-------|
 | `hsf_segmentation` | 8000 (default) | 2 | Uses CPU-only ONNX runtime |
 | `split_label` | 200 | 1 | Simple NIfTI masking |
-| `combine_labels` | 200 | 1 | Simple NIfTI masking |
+| `combine_labels` | 8000 (default) | 1 | Uses default profile memory |
 | `mesh_per_label` | 4000 | 1 | VTK mesh generation |
-| `mesh_combined` | 4000 | 1 | VTK mesh generation |
-| `extract_pyradiomics_*` | 3000 | 1 | PyRadiomics feature extraction |
-| `extract_curvature_*` | 3000 | 1 | Curvature computation on meshes |
+| `mesh_combined` | 8000 (default) | 1 | Uses default profile memory |
+| `extract_pyradiomics_per_label` | 3000 | 1 | PyRadiomics feature extraction |
+| `extract_pyradiomics_combined` | 8000 (default) | 1 | Uses default profile memory |
+| `extract_curvature_per_label` | 3000 | 1 | Curvature computation on meshes |
+| `extract_curvature_combined` | 8000 (default) | 1 | Uses default profile memory |
 | `aggregate_subject_features` | 2000 | 1 | CSV aggregation |
-| `aggregate_all_subjects` | 2000 | 1 | CSV merge |
+| `aggregate_all_subjects` | 8000 (default) | 1 | Uses default profile memory |
 
-The default 8 GB covers HSF segmentation (the most memory-intensive step) and any rules without explicit overrides. Lighter rules request less to reduce SLURM billing.
+The default 8 GB is used by any rule without an explicit `mem_mb` override. This includes `hsf_segmentation` and several "combined"/aggregation rules in the current workflow.
+
+### CSC vs Tyks/Local Override Behavior
+
+- **CSC (SLURM + Apptainer):** `mem_mb` and `runtime` are translated into SLURM job requests. Per-rule `resources.mem_mb` overrides profile defaults per job.
+- **Tyks/Local (Docker path):** no SLURM submission is used, so there are no SLURM memory/time requests. `threads` still controls local parallel scheduling, while `mem_mb` mainly acts as Snakemake resource metadata unless additional resource limits are set at runtime.
 
 ---
 

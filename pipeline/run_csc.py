@@ -250,6 +250,7 @@ def gather_config(args):
         "jobs": args.jobs,
         "latency_wait": args.latency_wait,
         "retries": args.retries,
+        "set_threads": args.set_threads or [],
     }
 
 
@@ -267,6 +268,10 @@ def print_summary(cfg):
         ("Partition", cfg["partition"]),
         ("Tmp dir", cfg["tmpdir"]),
         ("Max jobs", cfg["jobs"]),
+        (
+            "Set threads",
+            ", ".join(cfg.get("set_threads", [])) if cfg.get("set_threads") else "(none)",
+        ),
     ]:
         print(f"  {label:<14} {value}", file=sys.stderr)
     print(f"  {sep}", file=sys.stderr)
@@ -433,7 +438,15 @@ def render_bar(st, prefix="Pipeline"):
 # Pipeline execution
 # ---------------------------------------------------------------------------
 
-def run_pipeline(cfg, profile_path, *, dry_run=False, force=False, clean=False):
+def run_pipeline(
+    cfg,
+    profile_path,
+    *,
+    dry_run=False,
+    force=False,
+    clean=False,
+    set_threads=None,
+):
     """Execute Snakemake with live progress tracking. Returns True on success."""
 
     # Optional .snakemake cleanup
@@ -456,6 +469,9 @@ def run_pipeline(cfg, profile_path, *, dry_run=False, force=False, clean=False):
     ]
     if cfg.get("bids_pattern"):
         cmd.append(f"bids_pattern={cfg['bids_pattern']}")
+    if set_threads:
+        for entry in set_threads:
+            cmd.extend(["--set-threads", entry])
     if dry_run:
         cmd.append("--dry-run")
     if force:
@@ -583,6 +599,11 @@ def main():
               # Dry run to see planned jobs
               python run_csc.py --project <NUMBER> -n
 
+              # Override threads for specific rules
+              python run_csc.py --project <NUMBER> \
+                  --set-threads hsf_segmentation=4 \
+                  --set-threads mesh_per_label=2
+
               # Clean stale metadata and force re-run
               python run_csc.py --clean --force
         """),
@@ -606,6 +627,15 @@ def main():
     parser.add_argument("--jobs", type=int, default=100, help="Max concurrent SLURM jobs (default: 100)")
     parser.add_argument("--latency-wait", type=int, default=120, help="Seconds to wait for output files (default: 120)")
     parser.add_argument("--retries", type=int, default=1, help="Retries per failed job (default: 1)")
+    parser.add_argument(
+        "--set-threads",
+        action="append",
+        default=None,
+        help=(
+            "Override rule threads (e.g., hsf_segmentation=4). "
+            "Can be used multiple times."
+        ),
+    )
 
     # Execution control
     parser.add_argument("-n", "--dry-run", action="store_true", help="Show planned jobs without executing")
@@ -668,6 +698,7 @@ def main():
         dry_run=args.dry_run,
         force=args.force,
         clean=args.clean,
+        set_threads=args.set_threads,
     )
 
     # 7. Optional cleanup of intermediates after a successful run
