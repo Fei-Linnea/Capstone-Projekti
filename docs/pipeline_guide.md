@@ -1,4 +1,4 @@
-# Radiomic Feature Extraction Pipeline - Complete Guide
+# Radiomic Feature Extraction Pipeline - Complete General Guide
 
 ## Pipeline Overview
 
@@ -53,7 +53,14 @@ dataset/
         sub-02_ses-1_T1w.json
 ```
 
-For detailed run instructions, see [User Guide](user_guide.md).
+### 1. Local Execution
+
+For step-by-step run instructions, see [User Guide](user_guide.md).
+
+### 2. CSC Execution
+
+For step-by-step run instructions, see [CSC User Guide](csc_user_guide.md). For more technical detail, see [CSC Cluster Pipeline](csc_cluster_pipeline.md).
+
 
 **What the pipeline does:**
 - Provides different customizable command-line options (flags) to override default values
