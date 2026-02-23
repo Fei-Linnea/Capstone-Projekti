@@ -1,27 +1,34 @@
 #!/usr/bin/env python3
 """
-CSC Puhti Pipeline Runner
+CSC Puhti Pipeline Runner.
 
-Interactive wrapper for running the hippocampus radiomic feature extraction
-pipeline on CSC's Puhti cluster using SLURM + Apptainer.
+Interactive and CLI-based wrapper for executing the hippocampus
+radiomic feature extraction workflow on CSC's Puhti cluster using
+SLURM and Apptainer.
 
-Features:
-  - Interactive or CLI-driven project configuration
-  - Dynamic Snakemake profile generation (project number, paths, tmpdir)
-  - CSC-specific environment setup (shared TMPDIR, Apptainer bind mounts)
-  - Real-time progress bar driven by Snakemake log output
+This script provides:
 
-Usage:
-  # Interactive (prompts for project, paths, etc.)
-  python run_csc.py
+- Interactive or fully CLI-driven configuration
+- Automatic Snakemake profile generation
+- CSC-specific environment setup (TMPDIR, bind mounts)
+- Real-time progress tracking from Snakemake logs
+- Optional cleanup of intermediate outputs
 
-  # Non-interactive
-  python run_csc.py --project <NUMBER> \\
-      --bids-root /scratch/project_<NUMBER>/<USER>/Dataset \\
-      --sif /scratch/project_<NUMBER>/<USER>/Containers/hippocampus-pipeline.sif
+Typical Usage
+-------------
+Interactive mode:
 
-  # Dry run
-  python run_csc.py --dry-run
+    python run_csc.py
+
+Non-interactive mode:
+
+    python run_csc.py --project 2001988 \
+        --bids-root /scratch/project_2001988/user/Dataset \
+        --sif /scratch/project_2001988/user/Containers/pipeline.sif
+
+Dry run:
+
+    python run_csc.py --dry-run
 """
 
 import argparse
@@ -35,11 +42,12 @@ import textwrap
 import threading
 import time
 from datetime import datetime
-from run_utils.cleanup import cleanup_with_confirmation
+from pipeline.run_utils.cleanup import cleanup_with_confirmation
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROFILE_DIR = os.path.join(SCRIPT_DIR, "config", "profiles", "csc")
 PROFILE_PATH = os.path.join(PROFILE_DIR, "config.yaml")
@@ -63,12 +71,20 @@ RULE_DISPLAY = {
 
 MIN_SNAKEMAKE_MAJOR = 8
 
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 def banner(text):
-    """Print a section banner to stderr."""
+    """
+    Print a formatted section banner to stderr.
+
+    Parameters
+    ----------
+    text : str
+        Title text to display inside the banner.
+    """
     w = 70
     print(f"\n{'=' * w}", file=sys.stderr)
     print(f"  {text}", file=sys.stderr)
@@ -76,19 +92,57 @@ def banner(text):
 
 
 def info(msg):
+    """
+    Print an informational message to stderr.
+
+    Parameters
+    ----------
+    msg : str
+        Message to display.
+    """
     print(f"  {msg}", file=sys.stderr)
 
 
 def ok(msg):
+    """
+    Print a success message to stderr.
+
+    Parameters
+    ----------
+    msg : str
+        Message to display.
+    """
     print(f"  [OK] {msg}", file=sys.stderr)
 
 
 def err(msg):
+    """
+    Print an error message to stderr.
+
+    Parameters
+    ----------
+    msg : str
+        Error message to display.
+    """
     print(f"  [FAIL] {msg}", file=sys.stderr)
 
 
 def prompt(label, default=None):
-    """Prompt user for input, returning *default* on empty reply."""
+    """
+    Prompt the user for input.
+
+    Parameters
+    ----------
+    label : str
+        Prompt label to display.
+    default : str, optional
+        Default value returned if user presses Enter.
+
+    Returns
+    -------
+    str
+        User-provided value or the default if empty.
+    """
     if default:
         value = input(f"  {label} [{default}]: ").strip()
         return value if value else default
@@ -104,29 +158,41 @@ def prompt(label, default=None):
 # ---------------------------------------------------------------------------
 
 def _module_load(module_name):
-    """Run 'module load <name>' via bash so the shell-function works.
-
-    On CSC (Lmod), 'module' is a shell function.  We source the init script
-    and print the resulting PATH so we can update the current process env.
     """
-    # Lmod init script location (standard on CSC / most HPC)
+    Attempt to load an HPC module using Lmod via a subprocess.
+
+    This function sources the Lmod initialization script and executes
+    `module load <module_name>` in a bash subshell. If successful,
+    the updated PATH is propagated to the current Python process.
+
+    Parameters
+    ----------
+    module_name : str
+        Name of the module to load.
+
+    Returns
+    -------
+    bool
+        True if the module was successfully loaded, False otherwise.
+    """
     init_script = "/usr/share/lmod/lmod/init/bash"
     if not os.path.isfile(init_script):
-        # Fallback: try the profile-based init
         init_script = "/usr/share/lmod/lmod/init/profile"
+
     cmd = (
         f'source {init_script} 2>/dev/null; '
         f'module load {module_name} 2>&1; '
         f'echo "===PATH===$PATH"'
     )
+
     try:
         r = subprocess.run(
             ["bash", "-c", cmd],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             universal_newlines=True,
         )
         output = r.stdout
-        # Extract the updated PATH from the output
         for line in output.splitlines():
             if line.startswith("===PATH==="):
                 new_path = line[len("===PATH==="):]
@@ -134,16 +200,26 @@ def _module_load(module_name):
                 return True
     except Exception:
         pass
+
     return False
 
 
 def _get_snakemake_version():
-    """Return snakemake version string, or None if not available."""
+    """
+    Retrieve the installed Snakemake version.
+
+    Returns
+    -------
+    str or None
+        Version string if Snakemake is available, otherwise None.
+    """
     try:
         r = subprocess.run(
             ["snakemake", "--version"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            universal_newlines=True, check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            check=True,
         )
         return r.stdout.strip()
     except (FileNotFoundError, subprocess.CalledProcessError, ValueError):
@@ -151,10 +227,15 @@ def _get_snakemake_version():
 
 
 def check_snakemake():
-    """Verify that Snakemake >= 8 is on PATH and return the version string.
+    """
+    Verify that Snakemake >= 8 is available in PATH.
 
-    If snakemake is missing or too old, attempt ``module load snakemake``
-    automatically (works on CSC Puhti / any Lmod-based cluster).
+    If Snakemake is missing or too old, attempts to load it via Lmod
+    module system (e.g., `module load snakemake` on CSC Puhti).
+
+    :return: Snakemake version string if found and satisfies minimum,
+             otherwise None.
+    :rtype: str or None
     """
     ver = _get_snakemake_version()
 
@@ -194,7 +275,15 @@ def check_snakemake():
 # ---------------------------------------------------------------------------
 
 def gather_config(args):
-    """Collect all settings from CLI flags + interactive prompts."""
+    """
+    Collect all pipeline configuration from CLI arguments and interactive prompts.
+
+    :param args: Parsed command-line arguments object.
+    :type args: argparse.Namespace
+    :return: Dictionary of configuration values.
+    :rtype: dict
+    """
+
     username = getpass.getuser()
     interactive = not (args.project and args.bids_root and args.sif)
 
@@ -255,7 +344,13 @@ def gather_config(args):
 
 
 def print_summary(cfg):
-    """Print configuration summary table."""
+    """
+    Print a configuration summary table to stderr.
+
+    :param cfg: Pipeline configuration dictionary.
+    :type cfg: dict
+    """
+
     sep = "-" * 55
     print(f"\n  {sep}", file=sys.stderr)
     for label, value in [
@@ -278,7 +373,14 @@ def print_summary(cfg):
 
 
 def validate_paths(cfg):
-    """Return a list of error strings for missing paths."""
+    """
+    Check that required paths exist and return a list of errors.
+
+    :param cfg: Pipeline configuration dictionary.
+    :type cfg: dict
+    :return: List of missing or invalid paths.
+    :rtype: list of str
+    """
     errors = []
     if not os.path.isdir(cfg["bids_root"]):
         errors.append(f"BIDS root not found: {cfg['bids_root']}")
@@ -292,7 +394,16 @@ def validate_paths(cfg):
 # ---------------------------------------------------------------------------
 
 def write_profile(cfg):
-    """Write config/profiles/csc/config.yaml with the current settings."""
+    """
+    Write Snakemake profile YAML configuration for SLURM execution.
+
+    Creates PROFILE_DIR and writes config.yaml with current settings.
+
+    :param cfg: Pipeline configuration dictionary.
+    :type cfg: dict
+    :return: Directory path where the profile was written.
+    :rtype: str
+    """
     os.makedirs(PROFILE_DIR, exist_ok=True)
 
     p = cfg["project"]
@@ -335,7 +446,14 @@ def write_profile(cfg):
 # ---------------------------------------------------------------------------
 
 def setup_environment(cfg):
-    """Prepare env vars for Apptainer + SLURM."""
+    """
+    Prepare environment variables for Apptainer (Singularity) and SLURM.
+
+    Ensures TMPDIR exists, sets Apptainer cache, and clears old bind vars.
+
+    :param cfg: Pipeline configuration dictionary.
+    :type cfg: dict
+    """
     tmpdir = cfg["tmpdir"]
     os.makedirs(tmpdir, exist_ok=True)
     os.environ["TMPDIR"] = tmpdir
@@ -355,7 +473,16 @@ def setup_environment(cfg):
 # ---------------------------------------------------------------------------
 
 def parse_line(line, st):
-    """Parse one Snakemake log line and update state *st*."""
+    """
+    Parse a single Snakemake log line to update progress state.
+
+    Recognizes job counts, current rule, subject, SLURM submissions, and errors.
+
+    :param line: A line of Snakemake log output.
+    :type line: str
+    :param st: Dictionary tracking current pipeline state.
+    :type st: dict
+    """
     stripped = line.strip()
 
     # Authoritative progress: "M of T steps (PP%) done"
@@ -398,7 +525,14 @@ def parse_line(line, st):
 
 
 def render_bar(st, prefix="Pipeline"):
-    """Redraw the single-line progress bar on stderr."""
+    """
+    Render a single-line progress bar in stderr for pipeline execution.
+
+    :param st: Dictionary tracking current pipeline state.
+    :type st: dict
+    :param prefix: Optional prefix string for the progress display.
+    :type prefix: str
+    """
     done = st.get("done", 0)
     total = st.get("total")
     frame = st.get("_frame", 0)
@@ -447,7 +581,29 @@ def run_pipeline(
     clean=False,
     set_threads=None,
 ):
-    """Execute Snakemake with live progress tracking. Returns True on success."""
+    """
+    Execute the Hippocampus pipeline using Snakemake with live progress tracking.
+
+    Supports dry-run mode, forced re-execution, and optional cleanup of
+    stale Snakemake metadata. Displays a progress bar and summary, capturing
+    errors and duration.
+
+    :param cfg: Pipeline configuration dictionary (from gather_config).
+    :type cfg: dict
+    :param profile_path: Path to the Snakemake profile directory.
+    :type profile_path: str
+    :param dry_run: If True, only display planned jobs without executing.
+    :type dry_run: bool, default False
+    :param force: If True, force re-run all rules (--forceall).
+    :type force: bool, default False
+    :param clean: If True, remove .snakemake metadata before running.
+    :type clean: bool, default False
+    :param set_threads: Optional list of thread overrides for specific rules
+                        (e.g., ["hsf_segmentation=4"]).
+    :type set_threads: list of str or None
+    :return: True if pipeline completed successfully without errors, else False.
+    :rtype: bool
+    """
 
     # Optional .snakemake cleanup
     sm_dir = os.path.join(SCRIPT_DIR, ".snakemake")
@@ -583,6 +739,24 @@ def run_pipeline(
 # ---------------------------------------------------------------------------
 
 def main():
+    """
+    Entry point for running the Hippocampus pipeline on CSC Puhti.
+
+    Performs the following steps:
+    1. Parse command-line arguments.
+    2. Check prerequisites (Snakemake >= 8).
+    3. Gather configuration (CLI + interactive prompts).
+    4. Print a summary of the configuration.
+    5. Validate paths (skipped in dry-run mode).
+    6. Confirm execution with the user (unless --yes).
+    7. Setup environment variables for Apptainer + SLURM.
+    8. Write Snakemake profile.
+    9. Execute the pipeline (with optional dry-run, force, clean).
+    10. Optional cleanup of intermediate files after successful completion.
+
+    :return: Exits the program with code 0 on success or 1 on failure.
+    :rtype: None
+    """
     parser = argparse.ArgumentParser(
         description="Run hippocampus pipeline on CSC Puhti (SLURM + Apptainer)",
         formatter_class=argparse.RawDescriptionHelpFormatter,

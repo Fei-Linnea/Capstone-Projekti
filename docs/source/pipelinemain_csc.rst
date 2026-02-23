@@ -1,5 +1,5 @@
-CSC Puhti Pipeline Runner (run_csc.py)
-======================================
+CSC Puhti Pipeline Runner
+=========================
 
 Overview
 --------

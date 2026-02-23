@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overview &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+  <title>TYKS Pipeline Runner &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
@@ -19,8 +19,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="CSC Puhti Pipeline Runner (run_csc.py)" href="pipelinemain_csc.html" />
-    <link rel="prev" title="Rule Graph Explanation" href="guides/rulegraph_explanation.html" /> 
+    <link rel="next" title="CSC Puhti Pipeline Runner" href="pipelinemain_csc.html" />
+    <link rel="prev" title="CSC Puhti - Quick Start Guide" href="guides/csc_user_guide.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,13 +45,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html#main-pipeline-runner">Main Pipeline Runner</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#command-line-interface">Command-Line Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#notes">Notes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner (run_csc.py)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#main-pipeline-runners">Main Pipeline Runners</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">TYKS Pipeline Runner</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
@@ -75,7 +78,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
-      <li class="breadcrumb-item active">Overview</li>
+      <li class="breadcrumb-item active">TYKS Pipeline Runner</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/pipelinemain_tyks.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -85,8 +88,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
+  <section id="tyks-pipeline-runner">
+<h1>TYKS Pipeline Runner<a class="headerlink" href="#tyks-pipeline-runner" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
 <p><cite>run_pipeline.py</cite> is the <strong>main entry point</strong> for the hippocampus radiomic feature extraction pipeline. It handles:</p>
 <ul class="simple">
 <li><p>Batch processing of subjects</p></li>
@@ -98,7 +103,7 @@
 <p>This script imports utility functions from the <cite>run_utils</cite> package for all internal operations.</p>
 </section>
 <section id="command-line-interface">
-<h1>Command-Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading"></a></h1>
+<h2>Command-Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading"></a></h2>
 <p>The runner provides a <strong>rich CLI</strong> for flexible execution. Key arguments:</p>
 <ul class="simple">
 <li><p><strong>–profile</strong> <em>(required)</em>
@@ -123,7 +128,7 @@ Paths for working directories, logs, data, and BIDS T1w file discovery.</p></li>
 </ul>
 </section>
 <section id="workflow">
-<h1>Workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h1>
+<h2>Workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p><strong>Initialization</strong>
 - Parses CLI arguments.
@@ -146,7 +151,7 @@ Paths for working directories, logs, data, and BIDS T1w file discovery.</p></li>
 </ol>
 </section>
 <section id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h1>
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
 <p>Full command example (run with defaults from profile):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
@@ -222,7 +227,7 @@ Paths for working directories, logs, data, and BIDS T1w file discovery.</p></li>
 </div>
 </section>
 <section id="notes">
-<h1>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h1>
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>The pipeline automatically logs progress to a timestamped directory under <cite>–log-dir</cite>.</p></li>
 <li><p>Exit codes:
@@ -232,13 +237,14 @@ Paths for working directories, logs, data, and BIDS T1w file discovery.</p></li>
 <li><p>Designed for reproducible, containerized execution (via Apptainer/Singularity in profiles).</p></li>
 </ul>
 </section>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="guides/rulegraph_explanation.html" class="btn btn-neutral float-left" title="Rule Graph Explanation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pipelinemain_csc.html" class="btn btn-neutral float-right" title="CSC Puhti Pipeline Runner (run_csc.py)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="guides/csc_user_guide.html" class="btn btn-neutral float-left" title="CSC Puhti - Quick Start Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipelinemain_csc.html" class="btn btn-neutral float-right" title="CSC Puhti Pipeline Runner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

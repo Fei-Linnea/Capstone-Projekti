@@ -6,7 +6,7 @@ User Guides / Tutorials
 
    guides
 
-Main Pipeline Runner
+Main Pipeline Runners
 ====================
 .. toctree::
    :maxdepth: 2
@@ -38,7 +38,6 @@ Configuration Files
    :maxdepth: 2
 
    configuration
-   slurm_status
 
 API
 ===
@@ -48,3 +47,5 @@ API
 
    pipeline.run_utils
    pipeline.workflow.scripts
+   cli_scripts
+   workflow_helpers.rst

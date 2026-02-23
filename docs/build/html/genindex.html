@@ -42,7 +42,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
@@ -82,12 +82,19 @@
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -105,6 +112,10 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.banner">banner() (in module pipeline.run_csc)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.nii_parse.binarify_hd_mask">binarify_hd_mask() (in module pipeline.workflow.scripts.nii_parse)</a>
 </li>
   </ul></td>
@@ -115,6 +126,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.feature_extraction.calculate_curv_metrics">calculate_curv_metrics() (in module pipeline.workflow.scripts.feature_extraction)</a>
 </li>
+      <li><a href="cli_scripts.html#pipeline.run_csc.check_snakemake">check_snakemake() (in module pipeline.run_csc)</a>
+</li>
       <li><a href="pipeline.run_utils.html#pipeline.run_utils.cleanup.cleanup_intermediate_files">cleanup_intermediate_files() (in module pipeline.run_utils.cleanup)</a>
 </li>
   </ul></td>
@@ -123,6 +136,8 @@
 </li>
       <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.nii_parse.combine_labels">combine_labels() (in module pipeline.workflow.scripts.nii_parse)</a>
 </li>
+      <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.combined_mask_output">combined_mask_output() (in module pipeline.workflow.snakefile_docs)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -130,17 +145,23 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pipeline.run_utils.html#pipeline.run_utils.subjects.discover_subjects">discover_subjects() (in module pipeline.run_utils.subjects)</a>
+
+      <ul>
+        <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.discover_subjects">(in module pipeline.workflow.snakefile_docs)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.feature_extraction.extract_curvatures">extract_curvatures() (in module pipeline.workflow.scripts.feature_extraction)</a>
+      <li><a href="cli_scripts.html#pipeline.run_csc.err">err() (in module pipeline.run_csc)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.feature_extraction.extract_curvatures">extract_curvatures() (in module pipeline.workflow.scripts.feature_extraction)</a>
+</li>
       <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.feature_extraction.extract_pyradiomics_features">extract_pyradiomics_features() (in module pipeline.workflow.scripts.feature_extraction)</a>
 </li>
   </ul></td>
@@ -154,13 +175,73 @@
   </ul></td>
 </tr></table>
 
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.gather_config">gather_config() (in module pipeline.run_csc)</a>
+</li>
+      <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.get_input_path">get_input_path() (in module pipeline.workflow.snakefile_docs)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="workflow_helpers.html#pipeline.config.profiles.csc.slurm_status.get_job_status">get_job_status() (in module pipeline.config.profiles.csc.slurm_status)</a>
+</li>
+      <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.get_seg_crop_output">get_seg_crop_output() (in module pipeline.workflow.snakefile_docs)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_left_crop_output">hsf_left_crop_output() (in module pipeline.workflow.snakefile_docs)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_output">hsf_output() (in module pipeline.workflow.snakefile_docs)</a>
+</li>
+      <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_right_crop_output">hsf_right_crop_output() (in module pipeline.workflow.snakefile_docs)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.info">info() (in module pipeline.run_csc)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="workflow_helpers.html#pipeline.workflow.snakefile_docs.label_mask_output">label_mask_output() (in module pipeline.workflow.snakefile_docs)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="workflow_helpers.html#pipeline.config.profiles.csc.slurm_status.main">main() (in module pipeline.config.profiles.csc.slurm_status)</a>
+
+      <ul>
+        <li><a href="cli_scripts.html#pipeline.run_csc.main">(in module pipeline.run_csc)</a>
+</li>
+        <li><a href="cli_scripts.html#pipeline.run_pipeline.main">(in module pipeline.run_pipeline)</a>
+</li>
+      </ul></li>
       <li>
     module
 
       <ul>
+        <li><a href="workflow_helpers.html#module-pipeline.config.profiles.csc.slurm_status">pipeline.config.profiles.csc.slurm_status</a>
+</li>
+        <li><a href="cli_scripts.html#module-pipeline.run_csc">pipeline.run_csc</a>
+</li>
+        <li><a href="cli_scripts.html#module-pipeline.run_pipeline">pipeline.run_pipeline</a>
+</li>
         <li><a href="pipeline.run_utils.html#module-pipeline.run_utils.aggregate">pipeline.run_utils.aggregate</a>
 </li>
         <li><a href="pipeline.run_utils.html#module-pipeline.run_utils.batchExecutor">pipeline.run_utils.batchExecutor</a>
@@ -185,6 +266,8 @@
 </li>
         <li><a href="pipeline.workflow.scripts.html#module-pipeline.workflow.scripts.voxelToMesh">pipeline.workflow.scripts.voxelToMesh</a>
 </li>
+        <li><a href="workflow_helpers.html#module-pipeline.workflow.snakefile_docs">pipeline.workflow.snakefile_docs</a>
+</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -197,11 +280,42 @@
   </ul></td>
 </tr></table>
 
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.ok">ok() (in module pipeline.run_csc)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.parse_line">parse_line() (in module pipeline.run_csc)</a>
+</li>
       <li><a href="pipeline.run_utils.html#pipeline.run_utils.progress.parse_progress">parse_progress() (in module pipeline.run_utils.progress)</a>
 </li>
+      <li>
+    pipeline.config.profiles.csc.slurm_status
+
+      <ul>
+        <li><a href="workflow_helpers.html#module-pipeline.config.profiles.csc.slurm_status">module</a>
+</li>
+      </ul></li>
+      <li>
+    pipeline.run_csc
+
+      <ul>
+        <li><a href="cli_scripts.html#module-pipeline.run_csc">module</a>
+</li>
+      </ul></li>
+      <li>
+    pipeline.run_pipeline
+
+      <ul>
+        <li><a href="cli_scripts.html#module-pipeline.run_pipeline">module</a>
+</li>
+      </ul></li>
       <li>
     pipeline.run_utils.aggregate
 
@@ -237,6 +351,8 @@
         <li><a href="pipeline.run_utils.html#module-pipeline.run_utils.logger">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     pipeline.run_utils.progress
 
@@ -244,8 +360,6 @@
         <li><a href="pipeline.run_utils.html#module-pipeline.run_utils.progress">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     pipeline.run_utils.subjects
 
@@ -288,7 +402,18 @@
         <li><a href="pipeline.workflow.scripts.html#module-pipeline.workflow.scripts.voxelToMesh">module</a>
 </li>
       </ul></li>
+      <li>
+    pipeline.workflow.snakefile_docs
+
+      <ul>
+        <li><a href="workflow_helpers.html#module-pipeline.workflow.snakefile_docs">module</a>
+</li>
+      </ul></li>
       <li><a href="pipeline.run_utils.html#pipeline.run_utils.progress.print_progress_bar">print_progress_bar() (in module pipeline.run_utils.progress)</a>
+</li>
+      <li><a href="cli_scripts.html#pipeline.run_csc.print_summary">print_summary() (in module pipeline.run_csc)</a>
+</li>
+      <li><a href="cli_scripts.html#pipeline.run_csc.prompt">prompt() (in module pipeline.run_csc)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -296,11 +421,15 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.render_bar">render_bar() (in module pipeline.run_csc)</a>
+</li>
       <li><a href="pipeline.run_utils.html#pipeline.run_utils.aggregate.run_aggregation">run_aggregation() (in module pipeline.run_utils.aggregate)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.hsf_wrapper.run_hsf_segmentation">run_hsf_segmentation() (in module pipeline.workflow.scripts.hsf_wrapper)</a>
+</li>
+      <li><a href="cli_scripts.html#pipeline.run_csc.run_pipeline">run_pipeline() (in module pipeline.run_csc)</a>
 </li>
       <li><a href="pipeline.run_utils.html#pipeline.run_utils.batchExecutor.run_snakemake_batch">run_snakemake_batch() (in module pipeline.run_utils.batchExecutor)</a>
 </li>
@@ -309,6 +438,10 @@
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.setup_environment">setup_environment() (in module pipeline.run_csc)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.nii_parse.split_one_label">split_one_label() (in module pipeline.workflow.scripts.nii_parse)</a>
 </li>
@@ -319,6 +452,22 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pipeline.run_utils.html#pipeline.run_utils.logger.tail_log_file">tail_log_file() (in module pipeline.run_utils.logger)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.validate_paths">validate_paths() (in module pipeline.run_csc)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cli_scripts.html#pipeline.run_csc.write_profile">write_profile() (in module pipeline.run_csc)</a>
 </li>
   </ul></td>
 </tr></table>

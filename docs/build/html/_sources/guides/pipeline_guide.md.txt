@@ -1,4 +1,4 @@
-# Radiomic Feature Extraction Pipeline - Complete Guide
+# Radiomic Feature Extraction Pipeline - Complete General Guide
 
 ## Pipeline Overview
 
@@ -53,7 +53,14 @@ dataset/
         sub-02_ses-1_T1w.json
 ```
 
-For detailed run instructions, see [user_guide.md](user_guide.md).
+### 1. Local Execution
+
+For step-by-step run instructions, see [User Guide](user_guide.md).
+
+### 2. CSC Execution
+
+For step-by-step run instructions, see [CSC User Guide](csc_user_guide.md). For more technical detail, see [CSC Cluster Pipeline](csc_cluster_pipeline.md).
+
 
 **What the pipeline does:**
 - Provides different customizable command-line options (flags) to override default values
@@ -206,19 +213,105 @@ cat "D:\Path\To\Data\derivatives\summary\processing_issues.txt"
 
 ### Final Dataset
 
-CUSTOMER REQUIREMENT: Explain variables in all_features.csv
-
-IS THIS ENOUGH OR SHOULD IT BE MORE COMPREHENSIVE ??
+#### Explanations of each feature:
 
 `derivatives/summary/all_features.csv` contains:
-- **Subject/Session identifiers**
-- **Radiomics features** per region/hemisphere:
-  - MeshVolume, SurfaceArea, SurfaceVolumeRatio
-  - Shape elongation, flatness, sphericity
-- **Curvature features** per region/hemisphere:
-  - Mean curvature (average, min, max, std)
-  - Gaussian curvature (average, min, max, std)
-- **Regions:** DG, CA1, CA2, CA3, SUB (left/right + combined)
+
+**Subject / Session identifiers** These are as they appear in the BIDS format file name
+
+The actual features are divided into regions and hemispheres (Left / Right side of the brain):
+
+**Radiomics features**:
+- MeshVolume: Simply the volume (mm^3)
+- SurfaceVolumeRatio: The ratio of surface area to volume (mm^2/mm^3 = 1/mm)
+
+**Curvature features**:
+- Mean_curvature: average of the two principal curvatures k1 and k2, measures how much the surface bends overall with higher values meaning more and more convex
+  - median: median of all sample points (from around the current region)
+  - mean: mean of all sample points
+  - std: standard deviation of all sample points
+  - 25th_percentile: the value below which 25% of all sample points' values fall
+  - 75th_percentile the value below which 75% of all sample points' values fall
+- Gaussian_curvature: product of the two principal curvatures k1 and k2, determines the intrinsic shape type, if value > 0, shape is dome or bowl like (elliptic), if value < 0, shape is saddle like (hyperbolic)
+  - median: see above
+  - mean: see above
+  - std: see above
+  - 25th_percentile: see above
+  - 75th_percentile: see above
+- k1_curvature: maximum normal curvature at the sample points (most positive bending/least negative bending)
+  - median: see above
+  - mean: see above
+  - std: see above
+  - 25th_percentile: see above
+  - 75th_percentile: see above
+
+- k2_curvature: minimum normal curvature at the sample points (most negative bending/least positive bending)
+  - median: see above
+  - mean: see above
+  - std: see above
+  - 25th_percentile: see above
+  - 75th_percentile: see above
+    
+  **All curvature features' units are 1/mm**
+
+#### How the features are ordered / laid out in the .csv file:
+
+- First two columns are Subject ID and Session ID
+- Next come the actual features ordered...
+  - first by region (whole hippocampus, DG, SUB, CA1, CA2, CA3)
+  - then by hemisphere (Left / Right side of the brain)
+  - then by the order of the actual features for that region-hemisphere combination, in the order they are explained above.
+
+- Example (vertical for easier visualization):
+  - Hippocampus_L_MeshVolume &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;**First region, left hemisphere**
+  - Hippocampus_L_SurfaceVolumeRatio
+  - Hippocampus_L_Mean_curvature_median
+  - Hippocampus_L_Mean_curvature_mean
+  - Hippocampus_L_Mean_curvature_std
+  - Hippocampus_L_Mean_curvature_25th_percentile
+  - Hippocampus_L_Mean_curvature_75th_percentile
+  - Hippocampus_L_Gaussian_curvature_median
+  - Hippocampus_L_Gaussian_curvature_mean
+  - Hippocampus_L_Gaussian_curvature_std
+  - Hippocampus_L_Gaussian_curvature_25th_percentile
+  - Hippocampus_L_Gaussian_curvature_75th_percentile
+  - Hippocampus_L_k1_curvature_median
+  - Hippocampus_L_k1_curvature_mean
+  - Hippocampus_L_k1_curvature_std
+  - Hippocampus_L_k1_curvature_25th_percentile
+  - Hippocampus_L_k1_curvature_75th_percentile
+  - Hippocampus_L_k2_curvature_median
+  - Hippocampus_L_k2_curvature_mean
+  - Hippocampus_L_k2_curvature_std
+  - Hippocampus_L_k2_curvature_25th_percentile
+  - Hippocampus_L_k2_curvature_75th_percentile
+  - Hippocampus_R_MeshVolume &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;**First region, right hemisphere**
+  - Hippocampus_R_SurfaceVolumeRatio
+  - Hippocampus_R_Mean_curvature_median
+  - Hippocampus_R_Mean_curvature_mean
+  - Hippocampus_R_Mean_curvature_std
+  - Hippocampus_R_Mean_curvature_25th_percentile
+  - Hippocampus_R_Mean_curvature_75th_percentile
+  - Hippocampus_R_Gaussian_curvature_median
+  - Hippocampus_R_Gaussian_curvature_mean
+  - Hippocampus_R_Gaussian_curvature_std
+  - Hippocampus_R_Gaussian_curvature_25th_percentile
+  - Hippocampus_R_Gaussian_curvature_75th_percentile
+  - Hippocampus_R_k1_curvature_median
+  - Hippocampus_R_k1_curvature_mean
+  - Hippocampus_R_k1_curvature_std
+  - Hippocampus_R_k1_curvature_25th_percentile
+  - Hippocampus_R_k1_curvature_75th_percentile
+  - Hippocampus_R_k2_curvature_median
+  - Hippocampus_R_k2_curvature_mean
+  - Hippocampus_R_k2_curvature_std
+  - Hippocampus_R_k2_curvature_25th_percentile
+  - Hippocampus_R_k2_curvature_75th_percentile
+  - DG_L_MeshVolume &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;**Second region, left hemisphere**
+  - DG_L_SurfaceVolumeRatio
+  - DG_L_Mean_curvature_median
+  - DG_L_Mean_curvature_mean <br>
+      ...and so on
 
 ### Analysis Tools
 
@@ -270,3 +363,7 @@ logs/<timestamp>/rulegraph.svg
 ## Technical Documentation Guide
 
 Add instructions here how to access technical HTML doc.
+
+## References:
+
+- [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)

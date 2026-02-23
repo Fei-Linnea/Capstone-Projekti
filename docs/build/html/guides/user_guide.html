@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Radiomic Feature Extraction Pipeline - Quick Start Guide &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+  <title>Local Execution - Quick Start Guide &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Radiomic Feature Extraction Pipeline - Complete Guide" href="pipeline_guide.html" />
+    <link rel="next" title="Radiomic Feature Extraction Pipeline - Complete General Guide" href="pipeline_guide.html" />
     <link rel="prev" title="&lt;no title&gt;" href="../guides.html" /> 
 </head>
 
@@ -45,7 +45,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../modules.html">User Guides / Tutorials</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Radiomic Feature Extraction Pipeline - Quick Start Guide</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Local Execution - Quick Start Guide</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#download-the-pipeline-image">Download the Pipeline Image</a></li>
@@ -58,11 +58,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#output-structure">Output Structure</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete General Guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rulegraph_explanation.html">Rule Graph Explanation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="csc_user_guide.html">CSC Puhti - Quick Start Guide</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules.html#rules-overview">Rules Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules.html#configuration-files">Configuration Files</a></li>
@@ -85,7 +86,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../modules.html">User Guides / Tutorials</a></li>
           <li class="breadcrumb-item"><a href="../guides.html">&lt;no title&gt;</a></li>
-      <li class="breadcrumb-item active">Radiomic Feature Extraction Pipeline - Quick Start Guide</li>
+      <li class="breadcrumb-item active">Local Execution - Quick Start Guide</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/user_guide.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -95,8 +96,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="radiomic-feature-extraction-pipeline-quick-start-guide">
-<h1>Radiomic Feature Extraction Pipeline - Quick Start Guide<a class="headerlink" href="#radiomic-feature-extraction-pipeline-quick-start-guide" title="Link to this heading"></a></h1>
+  <section id="local-execution-quick-start-guide">
+<h1>Local Execution - Quick Start Guide<a class="headerlink" href="#local-execution-quick-start-guide" title="Link to this heading"></a></h1>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
 <ul class="simple">
@@ -114,7 +115,7 @@
 <section id="download-the-pipeline-image">
 <h2>Download the Pipeline Image<a class="headerlink" href="#download-the-pipeline-image" title="Link to this heading"></a></h2>
 <p>Pull the Apptainer image from Docker Hub:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>pull<span class="w"> </span>hippocampus-pipeline.sif<span class="w"> </span>docker://docker.io/tarizw/hippocampus-pipeline:v1.0.0
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>pull<span class="w"> </span>hippocampus-pipeline.sif<span class="w"> </span>docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
 </pre></div>
 </div>
 <p>This will download the container image (~4.3 GiB).</p>
@@ -362,7 +363,7 @@
 </pre></div>
 </div>
 <hr class="docutils" />
-<p>For comprehensive documentation, see <a class="reference internal" href="pipeline_guide.html"><span class="std std-doc">pipeline_guide.md</span></a>.</p>
+<p>For comprehensive documentation, see full <a class="reference internal" href="pipeline_guide.html"><span class="std std-doc">Pipeline Guide</span></a>.</p>
 </section>
 </section>
 
@@ -371,7 +372,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../guides.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pipeline_guide.html" class="btn btn-neutral float-right" title="Radiomic Feature Extraction Pipeline - Complete Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pipeline_guide.html" class="btn btn-neutral float-right" title="Radiomic Feature Extraction Pipeline - Complete General Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

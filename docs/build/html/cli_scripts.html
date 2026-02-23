@@ -1,0 +1,463 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cli Scripts &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Workflow helpers" href="workflow_helpers.html" />
+    <link rel="prev" title="data_analysis scripts" href="pipeline.workflow.scripts.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#api">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pipeline.run_utils.html">run_utils functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline.workflow.scripts.html">data_analysis scripts</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cli Scripts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_pipeline">Run Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_pipeline.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_csc">Run CSC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#typical-usage">Typical Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.banner"><code class="docutils literal notranslate"><span class="pre">banner()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.check_snakemake"><code class="docutils literal notranslate"><span class="pre">check_snakemake()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.err"><code class="docutils literal notranslate"><span class="pre">err()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.gather_config"><code class="docutils literal notranslate"><span class="pre">gather_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.info"><code class="docutils literal notranslate"><span class="pre">info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.ok"><code class="docutils literal notranslate"><span class="pre">ok()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.parse_line"><code class="docutils literal notranslate"><span class="pre">parse_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.print_summary"><code class="docutils literal notranslate"><span class="pre">print_summary()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.prompt"><code class="docutils literal notranslate"><span class="pre">prompt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.render_bar"><code class="docutils literal notranslate"><span class="pre">render_bar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.run_pipeline"><code class="docutils literal notranslate"><span class="pre">run_pipeline()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.setup_environment"><code class="docutils literal notranslate"><span class="pre">setup_environment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.validate_paths"><code class="docutils literal notranslate"><span class="pre">validate_paths()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_csc.write_profile"><code class="docutils literal notranslate"><span class="pre">write_profile()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_helpers.html">Workflow helpers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
+      <li class="breadcrumb-item active">Cli Scripts</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cli_scripts.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cli-scripts">
+<h1>Cli Scripts<a class="headerlink" href="#cli-scripts" title="Link to this heading"></a></h1>
+<section id="module-pipeline.run_pipeline">
+<span id="run-pipeline"></span><h2>Run Pipeline<a class="headerlink" href="#module-pipeline.run_pipeline" title="Link to this heading"></a></h2>
+<p>Hippocampus Radiomic Feature Extraction Pipeline Runner
+Processes subjects in batches with progress tracking</p>
+<p>This is the main entry point for the pipeline. All utility functions
+are imported from the run_utils package.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_pipeline.main">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_pipeline.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_pipeline.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_pipeline.main" title="Link to this definition"></a></dt>
+<dd><p>Execute the hippocampus radiomic feature extraction pipeline.</p>
+<p>This function:</p>
+<ol class="arabic simple">
+<li><p>Parses CLI arguments.</p></li>
+<li><p>Resolves and validates the Snakemake profile.</p></li>
+<li><p>Loads profile defaults (e.g., cores).</p></li>
+<li><p>Discovers or validates subject list.</p></li>
+<li><p>Splits subjects into batches.</p></li>
+<li><p>Executes Snakemake per batch.</p></li>
+<li><p>Runs aggregation step if all batches succeed.</p></li>
+<li><p>Optionally cleans intermediate files.</p></li>
+<li><p>Prints a final execution summary and exits with appropriate code.</p></li>
+</ol>
+<p>The function assumes execution inside the Apptainer container
+where:</p>
+<ul class="simple">
+<li><p>BIDS data is mounted at <code class="docutils literal notranslate"><span class="pre">/data</span></code></p></li>
+<li><p>Logs are written under <code class="docutils literal notranslate"><span class="pre">/app/logs</span></code></p></li>
+<li><p>Pipeline code resides under <code class="docutils literal notranslate"><span class="pre">/app/pipeline</span></code></p></li>
+</ul>
+<section id="exit-codes">
+<h3>Exit Codes<a class="headerlink" href="#exit-codes" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>0</dt><dd><p>All batches (and aggregation, if applicable) completed successfully.</p>
+</dd>
+<dt>1</dt><dd><p>One or more batches failed, profile not found, or no subjects detected.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">raises SystemExit<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Always exits explicitly with code 0 or 1.</p>
+</dd>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.run_csc">
+<span id="run-csc"></span><h2>Run CSC<a class="headerlink" href="#module-pipeline.run_csc" title="Link to this heading"></a></h2>
+<p>CSC Puhti Pipeline Runner.</p>
+<p>Interactive and CLI-based wrapper for executing the hippocampus
+radiomic feature extraction workflow on CSC’s Puhti cluster using
+SLURM and Apptainer.</p>
+<p>This script provides:</p>
+<ul class="simple">
+<li><p>Interactive or fully CLI-driven configuration</p></li>
+<li><p>Automatic Snakemake profile generation</p></li>
+<li><p>CSC-specific environment setup (TMPDIR, bind mounts)</p></li>
+<li><p>Real-time progress tracking from Snakemake logs</p></li>
+<li><p>Optional cleanup of intermediate outputs</p></li>
+</ul>
+<section id="typical-usage">
+<h3>Typical Usage<a class="headerlink" href="#typical-usage" title="Link to this heading"></a></h3>
+<p>Interactive mode:</p>
+<blockquote>
+<div><p>python run_csc.py</p>
+</div></blockquote>
+<p>Non-interactive mode:</p>
+<blockquote>
+<div><p>python run_csc.py –project 2001988         –bids-root /scratch/project_2001988/user/Dataset         –sif /scratch/project_2001988/user/Containers/pipeline.sif</p>
+</div></blockquote>
+<p>Dry run:</p>
+<blockquote>
+<div><p>python run_csc.py –dry-run</p>
+</div></blockquote>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.banner">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">banner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#banner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.banner" title="Link to this definition"></a></dt>
+<dd><p>Print a formatted section banner to stderr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<em>str</em>) – Title text to display inside the banner.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.check_snakemake">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">check_snakemake</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#check_snakemake"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.check_snakemake" title="Link to this definition"></a></dt>
+<dd><p>Verify that Snakemake &gt;= 8 is available in PATH.</p>
+<p>If Snakemake is missing or too old, attempts to load it via Lmod
+module system (e.g., <cite>module load snakemake</cite> on CSC Puhti).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Snakemake version string if found and satisfies minimum,
+otherwise None.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.err">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">err</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#err"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.err" title="Link to this definition"></a></dt>
+<dd><p>Print an error message to stderr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> (<em>str</em>) – Error message to display.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.gather_config">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">gather_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#gather_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.gather_config" title="Link to this definition"></a></dt>
+<dd><p>Collect all pipeline configuration from CLI arguments and interactive prompts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> (<em>argparse.Namespace</em>) – Parsed command-line arguments object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of configuration values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.info">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.info" title="Link to this definition"></a></dt>
+<dd><p>Print an informational message to stderr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> (<em>str</em>) – Message to display.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.main">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.main" title="Link to this definition"></a></dt>
+<dd><p>Entry point for running the Hippocampus pipeline on CSC Puhti.</p>
+<p>Performs the following steps:
+1. Parse command-line arguments.
+2. Check prerequisites (Snakemake &gt;= 8).
+3. Gather configuration (CLI + interactive prompts).
+4. Print a summary of the configuration.
+5. Validate paths (skipped in dry-run mode).
+6. Confirm execution with the user (unless –yes).
+7. Setup environment variables for Apptainer + SLURM.
+8. Write Snakemake profile.
+9. Execute the pipeline (with optional dry-run, force, clean).
+10. Optional cleanup of intermediate files after successful completion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Exits the program with code 0 on success or 1 on failure.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.ok">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">ok</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#ok"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.ok" title="Link to this definition"></a></dt>
+<dd><p>Print a success message to stderr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>msg</strong> (<em>str</em>) – Message to display.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.parse_line">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">parse_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#parse_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.parse_line" title="Link to this definition"></a></dt>
+<dd><p>Parse a single Snakemake log line to update progress state.</p>
+<p>Recognizes job counts, current rule, subject, SLURM submissions, and errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>str</em>) – A line of Snakemake log output.</p></li>
+<li><p><strong>st</strong> (<em>dict</em>) – Dictionary tracking current pipeline state.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.print_summary">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">print_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#print_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.print_summary" title="Link to this definition"></a></dt>
+<dd><p>Print a configuration summary table to stderr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfg</strong> (<em>dict</em>) – Pipeline configuration dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.prompt">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">prompt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#prompt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.prompt" title="Link to this definition"></a></dt>
+<dd><p>Prompt the user for input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label</strong> (<em>str</em>) – Prompt label to display.</p></li>
+<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – Default value returned if user presses Enter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>User-provided value or the default if empty.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.render_bar">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">render_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Pipeline'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#render_bar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.render_bar" title="Link to this definition"></a></dt>
+<dd><p>Render a single-line progress bar in stderr for pipeline execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>st</strong> (<em>dict</em>) – Dictionary tracking current pipeline state.</p></li>
+<li><p><strong>prefix</strong> (<em>str</em>) – Optional prefix string for the progress display.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.run_pipeline">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">run_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#run_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.run_pipeline" title="Link to this definition"></a></dt>
+<dd><p>Execute the Hippocampus pipeline using Snakemake with live progress tracking.</p>
+<p>Supports dry-run mode, forced re-execution, and optional cleanup of
+stale Snakemake metadata. Displays a progress bar and summary, capturing
+errors and duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfg</strong> (<em>dict</em>) – Pipeline configuration dictionary (from gather_config).</p></li>
+<li><p><strong>profile_path</strong> (<em>str</em>) – Path to the Snakemake profile directory.</p></li>
+<li><p><strong>dry_run</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, only display planned jobs without executing.</p></li>
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, force re-run all rules (–forceall).</p></li>
+<li><p><strong>clean</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, remove .snakemake metadata before running.</p></li>
+<li><p><strong>set_threads</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>None</em>) – Optional list of thread overrides for specific rules
+(e.g., [“hsf_segmentation=4”]).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if pipeline completed successfully without errors, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.setup_environment">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">setup_environment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#setup_environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.setup_environment" title="Link to this definition"></a></dt>
+<dd><p>Prepare environment variables for Apptainer (Singularity) and SLURM.</p>
+<p>Ensures TMPDIR exists, sets Apptainer cache, and clears old bind vars.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfg</strong> (<em>dict</em>) – Pipeline configuration dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.validate_paths">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">validate_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#validate_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.validate_paths" title="Link to this definition"></a></dt>
+<dd><p>Check that required paths exist and return a list of errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfg</strong> (<em>dict</em>) – Pipeline configuration dictionary.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of missing or invalid paths.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_csc.write_profile">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_csc.</span></span><span class="sig-name descname"><span class="pre">write_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_csc.html#write_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_csc.write_profile" title="Link to this definition"></a></dt>
+<dd><p>Write Snakemake profile YAML configuration for SLURM execution.</p>
+<p>Creates PROFILE_DIR and writes config.yaml with current settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfg</strong> (<em>dict</em>) – Pipeline configuration dictionary.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Directory path where the profile was written.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pipeline.workflow.scripts.html" class="btn btn-neutral float-left" title="data_analysis scripts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="workflow_helpers.html" class="btn btn-neutral float-right" title="Workflow helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

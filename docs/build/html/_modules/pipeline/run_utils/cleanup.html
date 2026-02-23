@@ -42,7 +42,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">User Guides / Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#main-pipeline-runner">Main Pipeline Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html#rules-overview">Rules Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html#configuration-files">Configuration Files</a></li>
@@ -104,11 +104,12 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR: Derivatives directory not found: </span><span class="si">{</span><span class="n">derivatives_root</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
     
-    <span class="c1"># Files to preserve (relative to derivatives_root)</span>
+    <span class="c1"># Files/directories to preserve (relative to derivatives_root)</span>
     <span class="n">preserve_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">keep_summary</span><span class="p">:</span>
         <span class="n">preserve_files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;summary/all_features.csv&quot;</span><span class="p">)</span>
         <span class="n">preserve_files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;summary/processing_issues.txt&quot;</span><span class="p">)</span>
+    <span class="n">preserve_dirs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;logs&quot;</span><span class="p">}</span>
     
     <span class="c1"># Track statistics</span>
     <span class="n">deleted_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -145,6 +146,11 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DRY RUN] Would delete: </span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
                     <span class="n">deleted_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Preserve logs directory if present</span>
+        <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">preserve_dirs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Preserving: </span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="n">preserved_count</span> <span class="o">+=</span> <span class="mi">1</span>
         
         <span class="c1"># Delete all subject directories (sub-XX)</span>
         <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sub-&quot;</span><span class="p">):</span>
@@ -217,7 +223,7 @@
     
     <span class="c1"># Show what will be deleted</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">⚠ WARNING: This will delete all intermediate files!&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only summary/all_features.csv and summary/processing_issues.txt will be preserved.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only summary folder and possible logs folder will be preserved.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
 
     <span class="c1"># First do a dry run to show what will be deleted</span>
     <span class="n">cleanup_intermediate_files</span><span class="p">(</span><span class="n">derivatives_root</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

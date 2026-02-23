@@ -11,7 +11,7 @@ import argparse, os, sys, yaml
 from datetime import datetime
 
 # Import all utilities from run_utils package
-from run_utils import (
+from pipeline.run_utils import (
     DEFAULT_CONFIG_PATH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_PIPELINE_DIR,
@@ -26,7 +26,39 @@ from run_utils import (
 
 
 def main():
-    """Main entry point for the pipeline runner."""
+    """
+    Execute the hippocampus radiomic feature extraction pipeline.
+
+    This function:
+
+    1. Parses CLI arguments.
+    2. Resolves and validates the Snakemake profile.
+    3. Loads profile defaults (e.g., cores).
+    4. Discovers or validates subject list.
+    5. Splits subjects into batches.
+    6. Executes Snakemake per batch.
+    7. Runs aggregation step if all batches succeed.
+    8. Optionally cleans intermediate files.
+    9. Prints a final execution summary and exits with appropriate code.
+
+    The function assumes execution inside the Apptainer container
+    where:
+
+    - BIDS data is mounted at ``/data``
+    - Logs are written under ``/app/logs``
+    - Pipeline code resides under ``/app/pipeline``
+
+    Exit Codes
+    ----------
+    0
+        All batches (and aggregation, if applicable) completed successfully.
+    1
+        One or more batches failed, profile not found, or no subjects detected.
+
+    :raises SystemExit: Always exits explicitly with code 0 or 1.
+    :rtype: None
+    """
+    
     parser = argparse.ArgumentParser(
         description="Run hippocampus feature extraction pipeline in batches",
         formatter_class=argparse.RawDescriptionHelpFormatter,

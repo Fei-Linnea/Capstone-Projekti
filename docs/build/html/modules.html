@@ -45,18 +45,15 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User Guides / Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html">Radiomic Feature Extraction Pipeline - Quick Start Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html">Local Execution - Quick Start Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete General Guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/rulegraph_explanation.html">Rule Graph Explanation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/csc_user_guide.html">CSC Puhti - Quick Start Guide</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#main-pipeline-runner">Main Pipeline Runner</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#command-line-interface">Command-Line Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#notes">Notes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner (run_csc.py)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#main-pipeline-runners">Main Pipeline Runners</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html">TYKS Pipeline Runner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#rules-overview">Rules Overview</a><ul>
@@ -75,12 +72,13 @@
 <li class="toctree-l2"><a class="reference internal" href="configuration.html">Pipeline Configuration File</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-tyks-single-machine-execution">Snakemake Profile: TYKS Single-Machine Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#snakemake-profile-csc-puhti-slurm-apptainer">Snakemake Profile: CSC Puhti (SLURM + Apptainer)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="slurm_status.html">slurm_status.py</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#api">API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pipeline.run_utils.html">run_utils functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pipeline.workflow.scripts.html">data_analysis scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_scripts.html">Cli Scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_helpers.html">Workflow helpers</a></li>
 </ul>
 </li>
 </ul>
@@ -113,7 +111,7 @@
 <h1>User Guides / Tutorials<a class="headerlink" href="#user-guides-tutorials" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="guides/user_guide.html">Radiomic Feature Extraction Pipeline - Quick Start Guide</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/user_guide.html">Local Execution - Quick Start Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#prerequisites">Prerequisites</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#setup">Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#download-the-pipeline-image">Download the Pipeline Image</a></li>
@@ -122,7 +120,7 @@
 <li class="toctree-l2"><a class="reference internal" href="guides/user_guide.html#output-structure">Output Structure</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="guides/pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete Guide</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete General Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#pipeline-overview">Pipeline Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#run-instructions">Run Instructions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#output-structure">Output Structure</a></li>
@@ -130,25 +128,38 @@
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#output-analysis">Output Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#workflow-visualization">Workflow Visualization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#technical-documentation-guide">Technical Documentation Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/pipeline_guide.html#references">References:</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="guides/rulegraph_explanation.html">Rule Graph Explanation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/rulegraph_explanation.html#what-rules-can-run-in-parallel">What rules can run in parallel</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="guides/csc_user_guide.html">CSC Puhti - Quick Start Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guides/csc_user_guide.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/csc_user_guide.html#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/csc_user_guide.html#run-the-pipeline">Run the Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/csc_user_guide.html#command-line-options">Command-Line Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/csc_user_guide.html#what-the-script-does-automatically">What the Script Does Automatically</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/csc_user_guide.html#output">Output</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
-<section id="main-pipeline-runner">
-<h1>Main Pipeline Runner<a class="headerlink" href="#main-pipeline-runner" title="Link to this heading"></a></h1>
+<section id="main-pipeline-runners">
+<h1>Main Pipeline Runners<a class="headerlink" href="#main-pipeline-runners" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#command-line-interface">Command-Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#workflow">Workflow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#examples">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html#notes">Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner (run_csc.py)</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_tyks.html">TYKS Pipeline Runner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#command-line-interface">Command-Line Interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html#workflow">Workflow</a></li>
@@ -204,15 +215,6 @@ feature extraction workflow. Rules are grouped by processing stage.</p>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id5">Example configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id6">Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html#id7">Notes</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="slurm_status.html">slurm_status.py</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#slurm-job-status-checker-for-snakemake">SLURM Job Status Checker for Snakemake</a></li>
-<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#usage">Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#functions">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#recognized-slurm-states">Recognized SLURM States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="slurm_status.html#example">Example</a></li>
 </ul>
 </li>
 </ul>
@@ -277,6 +279,51 @@ feature extraction workflow. Rules are grouped by processing stage.</p>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="pipeline.workflow.scripts.html#module-pipeline.workflow.scripts.voxelToMesh">voxelToMesh</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="pipeline.workflow.scripts.html#pipeline.workflow.scripts.voxelToMesh.nii_to_vtk"><code class="docutils literal notranslate"><span class="pre">nii_to_vtk()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli_scripts.html">Cli Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli_scripts.html#module-pipeline.run_pipeline">Run Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_pipeline.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cli_scripts.html#module-pipeline.run_csc">Run CSC</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#typical-usage">Typical Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.banner"><code class="docutils literal notranslate"><span class="pre">banner()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.check_snakemake"><code class="docutils literal notranslate"><span class="pre">check_snakemake()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.err"><code class="docutils literal notranslate"><span class="pre">err()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.gather_config"><code class="docutils literal notranslate"><span class="pre">gather_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.info"><code class="docutils literal notranslate"><span class="pre">info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.ok"><code class="docutils literal notranslate"><span class="pre">ok()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.parse_line"><code class="docutils literal notranslate"><span class="pre">parse_line()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.print_summary"><code class="docutils literal notranslate"><span class="pre">print_summary()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.prompt"><code class="docutils literal notranslate"><span class="pre">prompt()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.render_bar"><code class="docutils literal notranslate"><span class="pre">render_bar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.run_pipeline"><code class="docutils literal notranslate"><span class="pre">run_pipeline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.setup_environment"><code class="docutils literal notranslate"><span class="pre">setup_environment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.validate_paths"><code class="docutils literal notranslate"><span class="pre">validate_paths()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli_scripts.html#pipeline.run_csc.write_profile"><code class="docutils literal notranslate"><span class="pre">write_profile()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="workflow_helpers.html">Workflow helpers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="workflow_helpers.html#module-pipeline.workflow.snakefile_docs">Snakefile</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.combined_mask_output"><code class="docutils literal notranslate"><span class="pre">combined_mask_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.discover_subjects"><code class="docutils literal notranslate"><span class="pre">discover_subjects()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.get_input_path"><code class="docutils literal notranslate"><span class="pre">get_input_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.get_seg_crop_output"><code class="docutils literal notranslate"><span class="pre">get_seg_crop_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_left_crop_output"><code class="docutils literal notranslate"><span class="pre">hsf_left_crop_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_output"><code class="docutils literal notranslate"><span class="pre">hsf_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_right_crop_output"><code class="docutils literal notranslate"><span class="pre">hsf_right_crop_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.workflow.snakefile_docs.label_mask_output"><code class="docutils literal notranslate"><span class="pre">label_mask_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_helpers.html#module-pipeline.config.profiles.csc.slurm_status">Slurm status</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.config.profiles.csc.slurm_status.get_job_status"><code class="docutils literal notranslate"><span class="pre">get_job_status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow_helpers.html#pipeline.config.profiles.csc.slurm_status.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
 </li>
 </ul>
