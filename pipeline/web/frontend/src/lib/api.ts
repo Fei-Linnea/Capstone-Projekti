@@ -10,6 +10,10 @@ import type {
   LogRun,
   LogFile,
   LogFileContent,
+  DatasetCurrentResponse,
+  DatasetBrowseResponse,
+  DatasetSelectResponse,
+  DrivesResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
@@ -114,4 +118,38 @@ export async function getLogFileContent(
 
 export function getRulegraphUrl(runId: string): string {
   return `${API_BASE}/api/logs/${runId}/rulegraph`;
+}
+
+/* ── Dataset ── */
+
+export async function getCurrentDataset(): Promise<DatasetCurrentResponse> {
+  return fetchJSON<DatasetCurrentResponse>("/api/dataset/current");
+}
+
+export async function getDrives(): Promise<DrivesResponse> {
+  return fetchJSON<DrivesResponse>("/api/dataset/drives");
+}
+
+export async function browseDataset(path?: string, target?: string): Promise<DatasetBrowseResponse> {
+  const params = new URLSearchParams();
+  if (path) params.set("path", path);
+  if (target) params.set("target", target);
+  const qs = params.toString();
+  return fetchJSON<DatasetBrowseResponse>(`/api/dataset/browse${qs ? `?${qs}` : ""}`);
+}
+
+export async function selectDataset(path: string): Promise<DatasetSelectResponse> {
+  return fetchJSON<DatasetSelectResponse>("/api/dataset/select", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path }),
+  });
+}
+
+export async function selectDatasetByPath(hostPath: string): Promise<DatasetSelectResponse> {
+  return fetchJSON<DatasetSelectResponse>("/api/dataset/select-path", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ host_path: hostPath }),
+  });
 }

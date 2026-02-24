@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, Play, Activity, Table2, FileText } from "lucide-react";
+import { Brain, Play, Activity, Table2, FileText, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/status-dot";
@@ -10,6 +10,7 @@ import { usePipelineStatus } from "@/lib/hooks";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: Activity },
+  { href: "/dataset", label: "Dataset", icon: FolderOpen },
   { href: "/run", label: "Run Pipeline", icon: Play },
   { href: "/progress", label: "Progress", icon: Activity },
   { href: "/results", label: "Results", icon: Table2 },

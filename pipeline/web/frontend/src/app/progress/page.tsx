@@ -30,10 +30,12 @@ const PIPELINE_PHASES = [
 function PhaseStep({
   phase,
   currentPhase,
+  pipelineStatus,
   label,
 }: {
   phase: string;
   currentPhase: string;
+  pipelineStatus: string;
   label: string;
 }) {
   const phases = PIPELINE_PHASES as readonly string[];
@@ -42,19 +44,28 @@ function PhaseStep({
   const isActive = phase === currentPhase;
   const isComplete = thisIdx < currentIdx;
 
+  // When pipeline failed or completed, the active phase should NOT show a spinner
+  const isFailed = pipelineStatus === "failed" && isActive;
+  const isDone = pipelineStatus === "completed" && isActive;
+  const isStillRunning = isActive && pipelineStatus === "running";
+
   return (
     <div className="flex items-center gap-2">
       <div
         className={cn(
           "flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold transition-all",
           isComplete && "border-emerald-500 bg-emerald-500 text-white",
-          isActive && "border-primary bg-primary text-primary-foreground animate-pulse",
+          isDone && "border-emerald-500 bg-emerald-500 text-white",
+          isFailed && "border-destructive bg-destructive text-white",
+          isStillRunning && "border-primary bg-primary text-primary-foreground animate-pulse",
           !isComplete && !isActive && "border-muted-foreground/30 text-muted-foreground/50"
         )}
       >
-        {isComplete ? (
+        {isComplete || isDone ? (
           <CheckCircle2 className="h-4 w-4" />
-        ) : isActive ? (
+        ) : isFailed ? (
+          <XCircle className="h-4 w-4" />
+        ) : isStillRunning ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           thisIdx + 1
@@ -63,7 +74,8 @@ function PhaseStep({
       <span
         className={cn(
           "text-sm",
-          isActive && "font-semibold",
+          (isStillRunning || isFailed || isDone) && "font-semibold",
+          isFailed && "text-destructive",
           !isComplete && !isActive && "text-muted-foreground"
         )}
       >
@@ -191,6 +203,7 @@ export default function ProgressPage() {
                   <PhaseStep
                     phase={phase}
                     currentPhase={progress.phase}
+                    pipelineStatus={status}
                     label={PHASE_LABELS[phase] ?? phase}
                   />
                   {i < PIPELINE_PHASES.length - 1 && (

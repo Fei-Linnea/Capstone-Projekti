@@ -35,6 +35,7 @@ from pipeline.web.api.pipeline_routes import pipeline_bp
 from pipeline.web.api.progress_routes import progress_bp
 from pipeline.web.api.results_routes import results_bp
 from pipeline.web.api.logs_routes import logs_bp
+from pipeline.web.api.dataset_routes import dataset_bp
 
 
 def create_app() -> Flask:
@@ -60,6 +61,7 @@ def create_app() -> Flask:
     app.register_blueprint(progress_bp)
     app.register_blueprint(results_bp)
     app.register_blueprint(logs_bp)
+    app.register_blueprint(dataset_bp)
 
     # ── Serve Next.js static export ──────────────────────────────────
     @app.route("/", defaults={"path": ""})
@@ -115,12 +117,17 @@ def main():
         os.environ["LOG_BASE_DIR"] = os.path.join(_PROJECT_ROOT, "logs")
     if "DATA_DIR" not in os.environ:
         os.environ["DATA_DIR"] = os.path.join(_PROJECT_ROOT, "data")
+    if "BROWSE_ROOT" not in os.environ:
+        # Dev mode: let user browse from the drive root (Windows) or home (Linux)
+        drive = os.path.splitdrive(_PROJECT_ROOT)[0]
+        os.environ["BROWSE_ROOT"] = (drive + os.sep) if drive else os.path.expanduser("~")
 
     app = create_app()
     print(f"\n  Pipeline Web UI running at http://{args.host}:{args.port}", file=sys.stderr)
     print(f"  PIPELINE_DIR = {os.environ['PIPELINE_DIR']}", file=sys.stderr)
     print(f"  LOG_BASE_DIR = {os.environ['LOG_BASE_DIR']}", file=sys.stderr)
-    print(f"  DATA_DIR     = {os.environ['DATA_DIR']}\n", file=sys.stderr)
+    print(f"  DATA_DIR     = {os.environ['DATA_DIR']}", file=sys.stderr)
+    print(f"  BROWSE_ROOT  = {os.environ['BROWSE_ROOT']}\n", file=sys.stderr)
     app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
 
 

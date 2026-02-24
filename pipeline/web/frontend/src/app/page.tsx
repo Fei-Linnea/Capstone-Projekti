@@ -11,6 +11,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  FolderOpen,
+  Database,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,17 +21,18 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { StatusDot } from "@/components/status-dot";
 import { usePipelineStatus } from "@/lib/hooks";
-import { discoverSubjects } from "@/lib/api";
+import { getCurrentDataset } from "@/lib/api";
 import { PHASE_LABELS } from "@/lib/types";
+import type { DatasetCurrentResponse } from "@/lib/types";
 
 export default function DashboardPage() {
   const { state } = usePipelineStatus();
-  const [subjectCount, setSubjectCount] = useState<number | null>(null);
+  const [dataset, setDataset] = useState<DatasetCurrentResponse | null>(null);
 
   useEffect(() => {
-    discoverSubjects()
-      .then((res) => setSubjectCount(res.count))
-      .catch(() => setSubjectCount(null));
+    getCurrentDataset()
+      .then(setDataset)
+      .catch(() => setDataset(null));
   }, []);
 
   const status = state?.status ?? "idle";
@@ -49,6 +52,29 @@ export default function DashboardPage() {
           Hippocampus Radiomic Feature Extraction Pipeline
         </p>
       </div>
+
+      {/* Dataset Banner */}
+      {dataset && !dataset.selected_path && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="flex items-center justify-between pt-6">
+            <div className="flex items-center gap-3">
+              <Database className="h-6 w-6 text-amber-500" />
+              <div>
+                <p className="font-semibold">No Dataset Selected</p>
+                <p className="text-sm text-muted-foreground">
+                  Select a BIDS dataset to get started
+                </p>
+              </div>
+            </div>
+            <Link href="/dataset">
+              <Button>
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Select Dataset
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Status Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -73,20 +99,22 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Subjects */}
+        {/* Subjects / Dataset */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Subjects at /data
+              {dataset?.selected_path ? "Dataset" : "Subjects"}
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {subjectCount !== null ? subjectCount : "\u2014"}
+              {dataset ? dataset.subject_count : "\u2014"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              auto-discovered via BIDS pattern
+            <p className="text-xs text-muted-foreground truncate">
+              {dataset?.selected_path
+                ? dataset.selected_path
+                : "no dataset selected"}
             </p>
           </CardContent>
         </Card>
@@ -211,6 +239,12 @@ export default function DashboardPage() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
+          <Link href="/dataset">
+            <Button variant={dataset?.selected_path ? "outline" : "default"}>
+              <FolderOpen className="mr-2 h-4 w-4" />
+              {dataset?.selected_path ? "Change Dataset" : "Select Dataset"}
+            </Button>
+          </Link>
           <Link href="/run">
             <Button>
               <Play className="mr-2 h-4 w-4" />

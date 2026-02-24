@@ -7,19 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// Profile is fixed to tyks — Select component no longer needed
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  getProfiles,
   getProfile,
   getDefaults,
   discoverSubjects,
@@ -28,14 +21,15 @@ import {
 import type { PipelineConfig, ProfileConfig } from "@/lib/types";
 import { usePipelineStatus } from "@/lib/hooks";
 
+const FIXED_PROFILE = "tyks";
+
 export default function RunPipelinePage() {
   const router = useRouter();
   const { state } = usePipelineStatus();
   const isRunning = state?.status === "running" || state?.status === "cancelling";
 
-  // Form state
-  const [profiles, setProfiles] = useState<string[]>([]);
-  const [selectedProfile, setSelectedProfile] = useState("");
+  // Form state — profile is fixed to tyks
+  const selectedProfile = FIXED_PROFILE;
   const [profileConfig, setProfileConfig] = useState<Record<string, unknown> | null>(null);
   const [batchSize, setBatchSize] = useState(5);
   const [cores, setCores] = useState<string>("");
@@ -50,29 +44,23 @@ export default function RunPipelinePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Load profiles and defaults on mount
+  // Load defaults and tyks profile on mount
   useEffect(() => {
-    getProfiles().then(setProfiles).catch(() => {});
     getDefaults()
       .then((d) => {
         setBatchSize(d.batch_size);
         setBidsPattern(d.bids_pattern);
       })
       .catch(() => {});
-  }, []);
-
-  // Load profile config when selection changes
-  useEffect(() => {
-    if (!selectedProfile) return;
-    getProfile(selectedProfile)
+    getProfile(FIXED_PROFILE)
       .then((p) => {
         setProfileConfig(p.config);
-        if (p.config.cores && !cores) {
+        if (p.config.cores) {
           setCores(String(p.config.cores));
         }
       })
       .catch(() => {});
-  }, [selectedProfile]);
+  }, []);
 
   // Discover subjects
   useEffect(() => {
@@ -115,11 +103,6 @@ export default function RunPipelinePage() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedProfile) {
-      setError("Please select a profile");
-      return;
-    }
-
     setSubmitting(true);
     setError("");
 
@@ -181,31 +164,17 @@ export default function RunPipelinePage() {
         </Card>
       )}
 
-      {/* Profile Selection */}
+      {/* Profile (fixed to tyks) */}
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle className="flex items-center gap-3">Profile
+            <Badge variant="secondary" className="text-sm font-mono">{FIXED_PROFILE}</Badge>
+          </CardTitle>
           <CardDescription>
-            Select the Snakemake execution profile
+            Snakemake execution profile (fixed to TYKS)
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Snakemake Profile</Label>
-            <Select value={selectedProfile} onValueChange={setSelectedProfile}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a profile..." />
-              </SelectTrigger>
-              <SelectContent>
-                {profiles.map((p) => (
-                  <SelectItem key={p} value={p}>
-                    {p}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
+        <CardContent>
           {profileConfig && (
             <div className="rounded-lg bg-muted p-3">
               <p className="text-xs font-medium text-muted-foreground mb-2">
@@ -423,7 +392,7 @@ export default function RunPipelinePage() {
             size="lg"
             className="w-full"
             onClick={handleSubmit}
-            disabled={submitting || isRunning || !selectedProfile}
+            disabled={submitting || isRunning}
           >
             {submitting ? (
               <>

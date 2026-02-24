@@ -14,16 +14,9 @@ results_bp = Blueprint("results", __name__, url_prefix="/api/results")
 
 
 def _derivatives_root() -> str:
-    """Read derivatives_root from pipeline config.yaml."""
-    pipeline_dir = os.environ.get("PIPELINE_DIR", DEFAULT_PIPELINE_DIR)
-    cfg_path = os.path.join(pipeline_dir, DEFAULT_CONFIG_PATH)
-    try:
-        import yaml
-        with open(cfg_path, "r") as f:
-            cfg = yaml.safe_load(f) or {}
-        return cfg.get("derivatives_root", "/data/derivatives")
-    except Exception:
-        return "/data/derivatives"
+    """Return derivatives_root based on runtime DATA_DIR (user-selected dataset)."""
+    data_dir = os.environ.get("DATA_DIR", "/data")
+    return os.path.join(data_dir, "derivatives")
 
 
 @results_bp.route("/features", methods=["GET"])
@@ -46,6 +39,7 @@ def get_features():
     try:
         import pandas as pd
         df = pd.read_csv(csv_path)
+        df = df.fillna(0)  # Replace NaN with 0 for valid JSON serialization
     except Exception as e:
         return jsonify({"error": f"Failed to read CSV: {e}"}), 500
 

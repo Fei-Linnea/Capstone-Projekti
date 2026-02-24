@@ -86,6 +86,61 @@ export interface LogFileContent {
   truncated: boolean;
 }
 
+export interface DatasetCurrentResponse {
+  data_dir: string;
+  exists: boolean;
+  selected_path: string | null;
+  subject_count: number;
+  subjects: string[];
+  total_files: number;
+  total_size: number;
+  total_size_human: string;
+  browse_root: string;
+  browse_root_exists: boolean;
+}
+
+export interface DatasetEntry {
+  name: string;
+  path: string;
+  type: "file" | "directory";
+  size?: number;
+  size_human?: string;
+  extension?: string;
+  child_count?: number;
+  has_subjects?: boolean;
+}
+
+export interface DatasetBrowseResponse {
+  path: string;
+  parent: string | null;
+  entries: DatasetEntry[];
+  total: number;
+  is_bids: boolean;
+  target: string;
+}
+
+export interface DatasetSelectResponse {
+  message: string;
+  data_dir: string;
+  selected_path: string;
+  host_path?: string;
+  subject_count: number;
+  subjects: string[];
+}
+
+export interface DriveInfo {
+  name: string;
+  path: string;
+  label: string;
+  accessible: boolean;
+  child_count: number;
+}
+
+export interface DrivesResponse {
+  drives: DriveInfo[];
+  browse_root: string;
+}
+
 export const RULE_DISPLAY_NAMES: Record<string, string> = {
   hsf_segmentation: "HSF Segmentation",
   split_label: "Split Labels",

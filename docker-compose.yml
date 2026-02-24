@@ -6,18 +6,17 @@
 #   backend  – Flask REST API (port 5000) + Snakemake pipeline runner
 #   frontend – Next.js dev server (port 3000) with hot-reload
 #
-# Data:
-#   The "pipeline-data" named volume is mounted at /data inside the backend
-#   container. Place your BIDS dataset there, or override with a bind-mount:
+# IMPORTANT – Starting the pipeline:
+#   Use the platform-specific startup script instead of plain docker compose:
 #
-#     # Use a local folder instead of the named volume:
-#     docker compose run --rm -v /path/to/my/bids:/data backend
+#   Windows (PowerShell):   .\start.ps1
+#   Linux / macOS:          ./start.sh
 #
-# Usage:
-#   docker compose up --build          # start both services
-#   docker compose up --build backend  # backend only (API at :5000)
-#   docker compose down                # stop everything
-#   docker compose down -v             # stop and remove data volume
+#   These scripts auto-detect your drives/filesystem and generate
+#   docker-compose.override.yml with the correct volume mounts.
+#
+#   Alternatively, run:  docker compose up --build
+#   (after the override file has been generated at least once)
 #
 # =============================================================================
 
@@ -34,9 +33,12 @@ services:
       - PIPELINE_DIR=/app/pipeline
       - LOG_BASE_DIR=/app/logs
       - DATA_DIR=/data
+      - BROWSE_ROOT=/host
     volumes:
-      - pipeline-data:/data          # persistent BIDS data volume
-      - pipeline-logs:/app/logs      # persistent logs
+      - pipeline-logs:/app/logs           # persistent logs
+      # Host filesystem volumes are added automatically by start.ps1 / start.sh
+      # via docker-compose.override.yml.  You can also add them manually:
+      #   - /path/to/data:/host/data
     restart: unless-stopped
 
   # ── Next.js Frontend (dev) ──────────────────────────────────────────────
@@ -54,7 +56,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  pipeline-data:
-    driver: local
   pipeline-logs:
     driver: local

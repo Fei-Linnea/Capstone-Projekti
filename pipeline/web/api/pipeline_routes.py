@@ -257,6 +257,8 @@ def _run_pipeline_thread(config: dict, pipeline_dir: str, data_dir: str, log_dir
                 "--snakefile", "workflow/Snakefile",
                 "--profile", snakemake_profile_arg,
                 "--config",
+                f"bids_root={data_dir}",
+                f"derivatives_root={os.path.join(data_dir, 'derivatives')}",
                 f"batch_size={batch_size}",
                 f"batch_number={batch_num - 1}",
                 f"log_dir={log_dir}",
@@ -305,6 +307,8 @@ def _run_pipeline_thread(config: dict, pipeline_dir: str, data_dir: str, log_dir
                 "--snakefile", "workflow/Snakefile",
                 "--profile", snakemake_profile_arg,
                 "--config",
+                f"bids_root={data_dir}",
+                f"derivatives_root={os.path.join(data_dir, 'derivatives')}",
                 f"batch_size=0",
                 f"log_dir={log_dir}",
             ]
