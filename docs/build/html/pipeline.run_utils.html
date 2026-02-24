@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>run_utils functions &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="data_analysis scripts" href="pipeline.workflow.scripts.html" />
+    <link rel="prev" title="Pipeline Configuration File" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#api">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">run_utils functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.aggregate">aggregate</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.aggregate.run_aggregation"><code class="docutils literal notranslate"><span class="pre">run_aggregation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.batchExecutor">batchExecutor</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.batchExecutor.run_snakemake_batch"><code class="docutils literal notranslate"><span class="pre">run_snakemake_batch()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.cleanup">cleanup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.cleanup.cleanup_intermediate_files"><code class="docutils literal notranslate"><span class="pre">cleanup_intermediate_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.cleanup.cleanup_with_confirmation"><code class="docutils literal notranslate"><span class="pre">cleanup_with_confirmation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.config">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.logger">logger</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.logger.tail_log_file"><code class="docutils literal notranslate"><span class="pre">tail_log_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.progress">progress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.progress.parse_progress"><code class="docutils literal notranslate"><span class="pre">parse_progress()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.progress.print_progress_bar"><code class="docutils literal notranslate"><span class="pre">print_progress_bar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pipeline.run_utils.subjects">subjects</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pipeline.run_utils.subjects.discover_subjects"><code class="docutils literal notranslate"><span class="pre">discover_subjects()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline.workflow.scripts.html">data_analysis scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_scripts.html">Cli Scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_helpers.html">Workflow helpers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
+      <li class="breadcrumb-item active">run_utils functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/pipeline.run_utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="run-utils-functions">
+<h1>run_utils functions<a class="headerlink" href="#run-utils-functions" title="Link to this heading"></a></h1>
+<section id="module-pipeline.run_utils.aggregate">
+<span id="aggregate"></span><h2>aggregate<a class="headerlink" href="#module-pipeline.run_utils.aggregate" title="Link to this heading"></a></h2>
+<p>Snakemake aggregation step after batch processing</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.aggregate.run_aggregation">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.aggregate.</span></span><span class="sig-name descname"><span class="pre">run_aggregation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subjects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bids_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/aggregate.html#run_aggregation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.aggregate.run_aggregation" title="Link to this definition"></a></dt>
+<dd><p>Run the aggregation step after all batches are complete.
+This combines features from all subjects into final output files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profile</strong> – Path to Snakemake profile config</p></li>
+<li><p><strong>log_dir</strong> – Directory for logs</p></li>
+<li><p><strong>pipeline_dir</strong> – Working directory for Snakemake</p></li>
+<li><p><strong>dry_run</strong> – If True, don’t execute, just show commands</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.run_utils.batchExecutor">
+<span id="batchexecutor"></span><h2>batchExecutor<a class="headerlink" href="#module-pipeline.run_utils.batchExecutor" title="Link to this heading"></a></h2>
+<p>Snakemake batch execution</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.batchExecutor.run_snakemake_batch">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.batchExecutor.</span></span><span class="sig-name descname"><span class="pre">run_snakemake_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_subjects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_batches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subjects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bids_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/batchExecutor.html#run_snakemake_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.batchExecutor.run_snakemake_batch" title="Link to this definition"></a></dt>
+<dd><p>Run Snakemake for a batch of subjects with progress tracking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_subjects</strong> – List of subject IDs for this batch</p></li>
+<li><p><strong>batch_num</strong> – Batch number (1-indexed)</p></li>
+<li><p><strong>total_batches</strong> – Total number of batches</p></li>
+<li><p><strong>profile</strong> – Path to Snakemake profile config</p></li>
+<li><p><strong>log_dir</strong> – Directory for logs</p></li>
+<li><p><strong>batch_size</strong> – Size of batch (for config)</p></li>
+<li><p><strong>pipeline_dir</strong> – Working directory for Snakemake</p></li>
+<li><p><strong>dry_run</strong> – If True, don’t execute, just show commands</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.run_utils.cleanup">
+<span id="cleanup"></span><h2>cleanup<a class="headerlink" href="#module-pipeline.run_utils.cleanup" title="Link to this heading"></a></h2>
+<p>Cleanup utilities for removing intermediate pipeline outputs</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.cleanup.cleanup_intermediate_files">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.cleanup.</span></span><span class="sig-name descname"><span class="pre">cleanup_intermediate_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivatives_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/cleanup.html#cleanup_intermediate_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.cleanup.cleanup_intermediate_files" title="Link to this definition"></a></dt>
+<dd><p>Remove intermediate pipeline outputs, keeping only final summary files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivatives_root</strong> – Path to the derivatives directory</p></li>
+<li><p><strong>dry_run</strong> – If True, only print what would be deleted without actually deleting</p></li>
+<li><p><strong>keep_summary</strong> – If True, keep the summary directory with all_features.csv</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(success: bool, deleted_count: int, preserved_count: int)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.cleanup.cleanup_with_confirmation">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.cleanup.</span></span><span class="sig-name descname"><span class="pre">cleanup_with_confirmation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivatives_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/cleanup.html#cleanup_with_confirmation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.cleanup.cleanup_with_confirmation" title="Link to this definition"></a></dt>
+<dd><p>Cleanup intermediate files.</p>
+<p>If –cleanup is provided, we assume the user intends deletion.
+A preview (dry run) is still printed for transparency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivatives_root</strong> – Path to the derivatives directory</p></li>
+<li><p><strong>dry_run</strong> – If True, only show what would be deleted</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if cleanup succeeded, False on error</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.run_utils.config">
+<span id="config"></span><h2>config<a class="headerlink" href="#module-pipeline.run_utils.config" title="Link to this heading"></a></h2>
+<p>Configuration defaults and constants for the pipeline runner.
+Can be overridden via CLI args where applicable.</p>
+</section>
+<section id="module-pipeline.run_utils.logger">
+<span id="logger"></span><h2>logger<a class="headerlink" href="#module-pipeline.run_utils.logger" title="Link to this heading"></a></h2>
+<p>Log file tailing and threading utilities</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.logger.tail_log_file">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.logger.</span></span><span class="sig-name descname"><span class="pre">tail_log_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/logger.html#tail_log_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.logger.tail_log_file" title="Link to this definition"></a></dt>
+<dd><p>Tail a log file and call progress_callback for each new line.
+Runs in a separate thread.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_file</strong> – Path to log file to tail</p></li>
+<li><p><strong>stop_event</strong> – threading.Event to signal when to stop</p></li>
+<li><p><strong>progress_callback</strong> – Function to call for each new line</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.run_utils.progress">
+<span id="progress"></span><h2>progress<a class="headerlink" href="#module-pipeline.run_utils.progress" title="Link to this heading"></a></h2>
+<p>Progress parsing and display utilities</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.progress.parse_progress">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.progress.</span></span><span class="sig-name descname"><span class="pre">parse_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/progress.html#parse_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.progress.parse_progress" title="Link to this definition"></a></dt>
+<dd><p>Parse progress from Snakemake log line.
+Extracts total jobs from job stats, counts “Finished job” messages,
+and tracks current job and subject being processed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_line</strong> – Single line from Snakemake log</p></li>
+<li><p><strong>state</strong> – Dictionary to track parsing state across calls</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of jobs completed so far</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.progress.print_progress_bar">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.progress.</span></span><span class="sig-name descname"><span class="pre">print_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spinner_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/progress.html#print_progress_bar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.progress.print_progress_bar" title="Link to this definition"></a></dt>
+<dd><p>Print a progress bar to stderr (so it’s visible in terminal).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>current</strong> – Current progress value</p></li>
+<li><p><strong>total</strong> – Total value (100% completion)</p></li>
+<li><p><strong>prefix</strong> – Text before the progress bar</p></li>
+<li><p><strong>suffix</strong> – Text after the progress bar</p></li>
+<li><p><strong>length</strong> – Character length of the bar</p></li>
+<li><p><strong>spinner_frame</strong> – Frame number for spinner animation</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-pipeline.run_utils.subjects">
+<span id="subjects"></span><h2>subjects<a class="headerlink" href="#module-pipeline.run_utils.subjects" title="Link to this heading"></a></h2>
+<p>Subject discovery utilities for BIDS datasets.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pipeline.run_utils.subjects.discover_subjects">
+<span class="sig-prename descclassname"><span class="pre">pipeline.run_utils.subjects.</span></span><span class="sig-name descname"><span class="pre">discover_subjects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bids_pattern</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pipeline/run_utils/subjects.html#discover_subjects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pipeline.run_utils.subjects.discover_subjects" title="Link to this definition"></a></dt>
+<dd><p>Auto-discover subjects from BIDS data directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_dir</strong> – Root directory of BIDS dataset</p></li>
+<li><p><strong>bids_pattern</strong> – Glob pattern to match T1w files</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sorted list of subject IDs found in the dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Pipeline Configuration File" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipeline.workflow.scripts.html" class="btn btn-neutral float-right" title="data_analysis scripts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 # ============================================================================
-# Pipeline Configuration File - HSF Segmentation
+# Pipeline Configuration File
 # ============================================================================
 
 # BIDS dataset root directory (where subjects are located)
@@ -8,6 +8,10 @@ bids_root: "/data"
 
 # Derivatives output directory
 derivatives_root: "/data/derivatives/"
+
+# Logging directory - omit to use derivatives_root/logs (CSC compatible)
+# For Docker: set via run_pipeline.py wrapper
+# log_dir: "/app/logs"
 
 # HSF segmentation parameters
 hsf_params:
@@ -24,22 +28,6 @@ labels:
   CA2: 3
   CA3: 4
   SUB: 5
-
-# Processing options
-continue_on_error: false
-
-# Batch processing (for large datasets)
-# Set batch_size to process only a subset of subjects
-# Set batch_number to select which batch (0-based index)
-batch_size: 0  # 0 = process all subjects, >0 = process in batches
-batch_number: 0  # Which batch to process (0, 1, 2, etc.)
-
-# Resource limits
-cores: 4
-memory_mb: 8000
-
-# Logging directory (timestamped, set by wrapper script)
-log_dir: "/app/logs"
 
 # Mesh generation parameters (step 3)
 mesh_params:

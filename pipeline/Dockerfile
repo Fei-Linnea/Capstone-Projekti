@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Metadata
 LABEL maintainer="BigBrain Team"
 LABEL description="Radiomic Feature Extraction Hippocampus Morphometry Pipeline"
-LABEL version="1.0.0"
+LABEL version="1.1.0"
 
 # Install system dependencies and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,6 +34,7 @@ RUN pip install --no-cache-dir \
     pandas \
     pulp==2.7.0 \
     pyradiomics \
+    pyyaml \
     simpleitk \
     snakemake==7.32.4 \
     onnxruntime \
@@ -44,7 +45,8 @@ RUN pip install --no-cache-dir \
     vtk && \
     pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
-
+# Pre-download HSF models to avoid checksum failures during pipeline execution
+RUN python3 -c "from hsf import fetch_models; fetch_models('/root/.hsf/models', {'single': {'arunet_4.0.0single_1706895706.onnx': {'url': 'https://huggingface.co/poiretclement/hsf/resolve/main/onnx/arunet_4.0.0single_1706895706.onnx', 'xxh3_64': '04ba080ed7f373c2'}}})" || true
 WORKDIR /app
 
 # Set environment to allow pipeline/executable stack for onnxruntime

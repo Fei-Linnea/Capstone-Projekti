@@ -3,23 +3,29 @@
 # ============================================================================
 # Simplified pipeline using HSF (Hippocampal Segmentation Factory)
 # No conda environments - HSF installed directly in Docker image
+# Supports both local Docker and CSC Apptainer execution
 # ============================================================================
 
 import os, glob, re, sys
-import pandas as pd
-from pathlib import Path
-from scripts.nii_parse import split_one_label, combine_labels
-from scripts.feature_extraction import extract_pyradiomics_features, extract_curvatures, calculate_curv_metrics
-from scripts.aggregate_data import aggregate_region_data, form_row_from_data
-from scripts.voxelToMesh import nii_to_vtk
 
-# Load configuration
-configfile: "/app/pipeline/config/config.yaml"
+# NOTE: Heavy imports (SimpleITK, pyradiomics, pyvista, pandas) are NOT needed
+# in the Snakefile. All processing logic runs inside container via shell: directives.
+
+# Load configuration - use path relative to workflow directory
+configfile: os.path.join(workflow.basedir, "..", "config", "config.yaml")
+
+# Container image for CSC execution
+# When using Snakemake 8.x with --software-deployment-method apptainer,
+# each rule runs inside this container
+# Set via config or use default
+CONTAINER_IMAGE = config.get("container_image", "docker://ghcr.io/bigbrain/hippocampus-pipeline:latest")
+container: CONTAINER_IMAGE
 
 # Extract configuration values
 BIDS_ROOT = config["bids_root"]
 DERIVATIVES_ROOT = config["derivatives_root"]
-LOG_DIR = config.get("log_dir", "/app/logs")
+# Default log dir: use derivatives/logs for CSC compatibility (not /app/logs which is read-only)
+LOG_DIR = config.get("log_dir", os.path.join(DERIVATIVES_ROOT, "logs"))
 
 # HSF segmentation parameters
 HSF_PARAMS = config["hsf_params"]
@@ -31,7 +37,8 @@ LABELS = config["labels"]
 # Auto-discover subjects and sessions from BIDS structure
 def discover_subjects():
     """Discover subjects and sessions from BIDS dataset"""
-    pattern = os.path.join(BIDS_ROOT, "sub-*/ses-*/anat/*_T1w.nii.gz")
+    bids_pattern = config.get("bids_pattern", "sub-*/ses-*/anat/*_T1w.nii.gz")
+    pattern = os.path.join(BIDS_ROOT, bids_pattern)
     files = glob.glob(pattern)
     
     subject_session_pairs = []
@@ -48,6 +55,27 @@ def discover_subjects():
     
     # Sort for consistent batching
     subject_session_pairs.sort()
+
+    # Optional subject filtering
+    selected_subjects_raw = config.get("subjects")
+    if selected_subjects_raw:
+        if isinstance(selected_subjects_raw, str):
+            selected_subjects = [s for s in re.split(r"[,\s]+", selected_subjects_raw) if s]
+        elif isinstance(selected_subjects_raw, (list, tuple)):
+            selected_subjects = [str(s) for s in selected_subjects_raw]
+        else:
+            selected_subjects = [str(selected_subjects_raw)]
+
+        subject_session_pairs = [
+            (sub, ses) for (sub, ses) in subject_session_pairs if sub in set(selected_subjects)
+        ]
+
+        if len(subject_session_pairs) == 0:
+            raise ValueError(
+                "No subject/session pairs matched the requested subjects filter. "
+                f"Requested subjects={selected_subjects!r}. "
+                "Check that the IDs match exactly (e.g., '02' vs '2') and that bids_pattern matches your dataset."
+            )
     
     # Apply batch filtering if configured
     # Convert to int since command-line config passes strings
@@ -55,9 +83,11 @@ def discover_subjects():
     batch_number = int(config.get("batch_number", 0))
     
     # Debug output to stderr so it appears in logs
+    print(f"[DEBUG] Config bids_pattern: {config.get('bids_pattern', 'NOT SET')} -> {bids_pattern}", file=sys.stderr)
+    print(f"[DEBUG] Config subjects: {config.get('subjects', 'NOT SET')}", file=sys.stderr)
     print(f"[DEBUG] Config batch_size: {config.get('batch_size', 'NOT SET')} -> {batch_size}", file=sys.stderr)
     print(f"[DEBUG] Config batch_number: {config.get('batch_number', 'NOT SET')} -> {batch_number}", file=sys.stderr)
-    print(f"[DEBUG] Total subjects found: {len(subject_session_pairs)}", file=sys.stderr)
+    print(f"[DEBUG] Total subject/session pairs: {len(subject_session_pairs)}", file=sys.stderr)
     
     if batch_size > 0:
         start_idx = batch_number * batch_size
@@ -245,18 +275,18 @@ rule all:
         os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
         os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt"),
         # DAG visualization
-        os.path.join(LOG_DIR, "dag.svg")
+        os.path.join(LOG_DIR, "rulegraph.svg")
 
 
-rule generate_dag:
+rule generate_rulegraph:
     """Generate workflow DAG visualization after all batches and aggregation complete."""
     input:
         summary = os.path.join(DERIVATIVES_ROOT, "summary", "all_features.csv"),
         issues = os.path.join(DERIVATIVES_ROOT, "summary", "processing_issues.txt")
     output:
-        dag_svg = os.path.join(LOG_DIR, "dag.svg")
+        rulegraph_svg = os.path.join(LOG_DIR, "rulegraph.svg")
     log:
-        os.path.join(LOG_DIR, "dag_generation.log")
+        os.path.join(LOG_DIR, "rulegraph_generation.log")
     shell:
         """
         echo "Generating DAG visualization..." > {log}
@@ -268,8 +298,8 @@ rule generate_dag:
         fi
         
         # Generate rule graph (simplified workflow structure, scales to large datasets)
-        if snakemake --snakefile workflow/Snakefile --rulegraph 2>> {log} | dot -Tsvg > {output.dag_svg} 2>> {log}; then
-            echo "Rule graph visualization successfully saved to {output.dag_svg}" >> {log}
+        if snakemake --snakefile workflow/Snakefile --rulegraph 2>> {log} | dot -Tsvg > {output.rulegraph_svg} 2>> {log}; then
+            echo "Rule graph visualization successfully saved to {output.rulegraph_svg}" >> {log}
         else
             echo "Warning: Rule graph generation failed or completed with issues" >> {log}
             exit 1

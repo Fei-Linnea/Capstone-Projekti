@@ -109,6 +109,15 @@ def run_hsf_segmentation(
         # Use one as the main output (or combine them if needed)
         shutil.copy2(left_target, output_seg)
         
+        # Clean up hsf_outputs folder created by HSF in the input directory
+        hsf_outputs_dir = os.path.join(subject_anat_dir, "hsf_outputs")
+        if os.path.isdir(hsf_outputs_dir):
+            try:
+                shutil.rmtree(hsf_outputs_dir)
+                log(f"Cleaned up temporary folder: {hsf_outputs_dir}")
+            except Exception as e:
+                log(f"WARNING: Could not remove hsf_outputs folder: {e}")
+        
         log_timestamp("Segmentation completed successfully")
         log(f"Output: {output_seg}")
         log(f"Left hippocampus: {left_target}")
@@ -133,24 +142,46 @@ def run_hsf_segmentation(
 
 
 if __name__ == "__main__":
-    # This script is called by Snakemake with the script directive
-    # All variables from the rule are available in snakemake object
+    import argparse
+
+    parser = argparse.ArgumentParser(description="HSF Segmentation Wrapper")
+    parser.add_argument("--input-t1w", required=True)
+    parser.add_argument("--output-seg", required=True)
+    parser.add_argument("--output-left-crop", required=True)
+    parser.add_argument("--output-right-crop", required=True)
+    parser.add_argument("--subject-anat-dir", required=True)
+    parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--contrast", required=True)
+    parser.add_argument("--margin", type=str, required=True)
+    parser.add_argument("--seg-mode", required=True)
+    parser.add_argument("--ca-mode", required=True)
+    parser.add_argument("--hsf-left", required=True)
+    parser.add_argument("--hsf-right", required=True)
+    parser.add_argument("--hsf-left-crop", required=True)
+    parser.add_argument("--hsf-right-crop", required=True)
+    parser.add_argument("--subject", required=True)
+    parser.add_argument("--session", required=True)
+    parser.add_argument("--log-file", required=True)
+
+    args = parser.parse_args()
+    os.makedirs(os.path.dirname(args.log_file), exist_ok=True)
+
     run_hsf_segmentation(
-        input_t1w=snakemake.input.t1w,
-        output_seg=snakemake.output.seg,
-        output_left_crop=snakemake.output.left_crop,
-        output_right_crop=snakemake.output.right_crop,
-        subject_anat_dir=snakemake.params.subject_anat_dir,
-        output_dir=snakemake.params.output_dir,
-        contrast=snakemake.params.contrast,
-        margin=snakemake.params.margin,
-        seg_mode=snakemake.params.seg_mode,
-        ca_mode=snakemake.params.ca_mode,
-        hsf_left=snakemake.params.hsf_left,
-        hsf_right=snakemake.params.hsf_right,
-        hsf_left_crop=snakemake.params.hsf_left_crop,
-        hsf_right_crop=snakemake.params.hsf_right_crop,
-        subject=snakemake.wildcards.subject,
-        session=snakemake.wildcards.session,
-        log_file=snakemake.log[0]
+        input_t1w=args.input_t1w,
+        output_seg=args.output_seg,
+        output_left_crop=args.output_left_crop,
+        output_right_crop=args.output_right_crop,
+        subject_anat_dir=args.subject_anat_dir,
+        output_dir=args.output_dir,
+        contrast=args.contrast,
+        margin=args.margin,
+        seg_mode=args.seg_mode,
+        ca_mode=args.ca_mode,
+        hsf_left=args.hsf_left,
+        hsf_right=args.hsf_right,
+        hsf_left_crop=args.hsf_left_crop,
+        hsf_right_crop=args.hsf_right_crop,
+        subject=args.subject,
+        session=args.session,
+        log_file=args.log_file,
     )

@@ -1,0 +1,401 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Execution - Quick Start Guide &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Radiomic Feature Extraction Pipeline - Complete General Guide" href="pipeline_guide.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../guides.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../modules.html">User Guides / Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Local Execution - Quick Start Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#download-the-pipeline-image">Download the Pipeline Image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-the-pipeline">Run the Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#command-line-options">Command-Line Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performance-tuning">Performance tuning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cleanup-option">Cleanup Option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-structure">Output Structure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete General Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rulegraph_explanation.html">Rule Graph Explanation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="csc_user_guide.html">CSC Puhti - Quick Start Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../modules.html">User Guides / Tutorials</a></li>
+          <li class="breadcrumb-item"><a href="../guides.html">&lt;no title&gt;</a></li>
+      <li class="breadcrumb-item active">Local Execution - Quick Start Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/user_guide.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="local-execution-quick-start-guide">
+<h1>Local Execution - Quick Start Guide<a class="headerlink" href="#local-execution-quick-start-guide" title="Link to this heading"></a></h1>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Apptainer</strong> installed on your system (see <a class="reference external" href="https://apptainer.org/docs/admin/main/installation.html">Apptainer installation</a>)</p></li>
+<li><p>BIDS dataset</p></li>
+</ul>
+</section>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading"></a></h2>
+<p>Create an empty logs directory in your project folder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>logs
+</pre></div>
+</div>
+</section>
+<section id="download-the-pipeline-image">
+<h2>Download the Pipeline Image<a class="headerlink" href="#download-the-pipeline-image" title="Link to this heading"></a></h2>
+<p>Pull the Apptainer image from Docker Hub:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>pull<span class="w"> </span>hippocampus-pipeline.sif<span class="w"> </span>docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
+</pre></div>
+</div>
+<p>This will download the container image (~4.3 GiB).</p>
+</section>
+<section id="run-the-pipeline">
+<h2>Run the Pipeline<a class="headerlink" href="#run-the-pipeline" title="Link to this heading"></a></h2>
+<p>Execute the pipeline with the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span><span class="o">{</span>relative<span class="w"> </span>or<span class="w"> </span>absolute<span class="w"> </span>path<span class="w"> </span>to<span class="w"> </span>BIDS<span class="w"> </span>dataset<span class="o">}</span>:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span><span class="o">{</span>path<span class="w"> </span>to<span class="w"> </span>your<span class="w"> </span>logs<span class="w"> </span>directory<span class="o">}</span>:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">10</span>
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./DatasetName:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">10</span>
+</pre></div>
+</div>
+<p>Or one line command (without backslash):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span>--bind<span class="w"> </span>./Dataset_Name:/data<span class="w"> </span>--bind<span class="w"> </span>./logs:/app/logs<span class="w"> </span>hippocampus-pipeline.sif<span class="w"> </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span>--batch-size<span class="w"> </span><span class="m">10</span>
+</pre></div>
+</div>
+<section id="command-line-options">
+<h3>Command-Line Options<a class="headerlink" href="#command-line-options" title="Link to this heading"></a></h3>
+<p><strong>Available Pipeline Options:</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Required</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--profile</span></code></p></td>
+<td><p>Snakemake profile directory (e.g., <code class="docutils literal notranslate"><span class="pre">config/profiles/tyks</span></code>)</p></td>
+<td><p>None</p></td>
+<td><p><strong>Yes</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
+<td><p>Show help message and exit</p></td>
+<td><p>None</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--batch-size</span></code></p></td>
+<td><p>Number of subjects per batch</p></td>
+<td><p>5</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--cores</span></code></p></td>
+<td><p>Total CPU cores available to Snakemake. Use <code class="docutils literal notranslate"><span class="pre">--cores</span></code> without a value (or <code class="docutils literal notranslate"><span class="pre">--cores</span> <span class="pre">all</span></code>) to use all available CPU cores.</p></td>
+<td><p>16</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--subjects</span></code></p></td>
+<td><p>Process specific subjects</p></td>
+<td><p>all subjects</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--set-threads</span></code></p></td>
+<td><p>Override rule threads (e.g., <code class="docutils literal notranslate"><span class="pre">hsf_segmentation=4</span></code>).</p></td>
+<td><p>1 except hsf_segmentation=2</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--bids-pattern</span></code></p></td>
+<td><p>BIDS pattern to discover inputs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sub-*/ses-*/anat/*_T1w.nii.gz</span></code></p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--cleanup</span></code></p></td>
+<td><p>Remove intermediate files after completion, keeping only <code class="docutils literal notranslate"><span class="pre">summary/all_features.csv</span></code> and error report</p></td>
+<td><p>disabled</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code></p></td>
+<td><p>Show what would be done without executing</p></td>
+<td><p>disabled</p></td>
+<td><p>No</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> The <code class="docutils literal notranslate"><span class="pre">--profile</span></code> flag is required to specify default execution settings. Use <code class="docutils literal notranslate"><span class="pre">config/profiles/tyks</span></code> for TYKS environment.</p>
+</section>
+<section id="performance-tuning">
+<h3>Performance tuning<a class="headerlink" href="#performance-tuning" title="Link to this heading"></a></h3>
+<p>Important options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--batch-size</span></code>: if you run out of memory or disk space, reduce this first. This controls how many subjects are processed in one batch (i.e., how much intermediate data is created at once).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--cores</span></code>: set this to the number of CPU cores you are allowed to use. This will use at most N CPU cores/jobs in parallel. If you run <code class="docutils literal notranslate"><span class="pre">--cores</span></code> without a value (or <code class="docutils literal notranslate"><span class="pre">--cores</span> <span class="pre">all</span></code>), Snakemake uses all CPU cores available to the machine/container.</p></li>
+</ul>
+<p>Advanced options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--set-threads</span></code>: advanced per-rule tuning</p></li>
+</ul>
+<p>Rule of thumb:</p>
+<ul class="simple">
+<li><p>If the run is slow and your CPU is mostly idle, increase <code class="docutils literal notranslate"><span class="pre">--cores</span></code>.</p></li>
+<li><p>If the run fails with memory-related errors, decrease <code class="docutils literal notranslate"><span class="pre">--batch-size</span></code>.</p></li>
+</ul>
+<p><strong>Recommended Settings for Different Machine Sizes:</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Machine RAM</p></th>
+<th class="head"><p>batch-size</p></th>
+<th class="head"><p>cores</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>32 GB</p></td>
+<td><p>10</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><p>64 GB</p></td>
+<td><p>20</p></td>
+<td><p>16</p></td>
+</tr>
+<tr class="row-even"><td><p>128 GB</p></td>
+<td><p>40</p></td>
+<td><p>32</p></td>
+</tr>
+<tr class="row-odd"><td><p>256 GB</p></td>
+<td><p>80</p></td>
+<td><p>64</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example with cleanup flag:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./DatasetName:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cleanup
+</pre></div>
+</div>
+<p><strong>Example processing specific subjects:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./DatasetName:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--subjects<span class="w"> </span><span class="m">01</span><span class="w"> </span><span class="m">02</span><span class="w"> </span><span class="m">03</span><span class="w"> </span><span class="m">04</span><span class="w"> </span><span class="m">05</span>
+</pre></div>
+</div>
+<p><strong>Example using a custom BIDS discovery pattern:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./DatasetName:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bids-pattern<span class="w"> </span><span class="s2">&quot;sub-*/ses-1/anat/*_T1w.nii.gz&quot;</span>
+</pre></div>
+</div>
+<p><strong>Example with cores and rule thread override:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./DatasetName:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cores<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--set-threads<span class="w"> </span><span class="nv">hsf_segmentation</span><span class="o">=</span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="cleanup-option">
+<h2>Cleanup Option<a class="headerlink" href="#cleanup-option" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">--cleanup</span></code> flag removes all intermediate files after successful pipeline completion, keeping only the final <code class="docutils literal notranslate"><span class="pre">summary/all_features.csv</span></code> file and error report.</p>
+<p><strong>What gets deleted:</strong></p>
+<ul class="simple">
+<li><p>Individual subject segmentation files (<code class="docutils literal notranslate"><span class="pre">sub-XX/ses-X/anat/</span></code>)</p></li>
+<li><p>Per-subject feature files (<code class="docutils literal notranslate"><span class="pre">sub-XX/ses-X/features/</span></code>)</p></li>
+<li><p>Mesh files (<code class="docutils literal notranslate"><span class="pre">sub-XX/ses-X/meshes/</span></code>)</p></li>
+</ul>
+<p><strong>What gets preserved:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">derivatives/summary/all_features.csv</span></code> (final aggregated results)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">derivatives/summary/processing_issues.txt</span></code> (error report)</p></li>
+</ul>
+<p><strong>Usage:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./DatasetName:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span>./logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch-size<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cleanup
+</pre></div>
+</div>
+<p>The cleanup will:</p>
+<ol class="arabic simple">
+<li><p>Show a preview of what will be deleted</p></li>
+<li><p>Delete intermediate files automatically</p></li>
+<li><p>Only run if the pipeline completes successfully</p></li>
+</ol>
+</section>
+<section id="output-structure">
+<h2>Output Structure<a class="headerlink" href="#output-structure" title="Link to this heading"></a></h2>
+<p>After successful execution, your dataset directory will contain:</p>
+<p><strong>Without <code class="docutils literal notranslate"><span class="pre">--cleanup</span></code> flag (default):</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset/
+├── derivatives/
+│   ├── sub-01/
+│   │   └── ses-1/
+│   │       ├── anat/          # Segmentation outputs
+│   │       ├── features/      # Extracted radiomics features
+│   │       └── meshes/        # Generated 3D meshes
+│   ├── sub-02/
+│   │   └── ...
+│   └── summary/
+│       ├── all_features.csv       # Aggregated features from all subjects
+│       └── processing_issues.txt  # Any subjects with processing errors
+</pre></div>
+</div>
+<p><strong>With <code class="docutils literal notranslate"><span class="pre">--cleanup</span></code> flag:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset/
+└── derivatives/
+    └── summary/
+        ├── all_features.csv       # Aggregated features from all subjects
+        └── processing_issues.txt  # Any subjects with processing errors
+</pre></div>
+</div>
+<p>Your logs directory will contain timestamped directories with detailed execution logs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>└── logs/
+    ├── &lt;timestamp&gt;/
+      ├── hsf/                         # Step 1 logs
+      ├── data_processing/             # Step 2 logs
+      ├── mesh/                        # Step 3 logs
+      ├── feature_extraction/          # Steps 4-6 logs
+      ├── benchmarks/                # Performance metrics
+      │   ├── hsf/
+      │   ├── data_processing/
+      │   ├── mesh/
+      │   └── feature_extraction/
+      ├── snakemake_batch_001.log
+      └── snakemake_aggregation.log
+</pre></div>
+</div>
+<hr class="docutils" />
+<p>For comprehensive documentation, see full <a class="reference internal" href="pipeline_guide.html"><span class="std std-doc">Pipeline Guide</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../guides.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipeline_guide.html" class="btn btn-neutral float-right" title="Radiomic Feature Extraction Pipeline - Complete General Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

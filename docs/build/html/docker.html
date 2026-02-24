@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Full Dockerfile &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Pipeline Configuration File" href="configuration.html" />
+    <link rel="prev" title="HSF Segmentation Rule (Step 1)" href="rules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Full Dockerfile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#explanation-of-instructions">Explanation of Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
+      <li class="breadcrumb-item active">Full Dockerfile</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/docker.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <p>This Dockerfile sets up the environment for the
+<strong>Radiomic Feature Extraction Hippocampus Morphometry Pipeline</strong>.</p>
+<p>It uses Python 3.11 slim base and installs all system
+and Python dependencies required to run the pipeline.</p>
+<section id="full-dockerfile">
+<h1>Full Dockerfile<a class="headerlink" href="#full-dockerfile" title="Link to this heading"></a></h1>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Dockerfile for Radiomic Pipeline</span><a class="headerlink" href="#id1" title="Link to this code"></a></div>
+<div class="highlight-docker notranslate"><div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.11-slim</span>
+
+<span class="c"># Metadata</span>
+<span class="k">LABEL</span><span class="w"> </span><span class="nv">maintainer</span><span class="o">=</span><span class="s2">&quot;BigBrain Team&quot;</span>
+<span class="k">LABEL</span><span class="w"> </span><span class="nv">description</span><span class="o">=</span><span class="s2">&quot;Radiomic Feature Extraction Hippocampus Morphometry Pipeline&quot;</span>
+<span class="k">LABEL</span><span class="w"> </span><span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.1.0&quot;</span>
+
+<span class="c"># Install system dependencies and build tools</span>
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--no-install-recommends<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>git<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>bash<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>gcc<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>g++<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>graphviz<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>python3-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libxrender1<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libosmesa6<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>xvfb<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+
+<span class="c"># Install Python packages</span>
+<span class="c"># First install numpy (required by pyradiomics build)</span>
+<span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>numpy
+
+<span class="c"># Then install remaining packages</span>
+<span class="c"># HSF for hippocampal segmentation</span>
+<span class="c"># PyTorch CPU version (lighter)</span>
+<span class="c"># Snakemake for workflow management</span>
+<span class="c"># Pin PuLP to 2.7.0 for compatibility with Snakemake 7.32.4</span>
+<span class="c"># SimpleITK, nibabel and pandas for nii_parse.py functions (data_processing part)</span>
+<span class="c"># pyradiomics for feature extraction</span>
+<span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>nibabel<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>pandas<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">pulp</span><span class="o">==</span><span class="m">2</span>.7.0<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>pyradiomics<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>pyyaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>simpleitk<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">snakemake</span><span class="o">==</span><span class="m">7</span>.32.4<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>onnxruntime<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hsf<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>scikit-image<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>pyvista<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>pyvista<span class="o">[</span>jupyter<span class="o">]</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>vtk<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>torch<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+
+<span class="c"># Pre-download HSF models to avoid checksum failures during pipeline execution</span>
+<span class="k">RUN</span><span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from hsf import fetch_models; fetch_models(&#39;/root/.hsf/models&#39;, {&#39;single&#39;: {&#39;arunet_4.0.0single_1706895706.onnx&#39;: {&#39;url&#39;: &#39;https://huggingface.co/poiretclement/hsf/resolve/main/onnx/arunet_4.0.0single_1706895706.onnx&#39;, &#39;xxh3_64&#39;: &#39;04ba080ed7f373c2&#39;}}})&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>true
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+
+<span class="c"># Set environment to allow pipeline/executable stack for onnxruntime</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">LD_PRELOAD</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+
+<span class="c"># Enable off-screen plotting for PyVista in headless environments</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">PYVISTA_OFF_SCREEN</span><span class="o">=</span><span class="s2">&quot;true&quot;</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">VTK_OSMESA_DLL</span><span class="o">=</span><span class="s2">&quot;/usr/lib/libOSMesa.so&quot;</span>
+
+<span class="k">COPY</span><span class="w"> </span>pipeline<span class="w"> </span>/app/pipeline
+
+<span class="k">RUN</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>/app/pipeline/run_pipeline.py
+
+<span class="c"># Set entrypoint to batch wrapper (can still use snakemake directly if needed)</span>
+<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;python3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/app/pipeline/run_pipeline.py&quot;</span><span class="p">]</span>
+
+<span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;--help&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="explanation-of-instructions">
+<h1>Explanation of Instructions<a class="headerlink" href="#explanation-of-instructions" title="Link to this heading"></a></h1>
+<p><strong>Base Image and Metadata</strong></p>
+<ul class="simple">
+<li><p><cite>FROM python:3.11-slim</cite>
+Uses the official slim Python 3.11 image for a lightweight base.</p></li>
+<li><p><cite>LABEL maintainer=”BigBrain Team”</cite>
+<cite>LABEL description=”Radiomic Feature Extraction Hippocampus Morphometry Pipeline”</cite>
+<cite>LABEL version=”1.1.0”</cite>
+Adds metadata to the image.</p></li>
+</ul>
+<p><strong>System Dependencies</strong></p>
+<ul class="simple">
+<li><p><cite>apt-get update &amp;&amp; apt-get install -y –no-install-recommends …</cite>
+Installs required system packages:
+- <cite>git</cite>, <cite>bash</cite> → basic tools
+- <cite>gcc</cite>, <cite>g++</cite>, <cite>python3-dev</cite> → build tools for Python packages
+- <cite>graphviz</cite> → visualization
+- <cite>libxrender1</cite>, <cite>libosmesa6</cite>, <cite>xvfb</cite> → headless rendering for PyVista
+- <cite>rm -rf /var/lib/apt/lists/*</cite> cleans up to reduce image size</p></li>
+</ul>
+<p><strong>Python Packages</strong></p>
+<ul class="simple">
+<li><p><cite>pip install –no-cache-dir numpy</cite>
+Installs NumPy first, needed by PyRadiomics.</p></li>
+<li><p>Then install all other Python dependencies:
+- <cite>nibabel</cite>, <cite>pandas</cite> → for <cite>.nii</cite> parsing and data handling
+- <cite>pulp==2.7.0</cite> → LP solver pinned for Snakemake compatibility
+- <cite>pyradiomics</cite> → radiomics feature extraction
+- <cite>pyyaml</cite>, <cite>simpleitk</cite> → workflow utilities
+- <cite>snakemake==7.32.4</cite> → workflow management
+- <cite>onnxruntime</cite> → ONNX runtime for model execution
+- <cite>hsf</cite> → hippocampal segmentation framework
+- <cite>scikit-image</cite>, <cite>pyvista</cite>, <cite>vtk</cite> → image processing and visualization
+- <cite>torch</cite> → PyTorch CPU-only version (lightweight)</p></li>
+</ul>
+<p><strong>Pre-download Models</strong></p>
+<ul class="simple">
+<li><p><cite>python3 -c “from hsf import fetch_models; …”</cite>
+Pre-fetches HSF ONNX models to avoid checksum errors during execution.
+<cite>|| true</cite> ensures the Docker build continues even if the download fails.</p></li>
+</ul>
+<p><strong>Working Directory and Environment Variables</strong></p>
+<ul class="simple">
+<li><p><cite>WORKDIR /app</cite> → sets the container working directory</p></li>
+<li><p><cite>ENV LD_PRELOAD=””</cite> → allows ONNX runtime to work in some Linux environments</p></li>
+<li><p><cite>ENV PYVISTA_OFF_SCREEN=”true”</cite> → enables headless plotting</p></li>
+<li><p><cite>ENV VTK_OSMESA_DLL=”/usr/lib/libOSMesa.so”</cite> → points PyVista to off-screen rendering library</p></li>
+</ul>
+<p><strong>Pipeline Files</strong></p>
+<ul class="simple">
+<li><p><cite>COPY pipeline /app/pipeline</cite> → copies the pipeline scripts into the container</p></li>
+<li><p><cite>RUN chmod +x /app/pipeline/run_pipeline.py</cite> → makes the pipeline script executable</p></li>
+</ul>
+<p><strong>Entrypoint</strong></p>
+<ul class="simple">
+<li><p><cite>ENTRYPOINT [“python3”, “/app/pipeline/run_pipeline.py”]</cite>
+Default command when the container starts.</p></li>
+<li><p><cite>CMD [”–help”]</cite>
+Default argument to show usage if no parameters are provided.</p></li>
+</ul>
+<p>—</p>
+<p><strong>Usage</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">`bash`</span></code>
+docker build -t radiomic-pipeline .
+docker run –rm radiomic-pipeline –help</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rules.html" class="btn btn-neutral float-left" title="HSF Segmentation Rule (Step 1)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Pipeline Configuration File" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

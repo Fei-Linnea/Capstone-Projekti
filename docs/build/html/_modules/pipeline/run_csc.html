@@ -1,0 +1,1045 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pipeline.run_csc &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pipeline.run_csc</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pipeline.run_csc</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CSC Puhti Pipeline Runner.</span>
+
+<span class="sd">Interactive and CLI-based wrapper for executing the hippocampus</span>
+<span class="sd">radiomic feature extraction workflow on CSC&#39;s Puhti cluster using</span>
+<span class="sd">SLURM and Apptainer.</span>
+
+<span class="sd">This script provides:</span>
+
+<span class="sd">- Interactive or fully CLI-driven configuration</span>
+<span class="sd">- Automatic Snakemake profile generation</span>
+<span class="sd">- CSC-specific environment setup (TMPDIR, bind mounts)</span>
+<span class="sd">- Real-time progress tracking from Snakemake logs</span>
+<span class="sd">- Optional cleanup of intermediate outputs</span>
+
+<span class="sd">Typical Usage</span>
+<span class="sd">-------------</span>
+<span class="sd">Interactive mode:</span>
+
+<span class="sd">    python run_csc.py</span>
+
+<span class="sd">Non-interactive mode:</span>
+
+<span class="sd">    python run_csc.py --project 2001988 \</span>
+<span class="sd">        --bids-root /scratch/project_2001988/user/Dataset \</span>
+<span class="sd">        --sif /scratch/project_2001988/user/Containers/pipeline.sif</span>
+
+<span class="sd">Dry run:</span>
+
+<span class="sd">    python run_csc.py --dry-run</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getpass</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pipeline.run_utils.cleanup</span><span class="w"> </span><span class="kn">import</span> <span class="n">cleanup_with_confirmation</span>
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Constants</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">SCRIPT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">PROFILE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SCRIPT_DIR</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;profiles&quot;</span><span class="p">,</span> <span class="s2">&quot;csc&quot;</span><span class="p">)</span>
+<span class="n">PROFILE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PROFILE_DIR</span><span class="p">,</span> <span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
+
+<span class="n">SPINNER</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;|&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">]</span>
+
+<span class="n">RULE_DISPLAY</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;hsf_segmentation&quot;</span><span class="p">:</span> <span class="s2">&quot;HSF Seg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;split_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Split&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;combine_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;Combine&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mesh_per_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mesh_combined&quot;</span><span class="p">:</span> <span class="s2">&quot;Mesh (comb)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extract_pyradiomics_per_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Radiomics&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extract_pyradiomics_combined&quot;</span><span class="p">:</span> <span class="s2">&quot;Radiomics (comb)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extract_curvature_per_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Curvature&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extract_curvature_combined&quot;</span><span class="p">:</span> <span class="s2">&quot;Curvature (comb)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;aggregate_subject_features&quot;</span><span class="p">:</span> <span class="s2">&quot;Aggregate&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;aggregate_all_subjects&quot;</span><span class="p">:</span> <span class="s2">&quot;Summary&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;generate_rulegraph&quot;</span><span class="p">:</span> <span class="s2">&quot;DAG&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">MIN_SNAKEMAKE_MAJOR</span> <span class="o">=</span> <span class="mi">8</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Helpers</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="banner">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.banner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">banner</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print a formatted section banner to stderr.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text : str</span>
+<span class="sd">        Title text to display inside the banner.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="mi">70</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">w</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">w</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="info">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.info">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">info</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print an informational message to stderr.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    msg : str</span>
+<span class="sd">        Message to display.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ok">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.ok">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print a success message to stderr.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    msg : str</span>
+<span class="sd">        Message to display.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  [OK] </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="err">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.err">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">err</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print an error message to stderr.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    msg : str</span>
+<span class="sd">        Error message to display.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  [FAIL] </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="prompt">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.prompt">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prompt</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prompt the user for input.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Prompt label to display.</span>
+<span class="sd">    default : str, optional</span>
+<span class="sd">        Default value returned if user presses Enter.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        User-provided value or the default if empty.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">default</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">]: &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="k">else</span> <span class="n">default</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    (required — please enter a value)&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Prerequisites</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_module_load</span><span class="p">(</span><span class="n">module_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attempt to load an HPC module using Lmod via a subprocess.</span>
+
+<span class="sd">    This function sources the Lmod initialization script and executes</span>
+<span class="sd">    `module load &lt;module_name&gt;` in a bash subshell. If successful,</span>
+<span class="sd">    the updated PATH is propagated to the current Python process.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    module_name : str</span>
+<span class="sd">        Name of the module to load.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the module was successfully loaded, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">init_script</span> <span class="o">=</span> <span class="s2">&quot;/usr/share/lmod/lmod/init/bash&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">init_script</span><span class="p">):</span>
+        <span class="n">init_script</span> <span class="o">=</span> <span class="s2">&quot;/usr/share/lmod/lmod/init/profile&quot;</span>
+
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;source </span><span class="si">{</span><span class="n">init_script</span><span class="si">}</span><span class="s1"> 2&gt;/dev/null; &#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;module load </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s1"> 2&gt;&amp;1; &#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;echo &quot;===PATH===$PATH&quot;&#39;</span>
+    <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;bash&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">],</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;===PATH===&quot;</span><span class="p">):</span>
+                <span class="n">new_path</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;===PATH===&quot;</span><span class="p">):]</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_path</span>
+                <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_snakemake_version</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve the installed Snakemake version.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        Version string if Snakemake is available, otherwise None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;snakemake&quot;</span><span class="p">,</span> <span class="s2">&quot;--version&quot;</span><span class="p">],</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="check_snakemake">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.check_snakemake">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_snakemake</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify that Snakemake &gt;= 8 is available in PATH.</span>
+
+<span class="sd">    If Snakemake is missing or too old, attempts to load it via Lmod</span>
+<span class="sd">    module system (e.g., `module load snakemake` on CSC Puhti).</span>
+
+<span class="sd">    :return: Snakemake version string if found and satisfies minimum,</span>
+<span class="sd">             otherwise None.</span>
+<span class="sd">    :rtype: str or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ver</span> <span class="o">=</span> <span class="n">_get_snakemake_version</span><span class="p">()</span>
+
+    <span class="c1"># --- not found at all → try module load ---</span>
+    <span class="k">if</span> <span class="n">ver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">info</span><span class="p">(</span><span class="s2">&quot;snakemake not in PATH — trying &#39;module load snakemake&#39; ...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_module_load</span><span class="p">(</span><span class="s2">&quot;snakemake&quot;</span><span class="p">):</span>
+            <span class="n">ver</span> <span class="o">=</span> <span class="n">_get_snakemake_version</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">err</span><span class="p">(</span><span class="s2">&quot;snakemake still not found after &#39;module load snakemake&#39;&quot;</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Install manually: pip install &#39;snakemake&gt;=8&#39; or ask your admin.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># --- found but too old → try loading a newer module ---</span>
+    <span class="n">major</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ver</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">major</span> <span class="o">&lt;</span> <span class="n">MIN_SNAKEMAKE_MAJOR</span><span class="p">:</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Snakemake </span><span class="si">{</span><span class="n">ver</span><span class="si">}</span><span class="s2"> found (need &gt;= </span><span class="si">{</span><span class="n">MIN_SNAKEMAKE_MAJOR</span><span class="si">}</span><span class="s2">) &quot;</span>
+             <span class="sa">f</span><span class="s2">&quot;— trying &#39;module load snakemake&#39; for a newer version ...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_module_load</span><span class="p">(</span><span class="s2">&quot;snakemake&quot;</span><span class="p">):</span>
+            <span class="n">ver2</span> <span class="o">=</span> <span class="n">_get_snakemake_version</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ver2</span><span class="p">:</span>
+                <span class="n">major2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ver2</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">major2</span> <span class="o">&gt;=</span> <span class="n">MIN_SNAKEMAKE_MAJOR</span><span class="p">:</span>
+                    <span class="n">ver</span> <span class="o">=</span> <span class="n">ver2</span>
+        <span class="n">major</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ver</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">major</span> <span class="o">&lt;</span> <span class="n">MIN_SNAKEMAKE_MAJOR</span><span class="p">:</span>
+            <span class="n">err</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Snakemake </span><span class="si">{</span><span class="n">ver</span><span class="si">}</span><span class="s2"> — need &gt;= </span><span class="si">{</span><span class="n">MIN_SNAKEMAKE_MAJOR</span><span class="si">}</span><span class="s2">.0.0&quot;</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Try: module load snakemake/&lt;version&gt;  or  &quot;</span>
+                 <span class="s2">&quot;pip install &#39;snakemake&gt;=8&#39;&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">ver</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Configuration</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="gather_config">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.gather_config">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gather_config</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect all pipeline configuration from CLI arguments and interactive prompts.</span>
+
+<span class="sd">    :param args: Parsed command-line arguments object.</span>
+<span class="sd">    :type args: argparse.Namespace</span>
+<span class="sd">    :return: Dictionary of configuration values.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getuser</span><span class="p">()</span>
+    <span class="n">interactive</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">project</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">bids_root</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">sif</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
+        <span class="n">banner</span><span class="p">(</span><span class="s2">&quot;Hippocampus Pipeline — CSC Setup&quot;</span><span class="p">)</span>
+
+    <span class="c1"># --- Project number ---</span>
+    <span class="n">project_num</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">project</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">project_num</span><span class="p">:</span>
+        <span class="n">project_num</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">(</span><span class="s2">&quot;CSC project number (e.g., 2001988)&quot;</span><span class="p">)</span>
+    <span class="n">project_num</span> <span class="o">=</span> <span class="n">project_num</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;project_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">project</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;project_</span><span class="si">{</span><span class="n">project_num</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/scratch/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="c1"># --- BIDS root ---</span>
+    <span class="n">bids_root</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">bids_root</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">bids_root</span><span class="p">:</span>
+        <span class="n">bids_root</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">(</span><span class="s2">&quot;BIDS dataset root (e.g., /scratch/project_&lt;NUM&gt;/&lt;user&gt;/MyDataset)&quot;</span><span class="p">)</span>
+
+    <span class="c1"># --- Derivatives (always &lt;bids_root&gt;/derivatives) ---</span>
+    <span class="n">derivatives_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bids_root</span><span class="p">,</span> <span class="s2">&quot;derivatives&quot;</span><span class="p">)</span>
+
+    <span class="c1"># --- Optional BIDS glob pattern (relative to BIDS root) ---</span>
+    <span class="c1"># Keep this optional to preserve current behavior; Snakefile has a default.</span>
+    <span class="n">bids_pattern</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">bids_pattern</span>
+    <span class="k">if</span> <span class="n">interactive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bids_pattern</span><span class="p">:</span>
+        <span class="n">bids_pattern</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">(</span>
+            <span class="s2">&quot;BIDS file glob pattern (relative to BIDS root)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sub-*/ses-*/anat/*_T1w.nii.gz&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- SIF path ---</span>
+    <span class="n">sif_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">sif</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sif_path</span><span class="p">:</span>
+        <span class="n">sif_path</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">(</span><span class="s2">&quot;Container SIF path (e.g., /scratch/project_&lt;NUM&gt;/&lt;user&gt;/Containers/hippocampus-pipeline.sif)&quot;</span><span class="p">)</span>
+
+    <span class="c1"># --- Partition ---</span>
+    <span class="n">partition</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">partition</span> <span class="ow">or</span> <span class="p">(</span>
+        <span class="n">prompt</span><span class="p">(</span><span class="s2">&quot;SLURM partition&quot;</span><span class="p">,</span> <span class="s2">&quot;small&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">interactive</span> <span class="k">else</span> <span class="s2">&quot;small&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="n">project</span><span class="p">,</span>
+        <span class="s2">&quot;project_num&quot;</span><span class="p">:</span> <span class="n">project_num</span><span class="p">,</span>
+        <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span>
+        <span class="s2">&quot;bids_root&quot;</span><span class="p">:</span> <span class="n">bids_root</span><span class="p">,</span>
+        <span class="s2">&quot;derivatives_root&quot;</span><span class="p">:</span> <span class="n">derivatives_root</span><span class="p">,</span>
+        <span class="s2">&quot;bids_pattern&quot;</span><span class="p">:</span> <span class="n">bids_pattern</span><span class="p">,</span>
+        <span class="s2">&quot;sif_path&quot;</span><span class="p">:</span> <span class="n">sif_path</span><span class="p">,</span>
+        <span class="s2">&quot;partition&quot;</span><span class="p">:</span> <span class="n">partition</span><span class="p">,</span>
+        <span class="s2">&quot;tmpdir&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">/tmp&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scratch_project&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;/scratch/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;jobs&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">jobs</span><span class="p">,</span>
+        <span class="s2">&quot;latency_wait&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">latency_wait</span><span class="p">,</span>
+        <span class="s2">&quot;retries&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">retries</span><span class="p">,</span>
+        <span class="s2">&quot;set_threads&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">set_threads</span> <span class="ow">or</span> <span class="p">[],</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="print_summary">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.print_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_summary</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print a configuration summary table to stderr.</span>
+
+<span class="sd">    :param cfg: Pipeline configuration dictionary.</span>
+<span class="sd">    :type cfg: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">55</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">sep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;Project&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;Username&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;BIDS root&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;bids_root&quot;</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;BIDS pattern&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bids_pattern&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;(default)&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Derivatives&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;derivatives_root&quot;</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;Container&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;sif_path&quot;</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;Partition&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;Tmp dir&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;tmpdir&quot;</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;Max jobs&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">]),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;Set threads&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;set_threads&quot;</span><span class="p">,</span> <span class="p">[]))</span> <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;set_threads&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;(none)&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">&lt;14</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">sep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_paths">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.validate_paths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_paths</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check that required paths exist and return a list of errors.</span>
+
+<span class="sd">    :param cfg: Pipeline configuration dictionary.</span>
+<span class="sd">    :type cfg: dict</span>
+<span class="sd">    :return: List of missing or invalid paths.</span>
+<span class="sd">    :rtype: list of str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;bids_root&quot;</span><span class="p">]):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BIDS root not found: </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;bids_root&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;sif_path&quot;</span><span class="p">]):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SIF container not found: </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;sif_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">errors</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Profile generation</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="write_profile">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.write_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_profile</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write Snakemake profile YAML configuration for SLURM execution.</span>
+
+<span class="sd">    Creates PROFILE_DIR and writes config.yaml with current settings.</span>
+
+<span class="sd">    :param cfg: Pipeline configuration dictionary.</span>
+<span class="sd">    :type cfg: dict</span>
+<span class="sd">    :return: Directory path where the profile was written.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">PROFILE_DIR</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span>
+    <span class="n">sp</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;scratch_project&quot;</span><span class="p">]</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">        # Auto-generated by run_csc.py — </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">:</span><span class="s2">%Y-%m-%d %H:%M:%S</span><span class="si">}</span>
+<span class="s2">        # Project: </span><span class="si">{</span><span class="n">p</span><span class="si">}</span>
+
+<span class="s2">        executor: slurm</span>
+
+<span class="s2">        jobs: </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">        keep-going: true</span>
+<span class="s2">        latency-wait: </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;latency_wait&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">        retries: </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;retries&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">        printshellcmds: true</span>
+<span class="s2">        rerun-incomplete: true</span>
+<span class="s2">        local-cores: 1</span>
+
+<span class="s2">        default-resources:</span>
+<span class="s2">          - slurm_account=</span><span class="si">{</span><span class="n">p</span><span class="si">}</span>
+<span class="s2">          - slurm_partition=</span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">          - mem_mb=8000</span>
+<span class="s2">          - runtime=120</span>
+<span class="s2">          - &quot;tmpdir=&#39;</span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;tmpdir&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+
+<span class="s2">        software-deployment-method:</span>
+<span class="s2">          - apptainer</span>
+
+<span class="s2">        apptainer-args: &quot;--bind </span><span class="si">{</span><span class="n">sp</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">sp</span><span class="si">}</span><span class="s2">:rw --env HSF_HOME=/users/$USER/.hsf&quot;</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">PROFILE_DIR</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">PROFILE_PATH</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">PROFILE_DIR</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Environment</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="setup_environment">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.setup_environment">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_environment</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepare environment variables for Apptainer (Singularity) and SLURM.</span>
+
+<span class="sd">    Ensures TMPDIR exists, sets Apptainer cache, and clears old bind vars.</span>
+
+<span class="sd">    :param cfg: Pipeline configuration dictionary.</span>
+<span class="sd">    :type cfg: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tmpdir</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;tmpdir&quot;</span><span class="p">]</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TMPDIR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmpdir</span>
+
+    <span class="c1"># Apptainer cache &amp; tmpdir — must be on shared /scratch, not $HOME</span>
+    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">),</span> <span class="s2">&quot;.apptainer&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;APPTAINER_CACHEDIR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache_dir</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;APPTAINER_TMPDIR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmpdir</span>
+
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;SINGULARITY_BIND&quot;</span><span class="p">,</span> <span class="s2">&quot;APPTAINER_BIND&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Progress tracking</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="parse_line">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.parse_line">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">st</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a single Snakemake log line to update progress state.</span>
+
+<span class="sd">    Recognizes job counts, current rule, subject, SLURM submissions, and errors.</span>
+
+<span class="sd">    :param line: A line of Snakemake log output.</span>
+<span class="sd">    :type line: str</span>
+<span class="sd">    :param st: Dictionary tracking current pipeline state.</span>
+<span class="sd">    :type st: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stripped</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Authoritative progress: &quot;M of T steps (PP%) done&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\d+)\s+of\s+(\d+)\s+steps.*?done&quot;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="n">st</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">st</span><span class="p">[</span><span class="s2">&quot;total&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Total from Job stats table: &quot;total        503&quot;</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;total\s+\d+&quot;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;total\s+(\d+)&quot;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">st</span><span class="p">[</span><span class="s2">&quot;total&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Fallback per-job counter</span>
+    <span class="k">if</span> <span class="s2">&quot;Finished job&quot;</span> <span class="ow">in</span> <span class="n">stripped</span><span class="p">:</span>
+        <span class="n">st</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># Current rule</span>
+    <span class="n">m2</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s*(?:local)?rule\s+(\w+):&quot;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m2</span><span class="p">:</span>
+        <span class="n">st</span><span class="p">[</span><span class="s2">&quot;rule&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m2</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Current subject</span>
+    <span class="k">if</span> <span class="s2">&quot;wildcards:&quot;</span> <span class="ow">in</span> <span class="n">stripped</span> <span class="ow">and</span> <span class="s2">&quot;subject=&quot;</span> <span class="ow">in</span> <span class="n">stripped</span><span class="p">:</span>
+        <span class="n">m3</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;subject=(\S+?)(?:,|$)&quot;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m3</span><span class="p">:</span>
+            <span class="n">st</span><span class="p">[</span><span class="s2">&quot;subject&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m3</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># SLURM submissions (informational)</span>
+    <span class="k">if</span> <span class="s2">&quot;Submitted&quot;</span> <span class="ow">in</span> <span class="n">stripped</span> <span class="ow">and</span> <span class="s2">&quot;external jobid&quot;</span> <span class="ow">in</span> <span class="n">stripped</span><span class="p">:</span>
+        <span class="n">st</span><span class="p">[</span><span class="s2">&quot;submitted&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submitted&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># Errors</span>
+    <span class="k">if</span> <span class="s2">&quot;Error in rule&quot;</span> <span class="ow">in</span> <span class="n">stripped</span><span class="p">:</span>
+        <span class="n">m4</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Error in rule (\w+)&quot;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m4</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m4</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="render_bar">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.render_bar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_bar</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;Pipeline&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Render a single-line progress bar in stderr for pipeline execution.</span>
+
+<span class="sd">    :param st: Dictionary tracking current pipeline state.</span>
+<span class="sd">    :type st: dict</span>
+<span class="sd">    :param prefix: Optional prefix string for the progress display.</span>
+<span class="sd">    :type prefix: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">)</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_frame&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">st</span><span class="p">[</span><span class="s2">&quot;_frame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">spin</span> <span class="o">=</span> <span class="n">SPINNER</span><span class="p">[</span><span class="n">frame</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">SPINNER</span><span class="p">)]</span>
+
+    <span class="n">rule</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rule&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">subj</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subject&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">tag</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">subj</span> <span class="ow">and</span> <span class="n">rule</span><span class="p">:</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; | sub-</span><span class="si">{</span><span class="n">subj</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">RULE_DISPLAY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span><span class="w"> </span><span class="n">rule</span><span class="p">[:</span><span class="mi">12</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">if</span> <span class="n">total</span> <span class="ow">and</span> <span class="n">total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pct</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">done</span> <span class="o">/</span> <span class="n">total</span><span class="p">))</span>
+        <span class="n">blen</span> <span class="o">=</span> <span class="mi">40</span>
+        <span class="n">filled</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">blen</span> <span class="o">*</span> <span class="n">done</span> <span class="o">/</span> <span class="n">total</span><span class="p">)</span>
+        <span class="n">bar</span> <span class="o">=</span> <span class="s2">&quot;#&quot;</span> <span class="o">*</span> <span class="n">filled</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">blen</span> <span class="o">-</span> <span class="n">filled</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">  </span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">done</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">] |</span><span class="si">{</span><span class="n">bar</span><span class="si">}</span><span class="s2">| </span><span class="si">{</span><span class="n">pct</span><span class="si">}</span><span class="s2">% </span><span class="si">{</span><span class="n">spin</span><span class="si">}{</span><span class="n">tag</span><span class="si">}</span><span class="s2">     &quot;</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">done</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">  </span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">done</span><span class="si">}</span><span class="s2">/?] </span><span class="si">{</span><span class="n">spin</span><span class="si">}</span><span class="s2"> Waiting for job stats...</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s2">     &quot;</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">submitted</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submitted&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">submitted</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">  </span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">spin</span><span class="si">}</span><span class="s2"> Submitted </span><span class="si">{</span><span class="n">submitted</span><span class="si">}</span><span class="s2"> SLURM job(s)...     &quot;</span><span class="p">,</span>
+                <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Pipeline execution</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_pipeline">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.run_pipeline">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_pipeline</span><span class="p">(</span>
+    <span class="n">cfg</span><span class="p">,</span>
+    <span class="n">profile_path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">clean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">set_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execute the Hippocampus pipeline using Snakemake with live progress tracking.</span>
+
+<span class="sd">    Supports dry-run mode, forced re-execution, and optional cleanup of</span>
+<span class="sd">    stale Snakemake metadata. Displays a progress bar and summary, capturing</span>
+<span class="sd">    errors and duration.</span>
+
+<span class="sd">    :param cfg: Pipeline configuration dictionary (from gather_config).</span>
+<span class="sd">    :type cfg: dict</span>
+<span class="sd">    :param profile_path: Path to the Snakemake profile directory.</span>
+<span class="sd">    :type profile_path: str</span>
+<span class="sd">    :param dry_run: If True, only display planned jobs without executing.</span>
+<span class="sd">    :type dry_run: bool, default False</span>
+<span class="sd">    :param force: If True, force re-run all rules (--forceall).</span>
+<span class="sd">    :type force: bool, default False</span>
+<span class="sd">    :param clean: If True, remove .snakemake metadata before running.</span>
+<span class="sd">    :type clean: bool, default False</span>
+<span class="sd">    :param set_threads: Optional list of thread overrides for specific rules</span>
+<span class="sd">                        (e.g., [&quot;hsf_segmentation=4&quot;]).</span>
+<span class="sd">    :type set_threads: list of str or None</span>
+<span class="sd">    :return: True if pipeline completed successfully without errors, else False.</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Optional .snakemake cleanup</span>
+    <span class="n">sm_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SCRIPT_DIR</span><span class="p">,</span> <span class="s2">&quot;.snakemake&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">clean</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">sm_dir</span><span class="p">):</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removing </span><span class="si">{</span><span class="n">sm_dir</span><span class="si">}</span><span class="s2"> ...&quot;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">sm_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ok</span><span class="p">(</span><span class="s2">&quot;Cleaned .snakemake metadata&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Build command</span>
+    <span class="n">rel_profile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">profile_path</span><span class="p">,</span> <span class="n">SCRIPT_DIR</span><span class="p">)</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;snakemake&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--snakefile&quot;</span><span class="p">,</span> <span class="s2">&quot;workflow/Snakefile&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--profile&quot;</span><span class="p">,</span> <span class="n">rel_profile</span><span class="p">,</span>
+        <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;bids_root=</span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;bids_root&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;derivatives_root=</span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;derivatives_root&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;container_image=</span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;sif_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bids_pattern&quot;</span><span class="p">):</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bids_pattern=</span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;bids_pattern&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">set_threads</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">set_threads</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--set-threads&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--dry-run&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">force</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--forceall&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Log file</span>
+    <span class="n">log_base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;derivatives_root&quot;</span><span class="p">],</span> <span class="s2">&quot;logs&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_base</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_base</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;run_csc_</span><span class="si">{</span><span class="n">ts</span><span class="si">}</span><span class="s2">.log&quot;</span><span class="p">)</span>
+
+    <span class="n">mode_label</span> <span class="o">=</span> <span class="s2">&quot;DRY RUN&quot;</span> <span class="k">if</span> <span class="n">dry_run</span> <span class="k">else</span> <span class="s2">&quot;EXECUTION&quot;</span>
+    <span class="n">banner</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pipeline </span><span class="si">{</span><span class="n">mode_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Log:     </span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Command: snakemake --profile </span><span class="si">{</span><span class="n">rel_profile</span><span class="si">}</span><span class="s2"> --config ...&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+    <span class="c1"># --- Dry run: show output interactively ---</span>
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">SCRIPT_DIR</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c1"># --- Real run with progress tracking ---</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;_frame&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">stop</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">tailer</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Tail the log file and update progress state.&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">stop</span><span class="o">.</span><span class="n">is_set</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">log_file</span><span class="p">):</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stop</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="k">while</span> <span class="ow">not</span> <span class="n">stop</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                        <span class="n">render_bar</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="n">tail_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">tailer</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tail_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">lf</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">cmd</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">lf</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="n">SCRIPT_DIR</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">  Interrupted by user.&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SLURM jobs may still be running — check: squeue -A </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;project&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cancel them with: scancel -A </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;project&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">130</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">stop</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+        <span class="n">tail_thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Duration</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">hours</span><span class="p">,</span> <span class="n">rem</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">elapsed</span><span class="p">),</span> <span class="mi">3600</span><span class="p">)</span>
+    <span class="n">mins</span><span class="p">,</span> <span class="n">secs</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">rem</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hours</span><span class="si">}</span><span class="s2">h </span><span class="si">{</span><span class="n">mins</span><span class="si">}</span><span class="s2">m </span><span class="si">{</span><span class="n">secs</span><span class="si">}</span><span class="s2">s&quot;</span> <span class="k">if</span> <span class="n">hours</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mins</span><span class="si">}</span><span class="s2">m </span><span class="si">{</span><span class="n">secs</span><span class="si">}</span><span class="s2">s&quot;</span>
+
+    <span class="c1"># Final pass to capture any lines the tail thread missed</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="n">done</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="c1"># Newline after progress bar</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+    <span class="c1"># --- Summary ---</span>
+    <span class="n">banner</span><span class="p">(</span><span class="s2">&quot;Summary&quot;</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duration:  </span><span class="si">{</span><span class="n">duration</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Jobs:      </span><span class="si">{</span><span class="n">done</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">errors</span><span class="p">:</span>
+        <span class="n">ok</span><span class="p">(</span><span class="s2">&quot;Pipeline completed successfully&quot;</span><span class="p">)</span>
+        <span class="n">out_csv</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;derivatives_root&#39;</span><span class="p">],</span> <span class="s1">&#39;summary&#39;</span><span class="p">,</span> <span class="s1">&#39;all_features.csv&#39;</span><span class="p">)</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output:    </span><span class="si">{</span><span class="n">out_csv</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">err</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pipeline failed (exit code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+            <span class="n">unique</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span>  <span class="c1"># dedupe, preserve order</span>
+            <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed in: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unique</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Log:       </span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Main</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_csc.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Entry point for running the Hippocampus pipeline on CSC Puhti.</span>
+
+<span class="sd">    Performs the following steps:</span>
+<span class="sd">    1. Parse command-line arguments.</span>
+<span class="sd">    2. Check prerequisites (Snakemake &gt;= 8).</span>
+<span class="sd">    3. Gather configuration (CLI + interactive prompts).</span>
+<span class="sd">    4. Print a summary of the configuration.</span>
+<span class="sd">    5. Validate paths (skipped in dry-run mode).</span>
+<span class="sd">    6. Confirm execution with the user (unless --yes).</span>
+<span class="sd">    7. Setup environment variables for Apptainer + SLURM.</span>
+<span class="sd">    8. Write Snakemake profile.</span>
+<span class="sd">    9. Execute the pipeline (with optional dry-run, force, clean).</span>
+<span class="sd">    10. Optional cleanup of intermediate files after successful completion.</span>
+
+<span class="sd">    :return: Exits the program with code 0 on success or 1 on failure.</span>
+<span class="sd">    :rtype: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Run hippocampus pipeline on CSC Puhti (SLURM + Apptainer)&quot;</span><span class="p">,</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">,</span>
+        <span class="n">epilog</span><span class="o">=</span><span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">            Examples:</span>
+<span class="s2">              # Interactive setup</span>
+<span class="s2">              python run_csc.py</span>
+
+<span class="s2">              # Full CLI (no prompts)</span>
+<span class="s2">              python run_csc.py --project &lt;NUMBER&gt; </span><span class="se">\\</span>
+<span class="s2">                  --bids-root /scratch/project_&lt;NUMBER&gt;/$USER/Dataset </span><span class="se">\\</span>
+<span class="s2">                  --sif /scratch/project_&lt;NUMBER&gt;/$USER/Containers/pipeline.sif</span>
+
+<span class="s2">              # Dry run to see planned jobs</span>
+<span class="s2">              python run_csc.py --project &lt;NUMBER&gt; -n</span>
+
+<span class="s2">              # Override threads for specific rules</span>
+<span class="s2">              python run_csc.py --project &lt;NUMBER&gt; </span><span class="se">\</span>
+<span class="s2">                  --set-threads hsf_segmentation=4 </span><span class="se">\</span>
+<span class="s2">                  --set-threads mesh_per_label=2</span>
+
+<span class="s2">              # Clean stale metadata and force re-run</span>
+<span class="s2">              python run_csc.py --clean --force</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Required-ish (prompted interactively if absent)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--project&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;CSC project number (e.g., 2001988)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--bids-root&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;BIDS dataset root directory&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--bids-pattern&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Glob pattern to match T1w files under BIDS root &quot;</span>
+            <span class="s2">&quot;(relative path; default is handled in the Snakefile)&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sif&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to Apptainer .sif container&quot;</span><span class="p">)</span>
+
+    <span class="c1"># SLURM tuning</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--partition&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;SLURM partition (default: small)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--jobs&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Max concurrent SLURM jobs (default: 100)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--latency-wait&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Seconds to wait for output files (default: 120)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--retries&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Retries per failed job (default: 1)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--set-threads&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Override rule threads (e.g., hsf_segmentation=4). &quot;</span>
+            <span class="s2">&quot;Can be used multiple times.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Execution control</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-n&quot;</span><span class="p">,</span> <span class="s2">&quot;--dry-run&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Show planned jobs without executing&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;--yes&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip confirmation prompt&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--force&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Force re-run all rules (--forceall)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--clean&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Remove .snakemake/ metadata before running&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--cleanup&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Remove intermediate outputs after successful completion, preserving &quot;</span>
+            <span class="s2">&quot;summary/all_features.csv and summary/processing_issues.txt&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="c1"># 1. Prerequisites</span>
+    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Checking prerequisites...&quot;</span><span class="p">)</span>
+    <span class="n">ver</span> <span class="o">=</span> <span class="n">check_snakemake</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ver</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">ok</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Snakemake </span><span class="si">{</span><span class="n">ver</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+    <span class="c1"># 2. Configuration</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">gather_config</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">print_summary</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+
+    <span class="c1"># 3. Validate paths (skip for dry-run since paths may not exist locally)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">errs</span> <span class="o">=</span> <span class="n">validate_paths</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">errs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errs</span><span class="p">:</span>
+                <span class="n">err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># 4. Confirm</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">yes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  Proceed? [Y/n]: &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">answer</span> <span class="ow">and</span> <span class="n">answer</span> <span class="o">!=</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Aborted.&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># 5. Environment setup</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Setting up environment...&quot;</span><span class="p">)</span>
+    <span class="n">setup_environment</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+    <span class="n">ok</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TMPDIR = </span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;tmpdir&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ok</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;APPTAINER_CACHEDIR = </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;APPTAINER_CACHEDIR&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ok</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;APPTAINER_TMPDIR = </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;APPTAINER_TMPDIR&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ok</span><span class="p">(</span><span class="s2">&quot;Cleared stale SINGULARITY_BIND / APPTAINER_BIND&quot;</span><span class="p">)</span>
+
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">write_profile</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+    <span class="n">ok</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Profile written to </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span><span class="w"> </span><span class="n">SCRIPT_DIR</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 6. Run</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span>
+        <span class="n">cfg</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span>
+        <span class="n">dry_run</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">,</span>
+        <span class="n">force</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">force</span><span class="p">,</span>
+        <span class="n">clean</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">clean</span><span class="p">,</span>
+        <span class="n">set_threads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">set_threads</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 7. Optional cleanup of intermediates after a successful run</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">cleanup</span> <span class="ow">and</span> <span class="n">success</span><span class="p">:</span>
+        <span class="n">cleanup_success</span> <span class="o">=</span> <span class="n">cleanup_with_confirmation</span><span class="p">(</span>
+            <span class="n">derivatives_root</span><span class="o">=</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;derivatives_root&quot;</span><span class="p">],</span>
+            <span class="n">dry_run</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cleanup_success</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">⚠ Warning: Cleanup encountered errors (pipeline results preserved)&quot;</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">success</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
