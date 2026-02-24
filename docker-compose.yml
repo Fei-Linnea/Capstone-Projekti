@@ -1,0 +1,60 @@
+# =============================================================================
+# Hippocampus Radiomic Feature Extraction Pipeline – Docker Compose
+# =============================================================================
+#
+# Services:
+#   backend  – Flask REST API (port 5000) + Snakemake pipeline runner
+#   frontend – Next.js dev server (port 3000) with hot-reload
+#
+# Data:
+#   The "pipeline-data" named volume is mounted at /data inside the backend
+#   container. Place your BIDS dataset there, or override with a bind-mount:
+#
+#     # Use a local folder instead of the named volume:
+#     docker compose run --rm -v /path/to/my/bids:/data backend
+#
+# Usage:
+#   docker compose up --build          # start both services
+#   docker compose up --build backend  # backend only (API at :5000)
+#   docker compose down                # stop everything
+#   docker compose down -v             # stop and remove data volume
+#
+# =============================================================================
+
+services:
+  # ── Flask Backend + Pipeline ─────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: pipeline/Dockerfile
+    container_name: hippocampus-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PIPELINE_DIR=/app/pipeline
+      - LOG_BASE_DIR=/app/logs
+      - DATA_DIR=/data
+    volumes:
+      - pipeline-data:/data          # persistent BIDS data volume
+      - pipeline-logs:/app/logs      # persistent logs
+    restart: unless-stopped
+
+  # ── Next.js Frontend (dev) ──────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: pipeline/web/frontend/Dockerfile
+    container_name: hippocampus-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pipeline-data:
+    driver: local
+  pipeline-logs:
+    driver: local

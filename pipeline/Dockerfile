@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrender1 \
     libosmesa6 \
     xvfb \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
@@ -45,6 +46,9 @@ RUN pip install --no-cache-dir \
     vtk && \
     pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
+# Install Flask web UI dependencies
+RUN pip install --no-cache-dir flask flask-cors
+
 # Pre-download HSF models to avoid checksum failures during pipeline execution
 RUN python3 -c "from hsf import fetch_models; fetch_models('/root/.hsf/models', {'single': {'arunet_4.0.0single_1706895706.onnx': {'url': 'https://huggingface.co/poiretclement/hsf/resolve/main/onnx/arunet_4.0.0single_1706895706.onnx', 'xxh3_64': '04ba080ed7f373c2'}}})" || true
 WORKDIR /app
@@ -56,11 +60,21 @@ ENV LD_PRELOAD=""
 ENV PYVISTA_OFF_SCREEN="true"
 ENV VTK_OSMESA_DLL="/usr/lib/libOSMesa.so"
 
+# Environment variables for the web UI (can be overridden in docker-compose)
+ENV PIPELINE_DIR="/app/pipeline"
+ENV LOG_BASE_DIR="/app/logs"
+ENV DATA_DIR="/data"
+
 COPY pipeline /app/pipeline
+
+# Create data and logs directories
+RUN mkdir -p /data /app/logs
 
 RUN chmod +x /app/pipeline/run_pipeline.py
 
-# Set entrypoint to batch wrapper (can still use snakemake directly if needed)
-ENTRYPOINT ["python3", "/app/pipeline/run_pipeline.py"]
+# Expose web UI port
+EXPOSE 5000
 
-CMD ["--help"]
+# Default: start the web UI (use docker-compose override for CLI mode)
+ENTRYPOINT ["python3", "/app/pipeline/web/app.py"]
+CMD ["--host", "0.0.0.0", "--port", "5000"]

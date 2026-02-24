@@ -1,0 +1,10 @@
+# Don't send unnecessary files as Docker build context
+logs/
+docs/
+*.md
+.git/
+__pycache__/
+*.pyc
+pipeline/web/frontend/node_modules/
+pipeline/web/frontend/.next/
+pipeline/web/frontend/out/

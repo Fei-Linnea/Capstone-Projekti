@@ -1,0 +1,6 @@
+node_modules
+.next
+out
+frontend_build
+*.log
+.env.local

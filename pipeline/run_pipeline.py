@@ -319,4 +319,10 @@ Examples:
 
 
 if __name__ == "__main__":
-    main()
+    # Support --web flag to launch the web UI instead of the CLI pipeline
+    if "--web" in sys.argv:
+        sys.argv.remove("--web")
+        from pipeline.web.app import main as web_main
+        web_main()
+    else:
+        main()
