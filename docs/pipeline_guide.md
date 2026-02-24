@@ -2,7 +2,7 @@
 
 ## Pipeline Overview
 
-This pipeline performs comprehensive radiomics and morphometric analysis of hippocampal subfields:
+This pipeline performs radiomics and morphometric analysis of hippocampal subfields:
 
 ### Step 1: HSF Segmentation
 - Uses HSF (Hippocampal Segmentation Factory) to segment hippocampal subfields
@@ -59,7 +59,7 @@ For step-by-step run instructions, see [User Guide](user_guide.md).
 
 ### 2. CSC Execution
 
-For step-by-step run instructions, see [CSC User Guide](csc_user_guide.md). For more technical detail, see [CSC Cluster Pipeline](csc_cluster_pipeline.md).
+For step-by-step run instructions, see [CSC User Guide](csc_user_guide.md). 
 
 
 **What the pipeline does:**

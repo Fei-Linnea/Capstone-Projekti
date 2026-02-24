@@ -307,11 +307,11 @@ Examples:
     print(f"Total batches: {total_batches}", file=sys.stderr)
     
     if failed_batches:
-        print(f"❌ Failed batches: {', '.join(map(str, failed_batches))}", file=sys.stderr)
+        print(f"Failed batches: {', '.join(map(str, failed_batches))}", file=sys.stderr)
         print(f"Exit code: 1", file=sys.stderr)
         sys.exit(1)
     else:
-        print("✓ All batches completed successfully", file=sys.stderr)
+        print("All batches completed successfully", file=sys.stderr)
         print(f"End time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", file=sys.stderr)
         print(f"Exit code: 0", file=sys.stderr)
     

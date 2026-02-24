@@ -883,7 +883,7 @@ def main():
         )
         if not cleanup_success:
             print(
-                "\n⚠ Warning: Cleanup encountered errors (pipeline results preserved)",
+                "\n Warning: Cleanup encountered errors (pipeline results preserved)",
                 file=sys.stderr,
             )
 

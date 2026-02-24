@@ -14,7 +14,7 @@ Create an empty logs directory in your project folder:
 
 ## Download the Pipeline Image
 
-Pull the Apptainer image from Docker Hub:
+Pull the Apptainer image from Gitlab registry:
 
 ```bash
 apptainer pull hippocampus-pipeline.sif docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
