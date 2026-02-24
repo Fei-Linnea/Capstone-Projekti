@@ -1,4 +1,3 @@
-# DOCUMENTATION RUN DOWN
 
 ## General info
 See specifics in [Pipeline Local Implementation](pipeline_guide.md) and [Pipeline Cluster Implementation](csc_cluster_pipeline.md) documents.
