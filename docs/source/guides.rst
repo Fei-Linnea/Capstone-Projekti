@@ -11,8 +11,8 @@ to help you understand and use the Hippocampus Radiomics Pipeline effectively.
    :maxdepth: 1
    :caption: Guides
 
-   guides/guide_csc.md
-   guides/guide_local.md
-   guides/rulegraph_explanation.md
-   guides/pipeline_doc_csc.md
    guides/pipeline_doc.md
+   guides/guide_local.md
+   guides/pipeline_doc_csc.md
+   guides/guide_csc.md
+   guides/rulegraph_explanation.md

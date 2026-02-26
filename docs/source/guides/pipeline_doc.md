@@ -2,6 +2,16 @@
 
 ## Pipeline Overview
 
+### Architecture Diagram (TYKS/Local Execution)
+
+The following architecture diagram is for **TYKS/local execution** (`run_pipeline.py` with local profile execution).
+
+![TYKS/Local Architecture](../_static/images/architecture/Arch_diagram_pipline_v4_TYKS.drawio.png)
+
+### Component Diagram (Shared High-Level View)
+
+![Pipeline Component Diagram](../_static/images/architecture/pipeline_component_diagram.svg)
+
 This pipeline performs radiomics and morphometric analysis of hippocampal subfields:
 
 ### Step 1: HSF Segmentation
@@ -148,66 +158,6 @@ dataset/
   - `mean_load`: Average CPU load
 - Use these files to identify bottlenecks and optimize batch sizes
 
-## Configuration Settings
-
-The pipeline uses following default settings (not editable by the users):
-
-
-### Batch Processing
-```yaml
-batch_size: 50      # Subjects per batch (0 = no batching)
-batch_number: 0     # Starting batch number
-```
-
-### HSF Segmentation
-```yaml
-hsf_params:
-  contrast: "t1"
-  margin: "[8,8,8]"
-  segmentation_mode: "single_fast" 
-  ca_mode: "1/2/3"                   # Separate CA1, CA2, CA3
-```
-
-### Mesh Generation
-```yaml
-mesh_params:
-  min_voxel_count: 20      # Minimum voxels for valid mesh
-  smooth_iters: 50         # Smoothing iterations
-  decimation_degree: 0.7   # Mesh reduction ratio
-```
-
-### Subfield Labels
-```yaml
-hemis: ["L", "R"]
-labels:
-  DG: 1    # Dentate Gyrus
-  CA1: 2   # Cornu Ammonis 1
-  CA2: 3   # Cornu Ammonis 2
-  CA3: 4   # Cornu Ammonis 3
-  SUB: 5   # Subiculum
-```
-
-### Mesh Generation Warnings
-
-VTK/EGL warnings are **expected and harmless**:
-```
-vtkXOpenGLRenderWindow: bad X server connection
-Failed to load EGL! Please install the EGL library...
-```
-
-Pipeline uses OSMesa (software rendering). Meshes are generated correctly.
-
-### Empty Masks / Processing Issues
-
-Some subjects may have empty subregion masks (too small to segment). This is normal:
-- Empty masks handled gracefully (empty VTK files created)
-- Pipeline continues processing other subjects
-- Issues logged in `derivatives/summary/processing_issues.txt`
-
-Check the issues report:
-```powershell
-cat "D:\Path\To\Data\derivatives\summary\processing_issues.txt"
-```
 
 ## Output Analysis
 

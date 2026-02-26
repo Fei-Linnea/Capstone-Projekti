@@ -8,6 +8,8 @@ Technical documentation for running the hippocampus radiomic feature extraction 
 
 ## Architecture Overview
 
+![CSC Architecture](../_static/images/architecture/Arch_diagram_pipline_v4_CSC.drawio.png)
+
 ### Single Container Design
 
 The pipeline uses **one container image** for all rules. A global `container:` directive in the Snakefile points every SLURM job at the same `.sif` file:

@@ -1,0 +1,126 @@
+digraph PipelineComponents {
+  rankdir=LR;
+  graph [
+    label="Hippocampus Pipeline - High-Level Component Diagram",
+    labelloc=t,
+    fontsize=12,
+    fontname="Helvetica",
+    splines=true,
+    nodesep=0.5,
+    ranksep=0.8
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="white",
+    color="#4B5563",
+    fontname="Helvetica",
+    fontsize=10
+  ];
+
+  edge [
+    color="#4B5563",
+    fontname="Helvetica",
+    fontsize=9,
+    arrowsize=0.7
+  ];
+
+  subgraph cluster_entry {
+    label="Main Entry Points";
+    color="#9CA3AF";
+    style="rounded";
+
+    run_pipeline [
+      label="pipeline/run_pipeline.py\n(local/container batch wrapper)",
+      fillcolor="#DBEAFE"
+    ];
+
+    run_csc [
+      label="pipeline/run_csc.py\n(CSC SLURM + Apptainer wrapper)",
+      fillcolor="#DBEAFE"
+    ];
+  }
+
+  subgraph cluster_wrapper {
+    label="Wrapper Layer";
+    color="#9CA3AF";
+    style="rounded";
+
+    run_utils [label="pipeline/run_utils/*\n(batchExecutor, aggregate, subjects, progress, cleanup)"];
+    env_setup [label="CSC env setup\n(TMPDIR, APPTAINER_* vars)"];
+    profile_gen [label="write_profile()\n(generates csc/config.yaml)"];
+  }
+
+  subgraph cluster_config {
+    label="Configuration";
+    color="#9CA3AF";
+    style="rounded";
+
+    general_cfg [label="pipeline/config/config.yaml\n(general defaults loaded by Snakefile)"];
+    profile_tyks [label="pipeline/config/profiles/tyks/config.yaml\n(local profile)"];
+    profile_csc [label="pipeline/config/profiles/csc/config.yaml\n(CSC profile; auto-overwritten)"];
+  }
+
+  subgraph cluster_runtime {
+    label="Execution Runtime";
+    color="#9CA3AF";
+    style="rounded";
+
+    snakemake [label="Snakemake CLI"];
+    slurm [label="SLURM executor\n(CSC only)"];
+    container_image [label="Container image\n(.sif or docker://...)\nused by Snakemake rules"];
+    dockerfile [label="pipeline/Dockerfile\n(builds default image)"];
+  }
+
+  subgraph cluster_workflow {
+    label="Workflow Definition";
+    color="#9CA3AF";
+    style="rounded";
+
+    snakefile [label="pipeline/workflow/Snakefile\n(rule inclusion + subject discovery + targets)"];
+    rules [label="pipeline/workflow/rules/*.smk\n(hsf_segmentation, data_processing,\nmesh_generation, feature_extraction)"];
+    scripts [label="pipeline/workflow/scripts/*.py\n(hsf_wrapper, nii_parse, voxelToMesh,\nfeature_extraction, cli_aggregate)"];
+  }
+
+  subgraph cluster_io {
+    label="Data IO";
+    color="#9CA3AF";
+    style="rounded";
+
+    bids [label="BIDS input dataset\n(sub-*/ses-*/anat/*_T1w.nii.gz)"];
+    derivatives [label="Derivatives + summary outputs\n(sub-*/... + summary/all_features.csv)"];
+  }
+
+  run_pipeline -> run_utils [label="imports"];
+  run_pipeline -> snakemake [label="invokes"];
+  run_pipeline -> profile_tyks [label="--profile"];
+  run_pipeline -> snakefile [label="--snakefile workflow/Snakefile"];
+
+  run_csc -> env_setup [label="prepares"];
+  run_csc -> profile_gen [label="creates"];
+  profile_gen -> profile_csc [label="writes"];
+  run_csc -> snakemake [label="invokes"];
+  run_csc -> profile_csc [label="--profile"];
+  run_csc -> snakefile [label="--snakefile workflow/Snakefile"];
+
+  run_utils -> snakemake [label="batch/aggregation runs"];
+
+  profile_tyks -> snakemake [label="execution settings"];
+  profile_csc -> snakemake [label="execution settings"];
+  snakemake -> slurm [label="executor=slurm"];
+
+  snakemake -> snakefile [label="executes workflow"];
+  general_cfg -> snakefile [label="configfile"];
+  container_image -> snakefile [label="container:"];
+
+  dockerfile -> container_image [label="build source"];
+  run_csc -> container_image [label="--sif -> container_image"];
+
+  snakefile -> rules [label="include"];
+  rules -> scripts [label="shell: python scripts"];
+
+  bids -> snakefile [label="discover subjects/sessions"];
+  scripts -> derivatives [label="write outputs"];
+  rules -> derivatives [label="final targets"];
+}
