@@ -148,7 +148,7 @@ labels:
 
 ## Documentation
 
-- [Local Guide](docs/guide_local.md) & [CSC Guide](docs/guide_csc.md)
+- [Local Guide](docs/guide_local.md) & [CSC Guide](docs/guide_csc.md) - Guides for running the pipeline
 - [Pipeline Guide](docs/pipeline_doc.md) - Pipeline architecture and workflow details
 - [Planning](docs/planning.md) - Snakemake practices 
 
