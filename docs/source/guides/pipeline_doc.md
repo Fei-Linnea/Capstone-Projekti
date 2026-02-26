@@ -1,8 +1,8 @@
-# Radiomic Feature Extraction Pipeline - Complete General Guide
+# Radiomic Feature Extraction Pipeline - General Implementation 
 
 ## Pipeline Overview
 
-This pipeline performs comprehensive radiomics and morphometric analysis of hippocampal subfields:
+This pipeline performs radiomics and morphometric analysis of hippocampal subfields:
 
 ### Step 1: HSF Segmentation
 - Uses HSF (Hippocampal Segmentation Factory) to segment hippocampal subfields
@@ -55,11 +55,11 @@ dataset/
 
 ### 1. Local Execution
 
-For step-by-step run instructions, see [User Guide](user_guide.md).
+For step-by-step run instructions, see [Local Guide](guide_local.md).
 
 ### 2. CSC Execution
 
-For step-by-step run instructions, see [CSC User Guide](csc_user_guide.md). For more technical detail, see [CSC Cluster Pipeline](csc_cluster_pipeline.md).
+For step-by-step run instructions, see [CSC User Guide](guide_csc.md). 
 
 
 **What the pipeline does:**
@@ -342,7 +342,6 @@ right_vol = df['R_Hippocampus_MeshVolume']
 ttest_ind(left_vol, right_vol)
 ```
 
-
 ## Workflow Visualization
 
 ### Rule Graph (dag.svg)
@@ -367,3 +366,5 @@ Add instructions here how to access technical HTML doc.
 ## References:
 
 - [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)
+
+

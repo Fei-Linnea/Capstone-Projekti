@@ -2,7 +2,7 @@
 
 Technical documentation for running the hippocampus radiomic feature extraction pipeline on CSC Puhti using **Snakemake 8.x + SLURM + Apptainer**. Each Snakemake rule is submitted as a separate SLURM job that runs inside a single shared Apptainer container.
 
-> **For step-by-step usage instructions, see [CSC User Guide](csc_user_guide.md).**
+> **For step-by-step usage instructions, see [CSC User Guide](guide_csc.md).**
 
 ---
 
@@ -179,7 +179,7 @@ scp hippocampus-pipeline.tar username@puhti.csc.fi:/scratch/project_<NUMBER>/$US
 apptainer build hippocampus-pipeline.sif docker-archive://hippocampus-pipeline.tar
 ```
 
-> **Important:** Set `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` on `/scratch` before pulling/building. See the [CSC User Guide](csc_user_guide.md) for details.
+> **Important:** Set `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` on `/scratch` before pulling/building. See the [CSC User Guide](guide_csc.md) for details.
 
 ---
 
@@ -216,7 +216,7 @@ What `run_csc.py` does automatically:
 7. Launches Snakemake with a live ASCII progress bar
 8. Reports summary with duration, job counts, and output location
 
-See [CSC User Guide - Command-Line Options](csc_user_guide.md#command-line-options) for all flags.
+See [CSC User Guide - Command-Line Options](guide_csc.md#command-line-options) for all flags.
 
 ### Alternative: Direct Snakemake (advanced)
 
@@ -379,7 +379,7 @@ python3 run_csc.py -n
 | `snakemake: command not found` | `module load snakemake` (done automatically by `run_csc.py`) |
 | `FATAL: mount source /tmp/...` | Stale `TMPDIR` — run `run_csc.py` (auto-fixes) or manually set `TMPDIR` to `/scratch/...` |
 | Stale locks / incomplete files | `python3 run_csc.py --clean --force` |
-| `apptainer pull` fails | Set `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` on `/scratch` (see [User Guide](csc_user_guide.md)) |
+| `apptainer pull` fails | Set `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` on `/scratch` (see [User Guide](guide_csc.md)) |
 | Pipeline interrupted (`Ctrl+C`) | SLURM jobs may still run: `squeue -u $USER` then `scancel -u $USER` |
 | One subject fails, rest continue | `keep-going: true` in profile; check `processing_issues.txt` |
 

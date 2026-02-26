@@ -23,15 +23,7 @@ Replace `<NUMBER>` with your CSC project number (e.g., `2001988`).
 
 **Why this is required:** CSC compute nodes cannot write to `/tmp` or `$HOME` during jobs. The Apptainer cache is used when pulling the container image and the temp directory is used during container execution. Both must be on the shared `/scratch` filesystem.
 
-### 2. Clone the pipeline repository
-
-```bash
-cd /scratch/project_<NUMBER>/
-git clone https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry.git hippocampus-pipeline
-cd hippocampus-pipeline/pipeline
-```
-
-### 3. Pull the container image
+### 2. Pull the container image
 
 ```bash
 mkdir -p /scratch/project_<NUMBER>/Containers
@@ -40,6 +32,15 @@ apptainer pull hippocampus-pipeline.sif docker://registry.gitlab.utu.fi/capstone
 ```
 
 This downloads the container image (~4.3 GiB). Make sure `APPTAINER_CACHEDIR` and `APPTAINER_TMPDIR` are set (Step 1), otherwise the pull may fail.
+
+### 3. Clone the pipeline repository
+
+```bash
+cd /scratch/project_<NUMBER>
+module load git
+git clone https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry.git hippocampus-pipeline
+cd hippocampus-pipeline/pipeline
+```
 
 ## Run the Pipeline
 
