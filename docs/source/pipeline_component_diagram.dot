@@ -70,7 +70,7 @@ digraph PipelineComponents {
     snakemake [label="Snakemake CLI"];
     slurm [label="SLURM executor\n(CSC only)"];
     container_image [label="Container image\n(.sif or docker://...)\nused by Snakemake rules"];
-    dockerfile [label="pipeline/Dockerfile\n(builds default image)"];
+    dockerfile [label="pipeline/Dockerfile\n(builds default image)", fillcolor="#DBEAFE"];
   }
 
   subgraph cluster_workflow {
@@ -115,6 +115,8 @@ digraph PipelineComponents {
   container_image -> snakefile [label="container:"];
 
   dockerfile -> container_image [label="build source"];
+  dockerfile -> run_pipeline [label="ENTRYPOINT (default): run_pipeline.py"];
+  dockerfile -> run_csc [label="ENTRYPOINT (overridden by the user): run_csc.py"];
   run_csc -> container_image [label="--sif -> container_image"];
 
   snakefile -> rules [label="include"];
