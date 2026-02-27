@@ -106,8 +106,7 @@ The full Sphinx HTML documentation is published via GitLab Pages.
 - It installs dependencies from `requirements.txt`, builds the docs with `make -C docs html`, and publishes `docs/build/html`.
 
 **Where to access it:**
-- Direct URL: https://radiomic-feature-extraction-hippocampus-morphometry-cb41a9.utugit.fi/
-- You can also open the public project page at https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry and click the GitLab Pages link.
+- Click the GitLab Pages link or click the direct URL: https://radiomic-feature-extraction-hippocampus-morphometry-cb41a9.utugit.fi/
 
 **Local preview (optional):**
 ```bash
