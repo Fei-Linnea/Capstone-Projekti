@@ -4,7 +4,9 @@
 [![BIDS Compliant](https://img.shields.io/badge/BIDS-compliant-brightgreen.svg)](https://bids.neuroimaging.io/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
 
-Automated pipeline for comprehensive hippocampal subfield segmentation, 3D mesh generation, and radiomics/morphometry feature extraction from T1-weighted MRI images using HSF (Hippocampal Segmentation Factory).
+This pipeline has been designed to automatically analyze morphometric data about the hippocampus region of the brain from large datasets of MRI images. It transforms raw image data into numeric features that are useful for medical research, such as studying diseases related to the hippocampus and the brain as a whole.
+
+**Key capabilities:** Deep learning–based segmentation, fully automated execution both locally and on the Finnish CSC supercomputing environment, containerized via Apptainer for platform independence, and comprehensive logging for quality control.
 
 ## Features
 
@@ -24,248 +26,118 @@ Automated pipeline for comprehensive hippocampal subfield segmentation, 3D mesh 
 - ✅ **Comprehensive Logging** and error handling
 - 📈 **Final Aggregated CSV** with all subjects and features
 
-## Quick Start
 
-### 1. Build Docker Image
 
-```bash
-docker build -f pipeline/Dockerfile -t hippocampus-pipeline:latest .
-```
+## Architecture & Workflow Control (2 versions: TYKS/CSC)
 
-### 2. Run Pipeline
+The pipeline follows a rule-based workflow using Snakemake, which manages dependencies and parallelization.
 
-```bash
-docker run --rm \
-  --security-opt seccomp=unconfined \
-  --memory="8g" \
-  -v "${PWD}/SampleDataset:/data" \
-  -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
-  --batch-size 20 \
-  --cores 4
-```
 
-The pipeline will:
-- Automatically discover all subjects in your dataset
-- Process them in batches
-- Extract radiomics and morphometry features
-- Generate performance benchmarks
-- Create a final aggregated CSV with all subjects
+**Execution Flow (Threads & Parallelization)**
 
-## Input Structure
+1. **Entry Points:** 
+  - **Local execution**: The user runs the command `apptainer run ...`, specifying dataset and log paths.  
+  - **CSC execution**: The user runs `python3 run_csc.py` command.
+2. **Job Orchestration:** Snakemake recognizes and distributes subjects into batches, manages jobs, and dispatches jobs to Slurm as containers (CSC environment).  
+3. **Job Execution:** Batches are processed one at a time using multiple threads for maximum parallelization. For each subject in a batch, segmentation, feature extraction, and data aggregation are performed.  
 
-Your dataset should be BIDS-formatted with T1w images:
 
-```
-dataset/
-├── sub-01/
-│   └── ses-1/
-│       └── anat/
-│           ├── sub-01_ses-1_T1w.nii.gz
-│           ├── sub-01_ses-1_T1w.json
-│           ├── sub-01_ses-1_FLAIR.nii.gz
-│           └── sub-01_ses-1_FLAIR.json
-├── sub-02/
-│   └── ses-1/
-│       └── anat/
-│           └── ...
-```
+## Data Analysis
+
+The pipeline segments and extracts features for 12 different hippocampal regions: Dentate Gyrus (DG), Subiculum (SUB), CA1, CA2, and CA3, as well as all combined — **for each side of the brain separately**.
+
+**Data analysis steps:**
+
+1. **Segmentation:** Uses the Hippocampal Segmentation Factory (HSF) model to segment subfields from raw MRI images.  
+2. **Segmentation Processing:** Splits segmentations into masks for individual labels (regions) and creates a combined segmentation mask.  
+3. **Mesh Generation:** Converts segmentation masks into 3D mesh `.vtk` files using the marching cubes algorithm.  
+4. **Radiomics Feature Extraction:** Extracts radiomics features (e.g., volume, surface area per volume) from segmentation masks using the PyRadiomics library.  
+5. **Curvature Feature Extraction:** Calculates multiple curvature metrics from 3D mesh `.vtk` files.  
+6. **Data Aggregation:** Collects all radiomics and curvature metrics from all regions into a single-row summary per input image (subject/session) and appends it to the final `.csv` file containing all processed images.  
+
 
 ## Output Structure
 
-Segmentation and feature results are saved as BIDS derivatives with this structure:
+The pipeline produces two primary output folders: `derivatives/`, containing results, and `logs/`, containing execution information.
 
-```
-SampleDataset/
-├── derivatives/
-│   ├── sub-01/
-│   │   └── ses-1/
-│   │       ├── anat/
-│   │       │   ├── *_desc-hsf_dseg.nii.gz          # Full segmentation
-│   │       │   ├── *_hemi-L_seg_crop.nii.gz        # Left hemisphere crop
-│   │       │   ├── *_hemi-R_seg_crop.nii.gz        # Right hemisphere crop
-│   │       │   ├── *_label-DG_mask.nii.gz          # Individual subfield masks
-│   │       │   └── *_mask.nii.gz                   # Combined whole-hippocampus mask
-│   │       ├── meshes/
-│   │       │   ├── *_mesh.vtk                      # 3D polygon meshes
-│   │       │   └── *_mesh.png                      # 2D visualizations
-│   │       └── features/
-│   │           ├── *_pyradiomics.csv               # Shape features
-│   │           ├── *_curvature.csv                 # Curvature metrics
-│   │           └── *_all_features.csv              # Per-subject summary
-│   └── summary/
-│       ├── all_features.csv                        # ✅ FINAL DATASET
-│       └── processing_issues.txt                   # Quality report
-└── logs/
-    ├── <timestamp>/
-    │   ├── hsf/                                    # Step 1 logs
-    │   ├── data_processing/                        # Step 2 logs
-    │   ├── mesh/                                   # Step 3 logs
-    │   ├── feature_extraction/                     # Steps 4-6 logs
-    │   └── benchmarks/                             # Performance metrics
-    └── latest/ → <timestamp>/                      # Symlink to latest run
-```
+### A. Results (`derivatives/`)
 
-## Configuration
+Data relevant to the end user:
 
-Edit `pipeline/config/config.yaml` to customize the pipeline:
+- **summary/all_features.csv:** Main table where each subject/session (input image) is one row.  
+  - Columns: Patient ID | Session ID | {each calculated metric as its own column}  
+- **{subject}/{session}/meshes/:** 3D meshes (`.vtk`) for visual inspection  
+- **{subject}/{session}/features/:** All features for a particular subject  
 
-```yaml
-# Paths
-bids_root: "/data"
-derivatives_root: "/data/derivatives/"
+### B. Execution Information (`logs/`)
 
-# Batch processing
-batch_size: 50          # Subjects per batch (0 = no batching)
-batch_number: 0         # Starting batch
+Information critical for maintenance and detecting abnormalities:
 
-# Computation
-cores: 4
-memory_mb: 8000
-
-# HSF Segmentation parameters
-hsf_params:
-  contrast: "t1"
-  margin: "[8,8,8]"
-  segmentation_mode: "single_fast"  # or single_accurate, bagging_fast, bagging_accurate
-  ca_mode: "1/2/3"                  # Separate CA1, CA2, CA3
-
-# Mesh generation
-mesh_params:
-  min_voxel_count: 20
-  smooth_iters: 50
-  decimation_degree: 0.7
-
-# Subfield definitions
-hemis: ["L", "R"]
-labels:
-  DG: 1    # Dentate Gyrus
-  CA1: 2   # Cornu Ammonis 1
-  CA2: 3   # Cornu Ammonis 2
-  CA3: 4   # Cornu Ammonis 3
-  SUB: 5   # Subiculum
-```
-
-## Documentation
-
-- [Local Guide](docs/guide_local.md) & [CSC Guide](docs/guide_csc.md) - Guides for running the pipeline
-- [Pipeline Guide](docs/pipeline_doc.md) - Pipeline architecture and workflow details
-- [Planning](docs/planning.md) - Snakemake practices 
-
-## Requirements
-
-- Docker
-- BIDS-formatted MRI dataset with T1w images
-- **Recommended:** 8GB+ RAM, 4+ CPU cores
-- ~10-20 minutes processing time per subject
-- ~800MB Docker image size
+- **Per-step logs:** Stored in `hsf/`, `data_processing/`, `mesh/`, and `feature_extraction/` folders
+- **Batch logs:** `snakemake_batch_*.log` — Execution logs for each subject batch processed
+- **Aggregation log:** `snakemake_aggregation.log` — Final aggregation step combining all results  
+- **Benchmarks:** `benchmarks/` — Performance metrics (CPU, memory, I/O, runtime) per rule and subject  
+- **Workflow diagram:** `rulegraph.svg` — Automatically generated Snakemake dependency rule graph showing all pipeline rules and their relationships  
 
 
-## Pipeline Overview
+## Customization & Runtime Tuning
 
-The pipeline consists of 6 main steps:
+The pipeline is fully automated and ready to use with sensible defaults. Users can customize execution via **command-line flags**.
 
-1. **HSF Segmentation** - Deep learning-based hippocampal subfield segmentation
-2. **Data Processing** - Split segmentations into individual labels and combined masks
-3. **Mesh Generation** - Convert masks to 3D VTK meshes with smoothing/decimation
-4. **PyRadiomics Features** - Extract shape-based radiomics features
-5. **Curvature Analysis** - Calculate curvature metrics from 3D meshes
-6. **Data Aggregation** - Combine all features into final subject-level and group-level CSVs
+**Pipeline Parameters:** Advanced users can edit `pipeline/config/config.yaml` to adjust e.g. HSF segmentation_mode and margin (of the cropped image), mesh smoothing iterations, and other processing details.
 
-**Output:** `derivatives/summary/all_features.csv` contains radiomics and morphometry features for all subjects
 
-## Advanced Usage
+---
 
-### Skip aggregation step
+## Complete Guides and Documentations
 
+- [Local Guide](docs/source/guides/guide_local.md) & [CSC Guide](docs/source/guides/guide_csc.md) - Step-by-step guides for running the pipeline
+- [Pipeline Documentation](docs/source/guides/pipeline_doc.md) - Pipeline architecture and workflow details
+- [Pipeline Cluster Implementation](docs/source/guides/pipeline_doc_csc.md) - Pipeline Cluster implementation details
+
+
+
+## GitLab Pages
+
+The full Sphinx HTML documentation is published via GitLab Pages.
+
+**How it is built:**
+- The Pages job runs on the `main` and `development` branch only.
+- It installs dependencies from `requirements.txt`, builds the docs with `make -C docs html`, and publishes `docs/build/html`.
+
+**Where to access it:**
+- Direct URL: https://radiomic-feature-extraction-hippocampus-morphometry-cb41a9.utugit.fi/
+- You can also open the public project page at https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry and click the GitLab Pages link.
+
+**Local preview (optional):**
 ```bash
-docker run --rm \
-  --security-opt seccomp=unconfined \
-  --memory="8g" \
-  -v "${PWD}/SampleDataset:/data" \
-  -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
-  --batch-size 20 \
-  --cores 4 \
-  --skip-aggregation
+pip install -r requirements.txt
+make -C docs html
 ```
-
-### Increase resources
-
-```bash
-docker run --rm \
-  --security-opt seccomp=unconfined \
-  --memory="16g" \
-  -v "${PWD}/SampleDataset:/data" \
-  -v "${PWD}/logs:/app/logs" \
-  hippocampus-pipeline:latest \
-  --batch-size 50 \
-  --cores 8
-```
-
-## Logging & Benchmarking
-
-- **Logs:** Stored in `logs/<timestamp>/` with per-step subdirectories
-- **Benchmarks:** Performance metrics in `logs/<timestamp>/benchmarks/`
-  - Runtime (seconds, h:m:s format)
-  - Memory usage (resident, virtual, USS, PSS)
-  - I/O statistics (read/write in MB)
-  - CPU load averages
-
-## Troubleshooting
-
-### Container exits with code 1
-
-Check logs in `logs/<latest>/snakemake_batch_*.log` for error details.
-
-### Out of memory
-
-Reduce `--batch-size` or increase `--memory`:
-```bash
-docker run --memory="12g" ... --batch-size 10
-```
-
-### Empty mask warnings
-
-Some subjects may have subregions too small to segment. This is normal and handled gracefully. Check `derivatives/summary/processing_issues.txt` for details.
-
-### VTK/EGL warnings
-
-These are expected in headless environments. Pipeline uses OSMesa for off-screen rendering and generates meshes correctly.
-
-## Performance Notes
-
-- **Per-subject time:** 10-20 minutes (all 6 steps)
-- **300 subjects with 4 cores:** ~60-75 hours
-- **Batch processing:** Optimal batch_size = 50 for 8GB RAM
-
-## Citation
+Then open `docs/build/html/index.html` in a browser.
 
 
-
-## Contributing
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## Authors
 
 - **BigBrain Team / Capstone Group 7**
 - University of Turku
 
-## Acknowledgments
+## References
 
-- [HSF](https://hsf.readthedocs.io/en/latest/)
-- [PyRadiomics](https://pyradiomics.readthedocs.io/en/latest/)
-- [Snakemake](https://snakemake.readthedocs.io/en/stable/) 
-- [BIDS](https://bids.neuroimaging.io/)
+**Core Dependencies:**
+- [HSF (Hippocampal Segmentation Factory)](https://hsf.readthedocs.io/en/latest/) — Deep learning segmentation
+- [PyRadiomics](https://pyradiomics.readthedocs.io/en/latest/) — Radiomic feature extraction
+- [Snakemake](https://snakemake.readthedocs.io/en/stable/) — Workflow orchestration
+- [BIDS (Brain Imaging Data Structure)](https://bids.neuroimaging.io/) — Data organization standard
 
-## Project Status
+**Supporting Libraries:**
+- [Apptainer/Singularity](https://apptainer.org/) — Container runtime
+- [Docker](https://www.docker.com/) — Container images
+- [ONNX Runtime](https://onnxruntime.ai/) — HSF model inference
+- [nibabel](https://nipy.org/nibabel/) — NIfTI file I/O
+- [VTK / PyVista](https://www.vtk.org/) — 3D mesh generation and visualization
 
-🔧 **Active Development** - Currently in beta with continuous improvements and testing
+
 
 ## License

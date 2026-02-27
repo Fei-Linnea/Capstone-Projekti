@@ -122,41 +122,57 @@ dataset/
       │   ├── data_processing/
       │   ├── mesh/
       │   └── feature_extraction/
-      ├── snakemake_batch_001.log
-      └── snakemake_aggregation.log
+      ├── rulegraph_generation.log
+      ├── rulegraph.svg
+      ├── snakemake_aggregation.log
+      └── snakemake_batch_001.log
 ```
 
 ### Output Files Explained
 
-**Segmentations (Step 1):**
-- `*_dseg.nii.gz`: Full HSF segmentation (all subfields labeled)
-- `*_hemi-{L|R}_seg_crop.nii.gz`: Hemisphere-specific cropped segmentation
+`derivatives/sub-X/ses-Y/`: 
 
-**Masks (Step 2):**
-- `*_label-{DG|CA1|CA2|CA3|SUB}_mask.nii.gz`: Binary mask for each subfield
-- `*_mask.nii.gz`: Combined whole-hippocampus mask
+- `anat/`:  
 
-**Meshes (Step 3):**
-- `.vtk`: 3D polygon mesh for curvature analysis
-- `.png`: 2D rendering for visual inspection
+  - **Segmentations (Step 1):**
+  - `*_dseg.nii.gz`: Full HSF segmentation (all subfields labeled)
+  - `*_hemi-{L|R}_seg_crop.nii.gz`: Hemisphere-specific cropped segmentation
 
-**Features (Steps 4-6):**
-- `*_pyradiomics.csv`: Shape features (volume, surface area, etc.)
-- `*_curvature.csv`: Curvature metrics (mean, Gaussian)
-- `*_all_features.csv`: Combined per-subject features
-- `summary/all_features.csv`: **Final dataset** with all subjects
+  - **Masks (Step 2):**
+  - `*_label-{DG|CA1|CA2|CA3|SUB}_mask.nii.gz`: Binary mask for each subfield
+  - `*_mask.nii.gz`: Combined whole-hippocampus mask
 
-**Benchmarks:**
-- `logs/<timestamp>/benchmarks/`: Performance metrics for each job
-- Tab-delimited files with columns:
-  - `s`: Runtime in seconds
-  - `h:m:s`: Formatted time (hours:minutes:seconds)
-  - `max_rss`: Maximum resident set size (memory)
-  - `max_vms`: Maximum virtual memory size
-  - `max_uss`, `max_pss`: Memory usage details
-  - `io_in`, `io_out`: I/O read/write in MB
-  - `mean_load`: Average CPU load
-- Use these files to identify bottlenecks and optimize batch sizes
+- `meshes/`: 
+  - **Meshes (Step 3):**
+  - `.vtk`: 3D polygon mesh for curvature analysis
+  - `.png`: 2D rendering for visual inspection
+
+- `features/`:
+  - **Features (Steps 4-6):**
+  - `*_pyradiomics.csv`: Shape features (volume, surface area, etc.)
+  - `*_curvature.csv`: Curvature metrics (mean, Gaussian)
+  - `*_all_features.csv`: Combined per-subject features
+  - `summary/all_features.csv`: **Final dataset** with all subjects
+
+---
+
+`logs/<timestamp>/`: 
+
+- Per-step logs are stored in `hsf/`, `data_processing/`, `mesh/`, and `feature_extraction/` folders
+
+- `benchmarks/`: Performance metrics for each job
+  - Tab-delimited files with columns:
+    - `s`: Runtime in seconds
+    - `h:m:s`: Formatted time (hours:minutes:seconds)
+    - `max_rss`: Maximum resident set size (memory)
+    - `max_vms`: Maximum virtual memory size
+    - `max_uss`, `max_pss`: Memory usage details
+    - `io_in`, `io_out`: I/O read/write in MB
+    - `mean_load`: Average CPU load
+
+- `rulegraph.svg`: Automatically generated Snakemake dependency rule graph showing all pipeline rules and their relationships  
+- `snakemake_aggregation.log`: Final aggregation step combining all results
+- `snakemake_batch_001.log`: Execution logs for each subject batch processed
 
 
 ## Output Analysis
@@ -294,12 +310,14 @@ ttest_ind(left_vol, right_vol)
 
 ## Workflow Visualization
 
-### Rule Graph (dag.svg)
+### Rule Graph
 
 After pipeline completion, a workflow rule graph is automatically generated and saved to:
 ```
 logs/<timestamp>/rulegraph.svg
 ```
+
+For more detailed documentation, see [Rule Graph Explanation](rulegraph_explanation).
 
 **What it shows:**
 - Complete pipeline structure showing all rules and their dependencies
@@ -308,13 +326,5 @@ logs/<timestamp>/rulegraph.svg
 
 **Note:** The rule graph generates after aggregation completes, ensuring it represents the entire pipeline execution across all batches.
 
-
-## Technical Documentation Guide
-
-Add instructions here how to access technical HTML doc.
-
-## References:
-
-- [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)
 
 

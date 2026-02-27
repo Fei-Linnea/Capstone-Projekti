@@ -2,19 +2,19 @@
 
 Snakemake rulegraph is a dependency diagram: each box is a rule, and each arrow means “the upstream rule produces files that the downstream rule needs as input.” 
 
-![alt text](rulegraph.png)
+![alt text](../_static/images/architecture/rulegraph.png)
 
-**top → bottom**
+## **From top to bottom**
 
-1) Starting point of the actual processing: **hsf_segmentation**
+**1)** Starting point of the actual processing: **hsf_segmentation**
 
-    hsf_segmentation is the first real computation step in the graph.
+- hsf_segmentation is the first real computation step in the graph.
 
-    It produces the base segmentation output that nearly everything else depends on.
+- It produces the base segmentation output that nearly everything else depends on.
 
-2) Two main branches from the segmentation
+**2)** Two main branches from the segmentation
 
-    After hsf_segmentation, the workflow splits into two conceptually different paths:
+- After hsf_segmentation, the workflow splits into two conceptually different paths:
 
     **A)** Per-label (subfield-wise) path
 
@@ -26,19 +26,19 @@ Snakemake rulegraph is a dependency diagram: each box is a rule, and each arrow 
 
         - **mesh_per_label**
 
-        - Builds a surface mesh for each individual label.
+            - Builds a surface mesh for each individual label.
 
         - **extract_curvature_per_label**
 
-        - Computes curvature (shape descriptors) from each per-label mesh.
+            - Computes curvature (shape descriptors) from each per-label mesh.
 
     - **2A.3** Texture/intensity features from individual labels
 
         - **extract_pyradiomics_per_label**
 
-        - Extracts PyRadiomics features per label.
+            - Extracts PyRadiomics features per label.
 
-        - In the graph this rule depends on outputs from split_label and also directly on hsf_segmentation (meaning it needs both the label masks and something else from the original segmentation context).
+            - In the graph this rule depends on outputs from split_label and also directly on hsf_segmentation (meaning it needs both the label masks and something else from the original segmentation context).
 
     **B)** Combined-label path
 
@@ -50,49 +50,49 @@ Snakemake rulegraph is a dependency diagram: each box is a rule, and each arrow 
 
         - **mesh_combined**
 
-        - Builds a mesh for the combined ROI.
+            - Builds a mesh for the combined ROI.
 
         - **extract_curvature_combined**
 
-        - Computes curvature from the combined mesh.
+            - Computes curvature from the combined mesh.
 
     - **2B.3** Texture/intensity features from combined ROI
 
         - **extract_pyradiomics_combined**
 
-        - Extracts PyRadiomics features from the combined ROI.
+            - Extracts PyRadiomics features from the combined ROI.
 
-        - It depends on combine_labels, and in the graph it also has a direct dependency line from hsf_segmentation (meaning it needs original information plus the combined mask).
+            - It depends on combine_labels, and in the graph it also has a direct dependency line from hsf_segmentation (meaning it needs original information plus the combined mask).
 
-3) Per-subject feature collection: **aggregate_subject_features**
+**3)** Per-subject feature collection: **aggregate_subject_features**
 
-    - This rule is where the branches converge.
+- This rule is where the branches converge.
 
-    - It gathers the outputs from:
+- It gathers the outputs from:
 
-    - extract_pyradiomics_per_label
+    - **extract_pyradiomics_per_label**
 
-    - extract_pyradiomics_combined
+    - **extract_pyradiomics_combined**
 
-    - extract_curvature_per_label
+    - **extract_curvature_per_label**
 
-    - extract_curvature_combined
+    - **extract_curvature_combined**
 
-    - Then it produces a single per-subject feature file (typically a CSV/TSV/JSON) that contains all features for that subject.
+- Then it produces a single per-subject feature file (typically a CSV/TSV/JSON) that contains all features for that subject.
 
-4) Across-subject aggregation: **aggregate_all_subjects**
+**4)** Across-subject aggregation: **aggregate_all_subjects**
 
-    - Takes all per-subject aggregated feature files from aggregate_subject_features
+- Takes all per-subject aggregated feature files from aggregate_subject_features
 
-    - Merges/concatenates them into a cohort-level dataset (one table for all subjects).
+- Merges/concatenates them into a cohort-level dataset (one table for all subjects).
 
-5) Visualization artifact: generate_rulegraph
+**5)** Visualization artifact: **generate_rulegraph**
 
-    - Depends on aggregate_all_subjects in the graph. Generates the workflow rule graph after the final aggregation is completed.
+- Depends on aggregate_all_subjects in the graph. Generates the workflow rule graph after the final aggregation is completed.
 
-6) Final target rule: all
+**6)** Final target rule: **all**
 
-    - all is the “goal” rule. It is a list of files that must exist and be up-to-date at the end. Snakemake works backwards from each listed file, finds the rule that produces it, and builds the dependency graph.
+- all is the “goal” rule. It is a list of files that must exist and be up-to-date at the end. Snakemake works backwards from each listed file, finds the rule that produces it, and builds the dependency graph.
 
 ## What rules can run in parallel
 

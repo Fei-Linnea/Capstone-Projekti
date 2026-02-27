@@ -38,4 +38,5 @@ pages:
     paths:
       - public
   only:
+    - main
     - development
