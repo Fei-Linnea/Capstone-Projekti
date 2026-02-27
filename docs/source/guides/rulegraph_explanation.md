@@ -4,7 +4,7 @@ Snakemake rulegraph is a dependency diagram: each box is a rule, and each arrow 
 
 ![alt text](../_static/images/architecture/rulegraph.png)
 
-## **From top to bottom**
+## From top to bottom
 
 **1)** Starting point of the actual processing: **hsf_segmentation**
 
