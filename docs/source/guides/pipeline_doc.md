@@ -42,7 +42,7 @@ This pipeline performs radiomics and morphometric analysis of hippocampal subfie
 ### Step 6: Data Aggregation
 - Combines radiomics and curvature features per subject
 - Merges all hemispheres and labels into single-row summary
-- Final aggregation combines all subjects into master CSV
+- Produces final aggregated CSV across all subjects
 
 ## Run Instructions
 
@@ -69,12 +69,14 @@ For step-by-step run instructions, see [Local Guide](guide_local.md).
 
 ### 2. CSC Execution
 
-For step-by-step run instructions, see [CSC User Guide](guide_csc.md). 
+For step-by-step run instructions, see [CSC Guide](guide_csc.md). 
 
 
-**What the pipeline does:**
+### Pipeline Behavior
+
+The pipeline:
 - Provides different customizable command-line options (flags) to override default values
-- Automatically discovers all subjects
+- Automatically discovers all subject-session pairs
 - Processes them in batches
 - Runs all 6 pipeline steps for each batch
 - Aggregates all results at the end
