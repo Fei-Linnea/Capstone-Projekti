@@ -36,8 +36,8 @@ The pipeline follows a rule-based workflow using Snakemake, which manages depend
 **Execution Flow (Threads & Parallelization)**
 
 1. **Entry Points:**  [For general documentation look in the docs](docs/README.md), or the [gitlab pages implementation below.](https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/-/tree/development#gitlab-pages)
-  - **Local execution**: [Pipeline Local Guide](docs/source/guides/guide_csc.md)
-  - **CSC execution**: [Pipeline CSC Guide](docs/source/guides/guide_local.md)
+  - **Local execution**: [Pipeline Local Guide](docs/source/guides/guide_local.md)
+  - **CSC execution**: [Pipeline CSC Guide](docs/source/guides/guide_csc.md)
 2. **Job Orchestration:** Snakemake recognizes and distributes subjects into batches, manages jobs, and dispatches jobs to Slurm as containers (CSC environment).  
 3. **Job Execution:** Batches are processed one at a time using multiple threads for maximum parallelization. For each subject in a batch, segmentation, feature extraction, and data aggregation are performed.  
 
