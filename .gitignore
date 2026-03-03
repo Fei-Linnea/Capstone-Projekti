@@ -6,10 +6,10 @@ docker-compose.override.yml
 
 # Snakemake
 .snakemake/
-logs/
+logs/2026*
+logs/.dataset*
 
 # Pipeline outputs
-results/
 derivatives/
 
 # Python
