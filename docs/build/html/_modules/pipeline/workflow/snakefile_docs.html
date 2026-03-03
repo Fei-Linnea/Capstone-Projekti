@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pipeline.workflow.snakefile_docs &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pipeline.workflow.snakefile_docs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pipeline.workflow.snakefile_docs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module defines helper functions used by the Snakefile workflow. These functions</span>
+<span class="sd">standardize file path construction, subject/session discovery, and</span>
+<span class="sd">batch handling for BIDS-compliant datasets.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="discover_subjects">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.discover_subjects">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">discover_subjects</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Discover subjects and sessions from a BIDS dataset.</span>
+
+<span class="sd">    Uses a BIDS glob pattern to locate T1-weighted files, extracts</span>
+<span class="sd">    subject and session identifiers, applies optional filtering</span>
+<span class="sd">    by subject, and optionally slices the dataset for batch processing.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    subjects : list[str]</span>
+<span class="sd">        List of subject IDs to process.</span>
+<span class="sd">    sessions : list[str]</span>
+<span class="sd">        Corresponding list of session IDs.</span>
+<span class="sd">    subject_session_pairs : list[tuple[str, str]]</span>
+<span class="sd">        List of (subject, session) pairs selected for processing.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If subject filtering is applied but no matches are found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="get_input_path">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.get_input_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_input_path</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct the input T1-weighted file path for a given subject and session.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Subject identifier (e.g., &quot;01&quot;).</span>
+<span class="sd">    session : str</span>
+<span class="sd">        Session identifier (e.g., &quot;ses-1&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Full path to the T1w NIfTI file in the BIDS dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="hsf_output">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hsf_output</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Path to the combined HSF segmentation output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Subject identifier.</span>
+<span class="sd">    session : str</span>
+<span class="sd">        Session identifier.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Full path to the combined hippocampal segmentation NIfTI.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="hsf_left_crop_output">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_left_crop_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hsf_left_crop_output</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Path to the left hemisphere cropped HSF segmentation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Subject identifier.</span>
+<span class="sd">    session : str</span>
+<span class="sd">        Session identifier.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Full path to the left hemisphere cropped segmentation NIfTI.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="hsf_right_crop_output">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.hsf_right_crop_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hsf_right_crop_output</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Path to the right hemisphere cropped HSF segmentation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Subject identifier.</span>
+<span class="sd">    session : str</span>
+<span class="sd">        Session identifier.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Full path to the right hemisphere cropped segmentation NIfTI.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="get_seg_crop_output">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.get_seg_crop_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_seg_crop_output</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">hemi</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Path to a hemisphere-specific cropped segmentation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Subject identifier.</span>
+<span class="sd">    session : str</span>
+<span class="sd">        Session identifier.</span>
+<span class="sd">    hemi : str</span>
+<span class="sd">        Hemisphere code, typically &#39;L&#39; or &#39;R&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Full path to the cropped segmentation NIfTI for the given hemisphere.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="label_mask_output">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.label_mask_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">label_mask_output</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">hemi</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Path to the per-label hippocampus mask for a given hemisphere.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Subject identifier.</span>
+<span class="sd">    session : str</span>
+<span class="sd">        Session identifier.</span>
+<span class="sd">    hemi : str</span>
+<span class="sd">        Hemisphere code (&#39;L&#39; or &#39;R&#39;).</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Label name or number.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Full path to the per-label mask NIfTI file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="combined_mask_output">
+<a class="viewcode-back" href="../../../workflow_helpers.html#pipeline.workflow.snakefile_docs.combined_mask_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">combined_mask_output</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">hemi</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Path to the combined hippocampus mask for a given hemisphere.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Subject identifier.</span>
+<span class="sd">    session : str</span>
+<span class="sd">        Session identifier.</span>
+<span class="sd">    hemi : str</span>
+<span class="sd">        Hemisphere code (&#39;L&#39; or &#39;R&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Full path to the combined hippocampus mask NIfTI file.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

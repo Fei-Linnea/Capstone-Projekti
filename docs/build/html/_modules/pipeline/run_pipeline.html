@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pipeline.run_pipeline &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pipeline.run_pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pipeline.run_pipeline</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Hippocampus Radiomic Feature Extraction Pipeline Runner</span>
+<span class="sd">Processes subjects in batches with progress tracking</span>
+
+<span class="sd">This is the main entry point for the pipeline. All utility functions</span>
+<span class="sd">are imported from the run_utils package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="c1"># Import all utilities from run_utils package</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pipeline.run_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DEFAULT_CONFIG_PATH</span><span class="p">,</span>
+    <span class="n">DEFAULT_BATCH_SIZE</span><span class="p">,</span>
+    <span class="n">DEFAULT_PIPELINE_DIR</span><span class="p">,</span>
+    <span class="n">DEFAULT_LOG_BASE_DIR</span><span class="p">,</span>
+    <span class="n">DEFAULT_DATA_DIR</span><span class="p">,</span>
+    <span class="n">DEFAULT_BIDS_PATTERN</span><span class="p">,</span>
+    <span class="n">run_snakemake_batch</span><span class="p">,</span>
+    <span class="n">run_aggregation</span><span class="p">,</span>
+    <span class="n">discover_subjects</span><span class="p">,</span>
+    <span class="n">cleanup_with_confirmation</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../cli_scripts.html#pipeline.run_pipeline.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execute the hippocampus radiomic feature extraction pipeline.</span>
+
+<span class="sd">    This function:</span>
+
+<span class="sd">    1. Parses CLI arguments.</span>
+<span class="sd">    2. Resolves and validates the Snakemake profile.</span>
+<span class="sd">    3. Loads profile defaults (e.g., cores).</span>
+<span class="sd">    4. Discovers or validates subject list.</span>
+<span class="sd">    5. Splits subjects into batches.</span>
+<span class="sd">    6. Executes Snakemake per batch.</span>
+<span class="sd">    7. Runs aggregation step if all batches succeed.</span>
+<span class="sd">    8. Optionally cleans intermediate files.</span>
+<span class="sd">    9. Prints a final execution summary and exits with appropriate code.</span>
+
+<span class="sd">    The function assumes execution inside the Apptainer container</span>
+<span class="sd">    where:</span>
+
+<span class="sd">    - BIDS data is mounted at ``/data``</span>
+<span class="sd">    - Logs are written under ``/app/logs``</span>
+<span class="sd">    - Pipeline code resides under ``/app/pipeline``</span>
+
+<span class="sd">    Exit Codes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    0</span>
+<span class="sd">        All batches (and aggregation, if applicable) completed successfully.</span>
+<span class="sd">    1</span>
+<span class="sd">        One or more batches failed, profile not found, or no subjects detected.</span>
+
+<span class="sd">    :raises SystemExit: Always exits explicitly with code 0 or 1.</span>
+<span class="sd">    :rtype: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Run hippocampus feature extraction pipeline in batches&quot;</span><span class="p">,</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">,</span>
+        <span class="n">epilog</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Examples:</span>
+<span class="s2">    # Full command example, run with defaults from profile</span>
+<span class="s2">    apptainer run --writable-tmpfs </span><span class="se">\</span>
+<span class="s2">        --bind /path/to/bids:/data </span><span class="se">\</span>
+<span class="s2">        --bind /path/to/logs:/app/logs </span><span class="se">\</span>
+<span class="s2">        hippocampus-pipeline.sif </span><span class="se">\</span>
+<span class="s2">        --profile config/profiles/tyks</span>
+
+<span class="s2">    # Run with custom batch size</span>
+<span class="s2">    Flag: --batch-size 20</span>
+
+<span class="s2">    # Override cores at runtime</span>
+<span class="s2">    Flags: --cores 32</span>
+
+<span class="s2">    # Override rule threads for specific rule</span>
+<span class="s2">    Flag: --set-threads hsf_segmentation=4</span>
+
+<span class="s2">    # Dry run (show what would be done)</span>
+<span class="s2">    Flag: --dry-run</span>
+
+<span class="s2">    # Process specific subjects</span>
+<span class="s2">    Flag: --subjects 01 02 03 04 05</span>
+
+<span class="s2">    # Use a custom BIDS pattern</span>
+<span class="s2">    Flag: --bids-pattern &quot;sub-*/ses-1/anat/*_T1w.nii.gz&quot;</span>
+
+<span class="s2">    # Complete example with multiple overrides</span>
+<span class="s2">    apptainer run --writable-tmpfs </span><span class="se">\</span>
+<span class="s2">        --bind /path/to/bids:/data </span><span class="se">\</span>
+<span class="s2">        --bind /path/to/logs:/app/logs </span><span class="se">\</span>
+<span class="s2">        hippocampus-pipeline.sif </span><span class="se">\</span>
+<span class="s2">        --profile config/profiles/tyks --batch-size 10 --cores 16 --set-threads hsf_segmentation=4</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Configuration arguments</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--profile&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Snakemake profile directory (e.g., config/profiles/tyks). A config.yaml path inside the profile is also accepted.&quot;</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Processing arguments</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--batch-size&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_BATCH_SIZE</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Number of subjects per batch (default: </span><span class="si">{</span><span class="n">DEFAULT_BATCH_SIZE</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Snakemake overrides (optional)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--cores&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Override Snakemake cores (default from the selected Snakemake profile). &quot;</span>
+            <span class="s2">&quot;Provide a number (e.g., --cores 16) or pass --cores without a value to use all available cores.&quot;</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--set-threads&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Override rule threads (e.g., hsf_segmentation=4). Can be used multiple times.&quot;</span>
+    <span class="p">)</span>
+    
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--bids-pattern&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_BIDS_PATTERN</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;BIDS glob pattern under /data (default: </span><span class="si">{</span><span class="n">DEFAULT_BIDS_PATTERN</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Execution control</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--dry-run&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Perform a dry run without executing jobs&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--subjects&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specific subjects to process (default: auto-discover from /data)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--cleanup&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Remove intermediate files after successful completion, keeping only summary/all_features.csv&quot;</span>
+    <span class="p">)</span>
+    
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="c1"># Fixed container paths (end users shouldn&#39;t need to set these)</span>
+    <span class="n">pipeline_dir</span> <span class="o">=</span> <span class="n">DEFAULT_PIPELINE_DIR</span>
+    <span class="n">log_base_dir</span> <span class="o">=</span> <span class="n">DEFAULT_LOG_BASE_DIR</span>
+    <span class="n">data_dir</span> <span class="o">=</span> <span class="n">DEFAULT_DATA_DIR</span>
+    
+    <span class="c1"># Create timestamped log directory</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_base_dir</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># Print startup banner</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hippocampus Radiomic Feature Extraction Pipeline&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Start time: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Log directory: </span><span class="si">{</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Profile: </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">profile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Batch size: </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="c1"># Load profile to display effective defaults</span>
+    <span class="c1"># Support both directory paths (e.g. config/profiles/tyks) and</span>
+    <span class="c1"># direct file paths (e.g. config/profiles/tyks/config.yaml).</span>
+    <span class="n">raw_profile_arg</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">profile</span>
+    <span class="n">profile_path</span> <span class="o">=</span> <span class="n">raw_profile_arg</span>
+    <span class="c1"># If profile is relative, resolve against pipeline_dir (inside container</span>
+    <span class="c1"># this is typically /app/pipeline, matching the Snakemake cwd).</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">profile_path</span><span class="p">):</span>
+        <span class="n">profile_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pipeline_dir</span><span class="p">,</span> <span class="n">profile_path</span><span class="p">)</span>
+
+    <span class="c1"># Determine the profile config file path (for reading defaults)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">profile_path</span><span class="p">):</span>
+        <span class="n">profile_config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">profile_path</span><span class="p">,</span> <span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">profile_config_path</span> <span class="o">=</span> <span class="n">profile_path</span>
+
+    <span class="c1"># Determine the Snakemake --profile argument.</span>
+    <span class="c1"># Snakemake expects a *directory* for --profile; if the user provided</span>
+    <span class="c1"># a config.yaml path, convert it to the containing directory.</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">profile_path</span><span class="p">):</span>
+        <span class="n">snakemake_profile_arg</span> <span class="o">=</span> <span class="n">profile_path</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">snakemake_profile_arg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">profile_path</span><span class="p">)</span>
+
+    <span class="c1"># Use absolute paths for robustness.</span>
+    <span class="n">profile_config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">profile_config_path</span><span class="p">)</span>
+    <span class="n">snakemake_profile_arg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">snakemake_profile_arg</span><span class="p">)</span>
+
+    <span class="n">profile_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">profile_config_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">profile_data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR: Profile not found: </span><span class="si">{</span><span class="n">profile_config_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">selected_cores</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cores</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">cores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">profile_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cores&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cores: </span><span class="si">{</span><span class="n">selected_cores</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">set_threads</span><span class="p">:</span>
+        <span class="n">overrides_display</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">set_threads</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Thread overrides: </span><span class="si">{</span><span class="n">overrides_display</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Thread overrides: none (using defaults)&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mode: DRY RUN&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+    <span class="c1"># Get subjects list</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">subjects</span><span class="p">:</span>
+        <span class="n">subjects</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">subjects</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using specified subjects: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subjects</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Auto-discover subjects from BIDS data directory</span>
+        <span class="n">subjects</span> <span class="o">=</span> <span class="n">discover_subjects</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">bids_pattern</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">subjects</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR: No subjects found in </span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pattern used: </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">bids_pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Auto-discovered </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subjects</span><span class="p">)</span><span class="si">}</span><span class="s2"> subjects&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    
+    <span class="c1"># Split into batches</span>
+    <span class="n">batches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">subjects</span><span class="p">),</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="n">batches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subjects</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">])</span>
+    
+    <span class="n">total_batches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span>
+    <span class="n">batch_word</span> <span class="o">=</span> <span class="s2">&quot;batch&quot;</span> <span class="k">if</span> <span class="n">total_batches</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;batches&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subjects</span><span class="p">)</span><span class="si">}</span><span class="s2"> subjects in </span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">batch_word</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> 
+          <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    
+    <span class="c1"># Process batches</span>
+    <span class="n">failed_batches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">batch_num</span><span class="p">,</span> <span class="n">batch_subjects</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">batches</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="n">run_snakemake_batch</span><span class="p">(</span>
+            <span class="n">batch_subjects</span><span class="o">=</span><span class="n">batch_subjects</span><span class="p">,</span>
+            <span class="n">batch_num</span><span class="o">=</span><span class="n">batch_num</span><span class="p">,</span>
+            <span class="n">total_batches</span><span class="o">=</span><span class="n">total_batches</span><span class="p">,</span>
+            <span class="n">profile</span><span class="o">=</span><span class="n">snakemake_profile_arg</span><span class="p">,</span>
+            <span class="n">log_dir</span><span class="o">=</span><span class="n">log_dir</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">pipeline_dir</span><span class="o">=</span><span class="n">pipeline_dir</span><span class="p">,</span>
+            <span class="n">cores</span><span class="o">=</span><span class="n">selected_cores</span><span class="p">,</span>
+            <span class="n">set_threads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">set_threads</span><span class="p">,</span>
+            <span class="n">subjects</span><span class="o">=</span><span class="n">subjects</span><span class="p">,</span>
+            <span class="n">bids_pattern</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">bids_pattern</span><span class="p">,</span>
+            <span class="n">dry_run</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dry_run</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+            <span class="n">failed_batches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">batch_num</span><span class="p">)</span>
+    
+    <span class="c1"># Run aggregation if all batches succeeded</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">failed_batches</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">aggregation_success</span> <span class="o">=</span> <span class="n">run_aggregation</span><span class="p">(</span>
+            <span class="n">profile</span><span class="o">=</span><span class="n">snakemake_profile_arg</span><span class="p">,</span>
+            <span class="n">log_dir</span><span class="o">=</span><span class="n">log_dir</span><span class="p">,</span>
+            <span class="n">pipeline_dir</span><span class="o">=</span><span class="n">pipeline_dir</span><span class="p">,</span>
+            <span class="n">cores</span><span class="o">=</span><span class="n">selected_cores</span><span class="p">,</span>
+            <span class="n">set_threads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">set_threads</span><span class="p">,</span>
+            <span class="n">subjects</span><span class="o">=</span><span class="n">subjects</span><span class="p">,</span>
+            <span class="n">bids_pattern</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">bids_pattern</span><span class="p">,</span>
+            <span class="n">dry_run</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dry_run</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">aggregation_success</span><span class="p">:</span>
+            <span class="n">failed_batches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;aggregation&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Cleanup intermediate files if requested and pipeline succeeded</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">cleanup</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">failed_batches</span><span class="p">:</span>
+        <span class="c1"># Need to get derivatives_root from config/config.yaml</span>
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="n">DEFAULT_CONFIG_PATH</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">derivatives_root</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;derivatives_root&#39;</span><span class="p">]</span>
+        
+        <span class="n">cleanup_success</span> <span class="o">=</span> <span class="n">cleanup_with_confirmation</span><span class="p">(</span>
+            <span class="n">derivatives_root</span><span class="o">=</span><span class="n">derivatives_root</span><span class="p">,</span>
+            <span class="n">dry_run</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dry_run</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cleanup_success</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;⚠ Warning: Cleanup encountered errors (pipeline results preserved)&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    
+    <span class="c1"># Final summary</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pipeline Summary&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total subjects: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subjects</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total batches: </span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">failed_batches</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Failed batches: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">failed_batches</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exit code: 1&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ All batches completed successfully&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;End time: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exit code: 0&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">80</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

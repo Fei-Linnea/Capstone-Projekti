@@ -12,15 +12,21 @@ rule split_label:
         label_mask = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                                   "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mask.nii.gz")
     params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts"),
         label_value = lambda wildcards: LABELS[wildcards.label]
     log:
         os.path.join(LOG_DIR, "data_processing", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "data_processing", "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}.txt")
-    run:
-        Path(output.label_mask).parent.mkdir(parents=True, exist_ok=True)
-        split_one_label(input.seg_crop, output.label_mask, params.label_value)
-        Path(log[0]).write_text(f"Split label {wildcards.label} (value {params.label_value}) from {input.seg_crop}\nOutput: {output.label_mask}\n")
+    threads: 1
+    shell:
+        """
+        python {params.scripts_dir}/nii_parse.py split \
+            --input {input.seg_crop} \
+            --output {output.label_mask} \
+            --label {params.label_value} \
+            > {log} 2>&1
+        """
 
 
 rule combine_labels:
@@ -29,11 +35,17 @@ rule combine_labels:
     output:
         combined_mask = os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                                     "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_mask.nii.gz")
+    params:
+        scripts_dir = os.path.join(workflow.basedir, "scripts")
     log:
         os.path.join(LOG_DIR, "data_processing", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.log")
     benchmark:
         os.path.join(LOG_DIR, "benchmarks", "data_processing", "sub-{subject}_ses-{session}_hemi-{hemi}_combined.txt")
-    run:
-        Path(output.combined_mask).parent.mkdir(parents=True, exist_ok=True)
-        combine_labels(input.seg_crop, output.combined_mask)
-        Path(log[0]).write_text(f"Combined labels from {input.seg_crop}\nOutput: {output.combined_mask}\n")
+    threads: 1
+    shell:
+        """
+        python {params.scripts_dir}/nii_parse.py combine \
+            --input {input.seg_crop} \
+            --output {output.combined_mask} \
+            > {log} 2>&1
+        """

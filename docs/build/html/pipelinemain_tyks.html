@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TYKS Pipeline Runner &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CSC Puhti Pipeline Runner" href="pipelinemain_csc.html" />
+    <link rel="prev" title="CSC Puhti - Quick Start Guide" href="guides/csc_user_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#main-pipeline-runners">Main Pipeline Runners</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">TYKS Pipeline Runner</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_csc.html">CSC Puhti Pipeline Runner</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
+      <li class="breadcrumb-item active">TYKS Pipeline Runner</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/pipelinemain_tyks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tyks-pipeline-runner">
+<h1>TYKS Pipeline Runner<a class="headerlink" href="#tyks-pipeline-runner" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p><cite>run_pipeline.py</cite> is the <strong>main entry point</strong> for the hippocampus radiomic feature extraction pipeline. It handles:</p>
+<ul class="simple">
+<li><p>Batch processing of subjects</p></li>
+<li><p>Integration with Snakemake profiles (local or HPC)</p></li>
+<li><p>Progress tracking and logging</p></li>
+<li><p>Post-processing aggregation of features</p></li>
+<li><p>Optional cleanup of intermediate files</p></li>
+</ul>
+<p>This script imports utility functions from the <cite>run_utils</cite> package for all internal operations.</p>
+</section>
+<section id="command-line-interface">
+<h2>Command-Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading"></a></h2>
+<p>The runner provides a <strong>rich CLI</strong> for flexible execution. Key arguments:</p>
+<ul class="simple">
+<li><p><strong>–profile</strong> <em>(required)</em>
+Path to the Snakemake profile configuration (e.g., <cite>config/profiles/tyks/config.yaml</cite>).
+Supports both profile directories and direct <cite>config.yaml</cite> files.</p></li>
+<li><p><strong>–batch-size</strong> <em>(default: 10)</em>
+Number of subjects to process per batch.</p></li>
+<li><p><strong>–jobs / –cores</strong>
+Override the maximum number of Snakemake jobs or cores.</p></li>
+<li><p><strong>–set-threads</strong>
+Override threads for specific rules (e.g., <cite>hsf_segmentation=4</cite>).</p></li>
+<li><p><strong>–set-resources</strong>
+Override resources per rule (e.g., <cite>hsf_segmentation:mem_mb=16000</cite>).</p></li>
+<li><p><strong>–subjects</strong>
+Process specific subjects instead of auto-discovering from BIDS data.</p></li>
+<li><p><strong>–dry-run</strong>
+Show planned execution without running jobs.</p></li>
+<li><p><strong>–cleanup</strong>
+Remove intermediate files after successful completion, keeping only <cite>all_features.csv</cite>.</p></li>
+<li><p><strong>–pipeline-dir / –log-dir / –data-dir / –bids-pattern</strong>
+Paths for working directories, logs, data, and BIDS T1w file discovery.</p></li>
+</ul>
+</section>
+<section id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Initialization</strong>
+- Parses CLI arguments.
+- Creates a timestamped log directory.
+- Loads the Snakemake profile to determine defaults for jobs, cores, and resources.</p></li>
+<li><p><strong>Subject Discovery</strong>
+- Uses either the <cite>–subjects</cite> list or auto-discovers subjects from the BIDS dataset directory.
+- Subjects are split into <strong>batches</strong> according to <cite>–batch-size</cite>.</p></li>
+<li><p><strong>Batch Processing</strong>
+- Calls <cite>run_snakemake_batch()</cite> for each batch.
+- Tracks failed batches for reporting.</p></li>
+<li><p><strong>Feature Aggregation</strong>
+- Runs <cite>run_aggregation()</cite> after all batches succeed.
+- Aggregates radiomic and curvature features across labels and hemispheres.</p></li>
+<li><p><strong>Optional Cleanup</strong>
+- Deletes intermediate files if <cite>–cleanup</cite> is specified and the pipeline completes successfully.</p></li>
+<li><p><strong>Logging &amp; Summary</strong>
+- Prints per-batch progress, errors, and final summary.
+- Exits with non-zero status if any batch or aggregation failed.</p></li>
+</ol>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>Full command example (run with defaults from profile):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks
+</pre></div>
+</div>
+<p>Run with custom batch size:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--batch-size<span class="w"> </span><span class="m">20</span>
+</pre></div>
+</div>
+<p>Override cores at runtime:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--cores<span class="w"> </span><span class="m">32</span>
+</pre></div>
+</div>
+<p>Override rule threads for a specific rule:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--set-threads<span class="w"> </span><span class="nv">hsf_segmentation</span><span class="o">=</span><span class="m">4</span>
+</pre></div>
+</div>
+<p>Dry run (preview execution without running jobs):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--dry-run
+</pre></div>
+</div>
+<p>Process specific subjects:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--subjects<span class="w"> </span><span class="m">01</span><span class="w"> </span><span class="m">02</span><span class="w"> </span><span class="m">03</span><span class="w"> </span><span class="m">04</span><span class="w"> </span><span class="m">05</span>
+</pre></div>
+</div>
+<p>Use a custom BIDS pattern:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bids-pattern<span class="w"> </span><span class="s2">&quot;sub-*/ses-1/anat/*_T1w.nii.gz&quot;</span>
+</pre></div>
+</div>
+<p>Complete example with multiple overrides:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apptainer<span class="w"> </span>run<span class="w"> </span>--writable-tmpfs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/bids:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bind<span class="w"> </span>/path/to/logs:/app/logs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--profile<span class="w"> </span>config/profiles/tyks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--batch-size<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--cores<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--set-threads<span class="w"> </span><span class="nv">hsf_segmentation</span><span class="o">=</span><span class="m">4</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The pipeline automatically logs progress to a timestamped directory under <cite>–log-dir</cite>.</p></li>
+<li><p>Exit codes:
+- <cite>0</cite> — all batches and aggregation completed successfully
+- <cite>1</cite> — one or more batches or aggregation failed</p></li>
+<li><p>Thread and resource overrides allow flexible adaptation to HPC or local environments.</p></li>
+<li><p>Designed for reproducible, containerized execution (via Apptainer/Singularity in profiles).</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="guides/csc_user_guide.html" class="btn btn-neutral float-left" title="CSC Puhti - Quick Start Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipelinemain_csc.html" class="btn btn-neutral float-right" title="CSC Puhti Pipeline Runner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

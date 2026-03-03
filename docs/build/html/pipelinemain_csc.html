@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSC Puhti Pipeline Runner &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="HSF Segmentation Rule (Step 1)" href="rules.html" />
+    <link rel="prev" title="TYKS Pipeline Runner" href="pipelinemain_tyks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html#main-pipeline-runners">Main Pipeline Runners</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pipelinemain_tyks.html">TYKS Pipeline Runner</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CSC Puhti Pipeline Runner</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-interface">Command-Line Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">User Guides / Tutorials</a></li>
+      <li class="breadcrumb-item active">CSC Puhti Pipeline Runner</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/pipelinemain_csc.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="csc-puhti-pipeline-runner">
+<h1>CSC Puhti Pipeline Runner<a class="headerlink" href="#csc-puhti-pipeline-runner" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">run_csc.py</span></code> is the CSC-specific entry point for running the hippocampus
+radiomic feature extraction pipeline on <strong>Puhti</strong> using <strong>SLURM + Apptainer</strong>.</p>
+<p>It provides an interactive and automated interface for configuring and
+launching large-scale cluster jobs while maintaining reproducibility.</p>
+<p>This script extends the standard pipeline runner by adding:</p>
+<ul class="simple">
+<li><p>Interactive CSC project configuration</p></li>
+<li><p>Dynamic Snakemake profile generation</p></li>
+<li><p>SLURM integration</p></li>
+<li><p>Apptainer environment setup</p></li>
+<li><p>Real-time progress tracking</p></li>
+<li><p>Automatic prerequisite validation</p></li>
+</ul>
+</section>
+<section id="command-line-interface">
+<h2>Command-Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading"></a></h2>
+<p>The runner supports both interactive mode and full CLI-driven execution.</p>
+<p>Key arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--project</span></code>
+CSC project number (e.g., <code class="docutils literal notranslate"><span class="pre">2001988</span></code>).
+If omitted, the script prompts interactively.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--bids-root</span></code>
+Path to the BIDS dataset root (typically on <code class="docutils literal notranslate"><span class="pre">/scratch/project_&lt;ID&gt;/...</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--bids-pattern</span></code>
+Optional glob pattern to locate T1-weighted files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--sif</span></code>
+Path to the Apptainer <code class="docutils literal notranslate"><span class="pre">.sif</span></code> container image.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--partition</span></code>
+SLURM partition (default: <code class="docutils literal notranslate"><span class="pre">small</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--jobs</span></code> (default: <code class="docutils literal notranslate"><span class="pre">100</span></code>)
+Maximum concurrent SLURM jobs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--latency-wait</span></code> (default: <code class="docutils literal notranslate"><span class="pre">120</span></code>)
+Seconds to wait for output file availability on shared storage.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--retries</span></code> (default: <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+Number of retries per failed job.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code> / <code class="docutils literal notranslate"><span class="pre">-n</span></code>
+Show planned jobs without executing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--force</span></code>
+Force re-run of all rules.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--clean</span></code>
+Remove <code class="docutils literal notranslate"><span class="pre">.snakemake/</span></code> metadata before execution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--cleanup</span></code>
+Remove intermediate outputs after successful completion.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--yes</span></code> / <code class="docutils literal notranslate"><span class="pre">-y</span></code>
+Skip confirmation prompt before execution.</p></li>
+</ul>
+</section>
+<section id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p><strong>Prerequisite Check</strong></p>
+<ul class="simple">
+<li><p>Verifies that Snakemake ≥ 8 is available.</p></li>
+<li><p>Attempts <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span> <span class="pre">snakemake</span></code> if not found.</p></li>
+<li><p>Aborts if version requirements are not met.</p></li>
+</ul>
+</li>
+<li><p><strong>Configuration Gathering</strong></p>
+<ul class="simple">
+<li><p>Collects settings from CLI flags.</p></li>
+<li><p>Prompts interactively if required values are missing.</p></li>
+<li><p>Determines project-specific paths:</p>
+<ul>
+<li><p>Scratch storage</p></li>
+<li><p>TMPDIR</p></li>
+<li><p>Container image</p></li>
+<li><p>Derivatives directory</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Profile Generation</strong></p>
+<ul class="simple">
+<li><p>Dynamically writes <code class="docutils literal notranslate"><span class="pre">config/profiles/csc/config.yaml</span></code>.</p></li>
+<li><p>Sets:</p>
+<ul>
+<li><p>SLURM executor</p></li>
+<li><p>Account and partition</p></li>
+<li><p>Memory and runtime defaults</p></li>
+<li><p>Apptainer bind mounts</p></li>
+<li><p>Shared <code class="docutils literal notranslate"><span class="pre">tmpdir</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Environment Setup</strong></p>
+<ul class="simple">
+<li><p>Creates project-specific TMPDIR on <code class="docutils literal notranslate"><span class="pre">/scratch</span></code>.</p></li>
+<li><p>Clears stale <code class="docutils literal notranslate"><span class="pre">SINGULARITY_BIND</span></code> / <code class="docutils literal notranslate"><span class="pre">APPTAINER_BIND</span></code> variables.</p></li>
+<li><p>Exports required environment variables.</p></li>
+</ul>
+</li>
+<li><p><strong>Pipeline Execution</strong></p>
+<ul class="simple">
+<li><p>Launches Snakemake with:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>snakemake<span class="w"> </span>--profile<span class="w"> </span>config/profiles/csc
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Logs are written to:</p></li>
+</ul>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>derivatives/logs/run_csc_&lt;timestamp&gt;.log
+</pre></div>
+</div>
+</li>
+<li><p><strong>Real-Time Progress Tracking</strong></p>
+<ul class="simple">
+<li><p>Parses Snakemake output.</p></li>
+<li><p>Displays:</p>
+<ul>
+<li><p>Completed steps vs total</p></li>
+<li><p>Current rule</p></li>
+<li><p>Current subject</p></li>
+<li><p>SLURM submission count</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Summary Reporting</strong></p>
+<ul class="simple">
+<li><p>Prints:</p>
+<ul>
+<li><p>Total duration</p></li>
+<li><p>Completed jobs</p></li>
+<li><p>Failed rules (if any)</p></li>
+<li><p>Output location (<code class="docutils literal notranslate"><span class="pre">summary/all_features.csv</span></code>)</p></li>
+</ul>
+</li>
+<li><p>Returns exit code:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code> on success</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> on failure</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Optional Cleanup</strong></p>
+<ul class="simple">
+<li><p>Removes intermediate files if <code class="docutils literal notranslate"><span class="pre">--cleanup</span></code> is specified.</p></li>
+<li><p>Preserves:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary/all_features.csv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary/processing_issues.txt</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>Interactive execution:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run_csc.py
+</pre></div>
+</div>
+<p>Full CLI execution:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run_csc.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--project<span class="w"> </span><span class="m">2001988</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--bids-root<span class="w"> </span>/scratch/project_2001988/user/Dataset<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--sif<span class="w"> </span>/scratch/project_2001988/user/Containers/hippocampus-pipeline.sif
+</pre></div>
+</div>
+<p>Dry run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run_csc.py<span class="w"> </span>--project<span class="w"> </span><span class="m">2001988</span><span class="w"> </span>--dry-run
+</pre></div>
+</div>
+<p>Force full re-run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run_csc.py<span class="w"> </span>--project<span class="w"> </span><span class="m">2001988</span><span class="w"> </span>--force<span class="w"> </span>--clean
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Designed specifically for CSC Puhti.</p></li>
+<li><p>Requires Snakemake ≥ 8.</p></li>
+<li><p>Each rule is submitted as an individual SLURM job.</p></li>
+<li><p>Shared <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> storage is required for <code class="docutils literal notranslate"><span class="pre">tmpdir</span></code>.</p></li>
+<li><p>Automatically binds project scratch space inside the container.</p></li>
+<li><p>Logs are stored under the derivatives directory for traceability.</p></li>
+<li><p>Fully compatible with containerized execution.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pipelinemain_tyks.html" class="btn btn-neutral float-left" title="TYKS Pipeline Runner" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rules.html" class="btn btn-neutral float-right" title="HSF Segmentation Rule (Step 1)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

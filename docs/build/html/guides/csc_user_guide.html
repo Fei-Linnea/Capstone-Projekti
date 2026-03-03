@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSC Puhti - Quick Start Guide &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="TYKS Pipeline Runner" href="../pipelinemain_tyks.html" />
+    <link rel="prev" title="Rule Graph Explanation" href="rulegraph_explanation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../modules.html">User Guides / Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html">Local Execution - Quick Start Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline_guide.html">Radiomic Feature Extraction Pipeline - Complete General Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rulegraph_explanation.html">Rule Graph Explanation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CSC Puhti - Quick Start Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#set-up-apptainer-cache-and-temp-directories-mandatory-one-time">1. Set up Apptainer cache and temp directories (mandatory, one-time)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#clone-the-pipeline-repository">2. Clone the pipeline repository</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pull-the-container-image">3. Pull the container image</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#run-the-pipeline">Run the Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#interactive-mode-recommended-for-first-run">Interactive mode (recommended for first run)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#non-interactive-mode">Non-interactive mode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#non-interactive-mode-with-rule-thread-overrides">Non-interactive mode with rule thread overrides</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dry-run-preview-without-executing">Dry run (preview without executing)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-options">Command-Line Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-the-script-does-automatically">What the Script Does Automatically</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output">Output</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#apptainer-pull-fails">Apptainer pull fails</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../modules.html">User Guides / Tutorials</a></li>
+          <li class="breadcrumb-item"><a href="../guides.html">&lt;no title&gt;</a></li>
+      <li class="breadcrumb-item active">CSC Puhti - Quick Start Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/csc_user_guide.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="csc-puhti-quick-start-guide">
+<h1>CSC Puhti - Quick Start Guide<a class="headerlink" href="#csc-puhti-quick-start-guide" title="Link to this heading"></a></h1>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>A CSC project with access to the Puhti cluster</p></li>
+<li><p>BIDS-formatted dataset on <code class="docutils literal notranslate"><span class="pre">/scratch</span></code></p></li>
+<li><p>The pipeline container image (<code class="docutils literal notranslate"><span class="pre">.sif</span></code> file) on <code class="docutils literal notranslate"><span class="pre">/scratch</span></code></p></li>
+</ul>
+</section>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading"></a></h2>
+<section id="set-up-apptainer-cache-and-temp-directories-mandatory-one-time">
+<h3>1. Set up Apptainer cache and temp directories (mandatory, one-time)<a class="headerlink" href="#set-up-apptainer-cache-and-temp-directories-mandatory-one-time" title="Link to this heading"></a></h3>
+<p>Apptainer needs a cache and temp directory on shared <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> storage. Add these to your <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code> (or run before every session):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">APPTAINER_CACHEDIR</span><span class="o">=</span>/scratch/project_&lt;NUMBER&gt;/.apptainer
+<span class="nb">export</span><span class="w"> </span><span class="nv">APPTAINER_TMPDIR</span><span class="o">=</span>/scratch/project_&lt;NUMBER&gt;/tmp
+<span class="nb">export</span><span class="w"> </span><span class="nv">TMPDIR</span><span class="o">=</span>/scratch/project_&lt;NUMBER&gt;/tmp
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$APPTAINER_CACHEDIR</span><span class="w"> </span><span class="nv">$APPTAINER_TMPDIR</span>
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;NUMBER&gt;</span></code> with your CSC project number (e.g., <code class="docutils literal notranslate"><span class="pre">2001988</span></code>).</p>
+<p><strong>Why this is required:</strong> CSC compute nodes cannot write to <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> or <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> during jobs. The Apptainer cache is used when pulling the container image and the temp directory is used during container execution. Both must be on the shared <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> filesystem.</p>
+</section>
+<section id="clone-the-pipeline-repository">
+<h3>2. Clone the pipeline repository<a class="headerlink" href="#clone-the-pipeline-repository" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/scratch/project_&lt;NUMBER&gt;/
+git<span class="w"> </span>clone<span class="w"> </span>https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry.git<span class="w"> </span>hippocampus-pipeline
+<span class="nb">cd</span><span class="w"> </span>hippocampus-pipeline/pipeline
+</pre></div>
+</div>
+</section>
+<section id="pull-the-container-image">
+<h3>3. Pull the container image<a class="headerlink" href="#pull-the-container-image" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>/scratch/project_&lt;NUMBER&gt;/Containers
+<span class="nb">cd</span><span class="w"> </span>/scratch/project_&lt;NUMBER&gt;/Containers
+apptainer<span class="w"> </span>pull<span class="w"> </span>hippocampus-pipeline.sif<span class="w"> </span>docker://registry.gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry/hippocampus-pipeline
+</pre></div>
+</div>
+<p>This downloads the container image (~4.3 GiB). Make sure <code class="docutils literal notranslate"><span class="pre">APPTAINER_CACHEDIR</span></code> and <code class="docutils literal notranslate"><span class="pre">APPTAINER_TMPDIR</span></code> are set (Step 1), otherwise the pull may fail.</p>
+</section>
+</section>
+<section id="run-the-pipeline">
+<h2>Run the Pipeline<a class="headerlink" href="#run-the-pipeline" title="Link to this heading"></a></h2>
+<section id="interactive-mode-recommended-for-first-run">
+<h3>Interactive mode (recommended for first run)<a class="headerlink" href="#interactive-mode-recommended-for-first-run" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run_csc.py
+</pre></div>
+</div>
+<p>The script will prompt you for:</p>
+<ol class="arabic simple">
+<li><p><strong>CSC project number</strong> (e.g., <code class="docutils literal notranslate"><span class="pre">2001988</span></code>)</p></li>
+<li><p><strong>BIDS dataset path</strong> (e.g., <code class="docutils literal notranslate"><span class="pre">/scratch/project_2001988/Dataset</span></code>)</p></li>
+<li><p><strong>BIDS file pattern</strong> (default: <code class="docutils literal notranslate"><span class="pre">sub-*/ses-*/anat/*_T1w.nii.gz</span></code>)</p></li>
+<li><p><strong>Container SIF path</strong> (e.g., <code class="docutils literal notranslate"><span class="pre">/scratch/project_2001988/Containers/hippocampus-pipeline.sif</span></code>)</p></li>
+<li><p><strong>SLURM partition</strong> (default: <code class="docutils literal notranslate"><span class="pre">small</span></code>)</p></li>
+</ol>
+<p>It then shows a configuration summary and asks for confirmation before starting.</p>
+</section>
+<section id="non-interactive-mode">
+<h3>Non-interactive mode<a class="headerlink" href="#non-interactive-mode" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run_csc.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--project<span class="w"> </span>&lt;NUMBER&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bids-root<span class="w"> </span>/scratch/project_&lt;NUMBER&gt;/<span class="nv">$USER</span>/Dataset<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sif<span class="w"> </span>/scratch/project_&lt;NUMBER&gt;/<span class="nv">$USER</span>/Containers/hippocampus-pipeline.sif
+</pre></div>
+</div>
+</section>
+<section id="non-interactive-mode-with-rule-thread-overrides">
+<h3>Non-interactive mode with rule thread overrides<a class="headerlink" href="#non-interactive-mode-with-rule-thread-overrides" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run_csc.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--project<span class="w"> </span>&lt;NUMBER&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bids-root<span class="w"> </span>/scratch/project_&lt;NUMBER&gt;/<span class="nv">$USER</span>/Dataset<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sif<span class="w"> </span>/scratch/project_&lt;NUMBER&gt;/<span class="nv">$USER</span>/Containers/hippocampus-pipeline.sif<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--set-threads<span class="w"> </span><span class="nv">hsf_segmentation</span><span class="o">=</span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--set-threads<span class="w"> </span><span class="nv">mesh_per_label</span><span class="o">=</span><span class="m">2</span>
+</pre></div>
+</div>
+</section>
+<section id="dry-run-preview-without-executing">
+<h3>Dry run (preview without executing)<a class="headerlink" href="#dry-run-preview-without-executing" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run_csc.py<span class="w"> </span>-n
+</pre></div>
+</div>
+</section>
+</section>
+<section id="command-line-options">
+<h2>Command-Line Options<a class="headerlink" href="#command-line-options" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Required</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--project</span></code></p></td>
+<td><p>CSC project number (e.g., <code class="docutils literal notranslate"><span class="pre">2001988</span></code>)</p></td>
+<td><p>prompted</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--bids-root</span></code></p></td>
+<td><p>BIDS dataset root directory</p></td>
+<td><p>prompted</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--bids-pattern</span></code></p></td>
+<td><p>Glob pattern (relative to BIDS root) to discover T1w inputs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sub-*/ses-*/anat/*_T1w.nii.gz</span></code></p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--sif</span></code></p></td>
+<td><p>Path to <code class="docutils literal notranslate"><span class="pre">.sif</span></code> container image</p></td>
+<td><p>prompted</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--partition</span></code></p></td>
+<td><p>SLURM partition</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">small</span></code></p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--jobs</span></code></p></td>
+<td><p>Max concurrent SLURM jobs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--latency-wait</span></code></p></td>
+<td><p>Seconds to wait for output files</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">120</span></code></p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--retries</span></code></p></td>
+<td><p>Retries per failed job</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--set-threads</span></code></p></td>
+<td><p>Override rule threads (e.g., <code class="docutils literal notranslate"><span class="pre">hsf_segmentation=4</span></code>). Can be used multiple times.</p></td>
+<td><p>none</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span></code>, <code class="docutils literal notranslate"><span class="pre">--dry-run</span></code></p></td>
+<td><p>Show planned jobs without executing</p></td>
+<td><p>off</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-y</span></code>, <code class="docutils literal notranslate"><span class="pre">--yes</span></code></p></td>
+<td><p>Skip confirmation prompt</p></td>
+<td><p>off</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--force</span></code></p></td>
+<td><p>Force re-run all rules (<code class="docutils literal notranslate"><span class="pre">--forceall</span></code>)</p></td>
+<td><p>off</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--clean</span></code></p></td>
+<td><p>Remove <code class="docutils literal notranslate"><span class="pre">.snakemake/</span></code> metadata before running</p></td>
+<td><p>off</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--cleanup</span></code></p></td>
+<td><p>Delete intermediate outputs after success, keeping summary files and logs</p></td>
+<td><p>off</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code>, <code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
+<td><p>Show help message and exit</p></td>
+<td><p>off</p></td>
+<td><p>No</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> For interactive mode, run <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">run_csc.py</span></code> with no arguments and provide values when prompted. For non-interactive mode, pass <code class="docutils literal notranslate"><span class="pre">--project</span></code>, <code class="docutils literal notranslate"><span class="pre">--bids-root</span></code>, and <code class="docutils literal notranslate"><span class="pre">--sif</span></code> explicitly.</p>
+</section>
+<section id="what-the-script-does-automatically">
+<h2>What the Script Does Automatically<a class="headerlink" href="#what-the-script-does-automatically" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Loads the <code class="docutils literal notranslate"><span class="pre">snakemake</span></code> module if it is not already available</p></li>
+<li><p>Creates a shared temp directory on <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> (SLURM nodes cannot see <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>)</p></li>
+<li><p>Sets <code class="docutils literal notranslate"><span class="pre">APPTAINER_CACHEDIR</span></code> and <code class="docutils literal notranslate"><span class="pre">APPTAINER_TMPDIR</span></code> on <code class="docutils literal notranslate"><span class="pre">/scratch</span></code></p></li>
+<li><p>Clears stale <code class="docutils literal notranslate"><span class="pre">SINGULARITY_BIND</span></code> / <code class="docutils literal notranslate"><span class="pre">APPTAINER_BIND</span></code> variables</p></li>
+<li><p>Generates the Snakemake SLURM + Apptainer profile for your project</p></li>
+<li><p>Shows a live progress bar during execution</p></li>
+</ul>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h2>
+<p>Results are written to <code class="docutils literal notranslate"><span class="pre">&lt;bids-root&gt;/derivatives/</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">bids</span><span class="o">-</span><span class="n">root</span><span class="o">&gt;/</span>
+  <span class="n">derivatives</span><span class="o">/</span>
+    <span class="n">sub</span><span class="o">-</span><span class="mi">01</span><span class="o">/</span>
+      <span class="n">ses</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span>
+        <span class="n">anat</span><span class="o">/</span>        <span class="c1"># Segmentation outputs</span>
+        <span class="n">features</span><span class="o">/</span>    <span class="c1"># Extracted radiomic features</span>
+        <span class="n">meshes</span><span class="o">/</span>      <span class="c1"># Generated 3D meshes</span>
+    <span class="n">sub</span><span class="o">-</span><span class="mi">02</span><span class="o">/</span>
+      <span class="o">...</span>
+    <span class="n">summary</span><span class="o">/</span>
+      <span class="n">all_features</span><span class="o">.</span><span class="n">csv</span>       <span class="c1"># Aggregated features from all subjects</span>
+      <span class="n">processing_issues</span><span class="o">.</span><span class="n">txt</span>  <span class="c1"># Any subjects with processing errors</span>
+    <span class="n">logs</span><span class="o">/</span>
+      <span class="n">run_csc_</span><span class="o">&lt;</span><span class="n">timestamp</span><span class="o">&gt;.</span><span class="n">log</span>
+</pre></div>
+</div>
+<section id="apptainer-pull-fails">
+<h3>Apptainer pull fails<a class="headerlink" href="#apptainer-pull-fails" title="Link to this heading"></a></h3>
+<p>Make sure cache and tmp directories are set (see Setup Step 1):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">APPTAINER_CACHEDIR</span><span class="o">=</span>/scratch/project_&lt;NUMBER&gt;/<span class="nv">$USER</span>/.apptainer
+<span class="nb">export</span><span class="w"> </span><span class="nv">APPTAINER_TMPDIR</span><span class="o">=</span>/scratch/project_&lt;NUMBER&gt;/<span class="nv">$USER</span>/tmp
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$APPTAINER_CACHEDIR</span><span class="w"> </span><span class="nv">$APPTAINER_TMPDIR</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rulegraph_explanation.html" class="btn btn-neutral float-left" title="Rule Graph Explanation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pipelinemain_tyks.html" class="btn btn-neutral float-right" title="TYKS Pipeline Runner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

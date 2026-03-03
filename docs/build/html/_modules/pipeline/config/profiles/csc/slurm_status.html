@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pipeline.config.profiles.csc.slurm_status &mdash; radiomic feature extraction hippocampus pipeline 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            radiomic feature extraction hippocampus pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html">User Guides / Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html#main-pipeline-runners">Main Pipeline Runners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html#rules-overview">Rules Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html#dockerfile-documentation">Dockerfile Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html#api">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">radiomic feature extraction hippocampus pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pipeline.config.profiles.csc.slurm_status</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pipeline.config.profiles.csc.slurm_status</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SLURM Job Status Checker for Snakemake</span>
+
+<span class="sd">This script checks the status of SLURM jobs for Snakemake cluster execution.</span>
+<span class="sd">Snakemake calls this script with a job ID to determine if a job is:</span>
+<span class="sd">- running: Still in progress</span>
+<span class="sd">- success: Completed successfully  </span>
+<span class="sd">- failed: Failed or cancelled</span>
+
+<span class="sd">Usage by Snakemake (configured in profile):</span>
+<span class="sd">    cluster-status: &quot;slurm_status.py&quot;</span>
+<span class="sd">    </span>
+<span class="sd">The script is called as: slurm_status.py &lt;jobid&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+
+<div class="viewcode-block" id="get_job_status">
+<a class="viewcode-back" href="../../../../../workflow_helpers.html#pipeline.config.profiles.csc.slurm_status.get_job_status">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_job_status</span><span class="p">(</span><span class="n">jobid</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Query SLURM for job status.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        &#39;running&#39; - job is pending, running, or completing</span>
+<span class="sd">        &#39;success&#39; - job completed successfully</span>
+<span class="sd">        &#39;failed&#39; - job failed, was cancelled, or timed out</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Status codes that indicate the job is still running</span>
+    <span class="n">running_states</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;PENDING&#39;</span><span class="p">,</span> <span class="s1">&#39;PD&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;RUNNING&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;COMPLETING&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CONFIGURING&#39;</span><span class="p">,</span> <span class="s1">&#39;CF&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;SUSPENDED&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;REQUEUED&#39;</span><span class="p">,</span> <span class="s1">&#39;RQ&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;RESIZING&#39;</span><span class="p">,</span> <span class="s1">&#39;RS&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+    
+    <span class="c1"># Status codes that indicate success</span>
+    <span class="n">success_states</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;COMPLETED&#39;</span><span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+    
+    <span class="c1"># Status codes that indicate failure</span>
+    <span class="n">failed_states</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;BOOT_FAIL&#39;</span><span class="p">,</span> <span class="s1">&#39;BF&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CANCELLED&#39;</span><span class="p">,</span> <span class="s1">&#39;CA&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;DEADLINE&#39;</span><span class="p">,</span> <span class="s1">&#39;DL&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;FAILED&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;NODE_FAIL&#39;</span><span class="p">,</span> <span class="s1">&#39;NF&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;OUT_OF_MEMORY&#39;</span><span class="p">,</span> <span class="s1">&#39;OOM&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;PREEMPTED&#39;</span><span class="p">,</span> <span class="s1">&#39;PR&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;TIMEOUT&#39;</span><span class="p">,</span> <span class="s1">&#39;TO&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+    
+    <span class="c1"># Query sacct for job info (more reliable than squeue for completed jobs)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s1">&#39;sacct&#39;</span><span class="p">,</span> <span class="s1">&#39;-j&#39;</span><span class="p">,</span> <span class="n">jobid</span><span class="p">,</span> <span class="s1">&#39;--format=State&#39;</span><span class="p">,</span> <span class="s1">&#39;--noheader&#39;</span><span class="p">,</span> <span class="s1">&#39;--parsable2&#39;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="c1"># sacct may return multiple lines (job + job steps)</span>
+            <span class="c1"># Take the first non-empty state</span>
+            <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="n">states</span><span class="p">:</span>
+                <span class="c1"># Get primary job state (first line)</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                
+                <span class="k">if</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">running_states</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s1">&#39;running&#39;</span>
+                <span class="k">elif</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">success_states</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s1">&#39;success&#39;</span>
+                <span class="k">elif</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">failed_states</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s1">&#39;failed&#39;</span>
+                <span class="k">elif</span> <span class="n">state</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;CANCELLED&#39;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s1">&#39;failed&#39;</span>
+                    
+    <span class="k">except</span> <span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
+        <span class="k">pass</span>
+    
+    <span class="c1"># Fallback: Try squeue for running jobs</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s1">&#39;squeue&#39;</span><span class="p">,</span> <span class="s1">&#39;-j&#39;</span><span class="p">,</span> <span class="n">jobid</span><span class="p">,</span> <span class="s1">&#39;--format=%T&#39;</span><span class="p">,</span> <span class="s1">&#39;--noheader&#39;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">running_states</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s1">&#39;running&#39;</span>
+            <span class="k">elif</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">success_states</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s1">&#39;success&#39;</span>
+            <span class="k">elif</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">failed_states</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s1">&#39;failed&#39;</span>
+        <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Job not found in queue - check sacct with retry</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;sacct&#39;</span><span class="p">,</span> <span class="s1">&#39;-j&#39;</span><span class="p">,</span> <span class="n">jobid</span><span class="p">,</span> <span class="s1">&#39;--format=State&#39;</span><span class="p">,</span> <span class="s1">&#39;--noheader&#39;</span><span class="p">,</span> <span class="s1">&#39;--parsable2&#39;</span><span class="p">],</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span>
+            <span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+                <span class="k">if</span> <span class="n">states</span><span class="p">:</span>
+                    <span class="n">state</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">success_states</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="s1">&#39;success&#39;</span>
+                    <span class="k">elif</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">failed_states</span> <span class="ow">or</span> <span class="n">state</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;CANCELLED&#39;</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="s1">&#39;failed&#39;</span>
+            
+            <span class="c1"># If still can&#39;t find, assume failed</span>
+            <span class="k">return</span> <span class="s1">&#39;failed&#39;</span>
+            
+    <span class="k">except</span> <span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Could not query SLURM: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;running&#39;</span>
+    
+    <span class="k">return</span> <span class="s1">&#39;running&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../../../../workflow_helpers.html#pipeline.config.profiles.csc.slurm_status.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Usage: slurm_status.py &lt;jobid&gt;&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">jobid</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">get_job_status</span><span class="p">(</span><span class="n">jobid</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">status</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, team big brain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
