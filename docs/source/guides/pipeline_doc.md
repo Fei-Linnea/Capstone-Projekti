@@ -1,8 +1,18 @@
-# Radiomic Feature Extraction Pipeline - Complete General Guide
+# Radiomic Feature Extraction Pipeline - General Implementation 
 
 ## Pipeline Overview
 
-This pipeline performs comprehensive radiomics and morphometric analysis of hippocampal subfields:
+### Architecture Diagram (TYKS/Local Execution)
+
+The following architecture diagram is for **TYKS/local execution** (`run_pipeline.py` with local profile execution).
+
+![TYKS/Local Architecture](../_static/images/architecture/Arch_diagram_pipline_v4_TYKS.drawio.png)
+
+### Component Diagram (Shared High-Level View)
+
+![Pipeline Component Diagram](../_static/images/architecture/pipeline_component_diagram.svg)
+
+This pipeline performs radiomics and morphometric analysis of hippocampal subfields:
 
 ### Step 1: HSF Segmentation
 - Uses HSF (Hippocampal Segmentation Factory) to segment hippocampal subfields
@@ -32,7 +42,7 @@ This pipeline performs comprehensive radiomics and morphometric analysis of hipp
 ### Step 6: Data Aggregation
 - Combines radiomics and curvature features per subject
 - Merges all hemispheres and labels into single-row summary
-- Final aggregation combines all subjects into master CSV
+- Produces final aggregated CSV across all subjects
 
 ## Run Instructions
 
@@ -55,16 +65,18 @@ dataset/
 
 ### 1. Local Execution
 
-For step-by-step run instructions, see [User Guide](user_guide.md).
+For step-by-step run instructions, see [Local Guide](guide_local.md).
 
 ### 2. CSC Execution
 
-For step-by-step run instructions, see [CSC User Guide](csc_user_guide.md). For more technical detail, see [CSC Cluster Pipeline](csc_cluster_pipeline.md).
+For step-by-step run instructions, see [CSC Guide](guide_csc.md). 
 
 
-**What the pipeline does:**
+### Pipeline Behavior
+
+The pipeline:
 - Provides different customizable command-line options (flags) to override default values
-- Automatically discovers all subjects
+- Automatically discovers all subject-session pairs
 - Processes them in batches
 - Runs all 6 pipeline steps for each batch
 - Aggregates all results at the end
@@ -112,102 +124,58 @@ dataset/
       │   ├── data_processing/
       │   ├── mesh/
       │   └── feature_extraction/
-      ├── snakemake_batch_001.log
-      └── snakemake_aggregation.log
+      ├── rulegraph_generation.log
+      ├── rulegraph.svg
+      ├── snakemake_aggregation.log
+      └── snakemake_batch_001.log
 ```
 
 ### Output Files Explained
 
-**Segmentations (Step 1):**
-- `*_dseg.nii.gz`: Full HSF segmentation (all subfields labeled)
-- `*_hemi-{L|R}_seg_crop.nii.gz`: Hemisphere-specific cropped segmentation
+`derivatives/sub-X/ses-Y/`: 
 
-**Masks (Step 2):**
-- `*_label-{DG|CA1|CA2|CA3|SUB}_mask.nii.gz`: Binary mask for each subfield
-- `*_mask.nii.gz`: Combined whole-hippocampus mask
+- `anat/`:  
 
-**Meshes (Step 3):**
-- `.vtk`: 3D polygon mesh for curvature analysis
-- `.png`: 2D rendering for visual inspection
+  - **Segmentations (Step 1):**
+  - `*_dseg.nii.gz`: Full HSF segmentation (all subfields labeled)
+  - `*_hemi-{L|R}_seg_crop.nii.gz`: Hemisphere-specific cropped segmentation
 
-**Features (Steps 4-6):**
-- `*_pyradiomics.csv`: Shape features (volume, surface area, etc.)
-- `*_curvature.csv`: Curvature metrics (mean, Gaussian)
-- `*_all_features.csv`: Combined per-subject features
-- `summary/all_features.csv`: **Final dataset** with all subjects
+  - **Masks (Step 2):**
+  - `*_label-{DG|CA1|CA2|CA3|SUB}_mask.nii.gz`: Binary mask for each subfield
+  - `*_mask.nii.gz`: Combined whole-hippocampus mask
 
-**Benchmarks:**
-- `logs/<timestamp>/benchmarks/`: Performance metrics for each job
-- Tab-delimited files with columns:
-  - `s`: Runtime in seconds
-  - `h:m:s`: Formatted time (hours:minutes:seconds)
-  - `max_rss`: Maximum resident set size (memory)
-  - `max_vms`: Maximum virtual memory size
-  - `max_uss`, `max_pss`: Memory usage details
-  - `io_in`, `io_out`: I/O read/write in MB
-  - `mean_load`: Average CPU load
-- Use these files to identify bottlenecks and optimize batch sizes
+- `meshes/`: 
+  - **Meshes (Step 3):**
+  - `.vtk`: 3D polygon mesh for curvature analysis
+  - `.png`: 2D rendering for visual inspection
 
-## Configuration Settings
+- `features/`:
+  - **Features (Steps 4-6):**
+  - `*_pyradiomics.csv`: Shape features (volume, surface area, etc.)
+  - `*_curvature.csv`: Curvature metrics (mean, Gaussian)
+  - `*_all_features.csv`: Combined per-subject features
+  - `summary/all_features.csv`: **Final dataset** with all subjects
 
-The pipeline uses following default settings (not editable by the users):
+---
 
+`logs/<timestamp>/`: 
 
-### Batch Processing
-```yaml
-batch_size: 50      # Subjects per batch (0 = no batching)
-batch_number: 0     # Starting batch number
-```
+- Per-step logs are stored in `hsf/`, `data_processing/`, `mesh/`, and `feature_extraction/` folders
 
-### HSF Segmentation
-```yaml
-hsf_params:
-  contrast: "t1"
-  margin: "[8,8,8]"
-  segmentation_mode: "single_fast" 
-  ca_mode: "1/2/3"                   # Separate CA1, CA2, CA3
-```
+- `benchmarks/`: Performance metrics for each job
+  - Tab-delimited files with columns:
+    - `s`: Runtime in seconds
+    - `h:m:s`: Formatted time (hours:minutes:seconds)
+    - `max_rss`: Maximum resident set size (memory)
+    - `max_vms`: Maximum virtual memory size
+    - `max_uss`, `max_pss`: Memory usage details
+    - `io_in`, `io_out`: I/O read/write in MB
+    - `mean_load`: Average CPU load
 
-### Mesh Generation
-```yaml
-mesh_params:
-  min_voxel_count: 20      # Minimum voxels for valid mesh
-  smooth_iters: 50         # Smoothing iterations
-  decimation_degree: 0.7   # Mesh reduction ratio
-```
+- `rulegraph.svg`: Automatically generated Snakemake dependency rule graph showing all pipeline rules and their relationships  
+- `snakemake_aggregation.log`: Final aggregation step combining all results
+- `snakemake_batch_001.log`: Execution logs for each subject batch processed
 
-### Subfield Labels
-```yaml
-hemis: ["L", "R"]
-labels:
-  DG: 1    # Dentate Gyrus
-  CA1: 2   # Cornu Ammonis 1
-  CA2: 3   # Cornu Ammonis 2
-  CA3: 4   # Cornu Ammonis 3
-  SUB: 5   # Subiculum
-```
-
-### Mesh Generation Warnings
-
-VTK/EGL warnings are **expected and harmless**:
-```
-vtkXOpenGLRenderWindow: bad X server connection
-Failed to load EGL! Please install the EGL library...
-```
-
-Pipeline uses OSMesa (software rendering). Meshes are generated correctly.
-
-### Empty Masks / Processing Issues
-
-Some subjects may have empty subregion masks (too small to segment). This is normal:
-- Empty masks handled gracefully (empty VTK files created)
-- Pipeline continues processing other subjects
-- Issues logged in `derivatives/summary/processing_issues.txt`
-
-Check the issues report:
-```powershell
-cat "D:\Path\To\Data\derivatives\summary\processing_issues.txt"
-```
 
 ## Output Analysis
 
@@ -342,15 +310,16 @@ right_vol = df['R_Hippocampus_MeshVolume']
 ttest_ind(left_vol, right_vol)
 ```
 
-
 ## Workflow Visualization
 
-### Rule Graph (dag.svg)
+### Rule Graph
 
 After pipeline completion, a workflow rule graph is automatically generated and saved to:
 ```
 logs/<timestamp>/rulegraph.svg
 ```
+
+For more detailed documentation, see [Rule Graph Explanation](rulegraph_explanation).
 
 **What it shows:**
 - Complete pipeline structure showing all rules and their dependencies
@@ -360,10 +329,4 @@ logs/<timestamp>/rulegraph.svg
 **Note:** The rule graph generates after aggregation completes, ensuring it represents the entire pipeline execution across all batches.
 
 
-## Technical Documentation Guide
 
-Add instructions here how to access technical HTML doc.
-
-## References:
-
-- [Snakemake Documentation](https://snakemake.readthedocs.io/en/stable/index.html)

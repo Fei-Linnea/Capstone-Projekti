@@ -216,4 +216,6 @@ Your logs directory will contain timestamped directories with detailed execution
 
 ---
 
-For comprehensive documentation, see full [Pipeline Guide](pipeline_guide.md).
+For comprehensive documentation, see the full [Pipeline Documentation](pipeline_doc.md).
+
+

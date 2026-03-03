@@ -19,7 +19,7 @@ without modifying the Python or Snakemake code.
 Purpose
 -------
 
-- Define **dataset locations** (BIDS root, derivatives, logs)
+- Define **dataset locations** (BIDS root, derivatives, logs) inside the container
 - Set **HSF segmentation parameters** (contrast, margins, subfield modes)
 - Configure **meshes, feature extraction, and labels**
 - Specify **hemispheres and label IDs** for downstream processing
@@ -39,22 +39,25 @@ Example configuration
       contrast: "t1"
       margin: "[8,8,8]"
       segmentation_mode: "single_fast"
-      ca_mode: "1/2/3"
+      ca_mode: "1/2/3"        # Separate CA1, CA2, CA3
 
     # Hemispheres and labels
     hemis: ["L", "R"]
     labels:
-      DG: 1
-      CA1: 2
-      CA2: 3
-      CA3: 4
-      SUB: 5
+      DG: 1       # Dentate Gyrus
+      CA1: 2      # Cornu Ammonis 1
+      CA2: 3      # Cornu Ammonis 2
+      CA3: 4      # Cornu Ammonis 3
+      SUB: 5      # Subiculum
 
     # Mesh generation parameters
     mesh_params:
-      min_voxel_count: 20
-      smooth_iters: 50
-      decimation_degree: 0.7
+      min_voxel_count: 20         # Minimum voxels for valid mesh
+      smooth_iters: 50            # Smoothing iterations
+      decimation_degree: 0.7      # Mesh reduction ratio
+
+
+During pipeline execution, any errors encountered while processing are logged in the processing issues file. And can be found at '\derivatives\summary\processing_issues.txt'
 
 Usage
 -----
