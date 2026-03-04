@@ -173,18 +173,21 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_dseg.nii.gz"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS
         ),
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-L_seg_crop.nii.gz"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
         ),
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-R_seg_crop.nii.gz"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
         ),
@@ -192,6 +195,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mask.nii.gz"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -200,6 +204,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "anat",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_mask.nii.gz"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -208,6 +213,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                         "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_pyradiomics.csv"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -216,6 +222,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                         "sub-{subject}_ses-{session}_hemi-{hemi}_combined_pyradiomics.csv"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -224,6 +231,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mesh.vtk"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -232,6 +240,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_label-{label}_mesh.png"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -240,6 +249,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_combined_mesh.vtk"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -247,6 +257,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "meshes",
                         "sub-{subject}_ses-{session}_space-T1w_desc-hsf_hemi-{hemi}_combined_mesh.png"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -255,6 +266,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                         "sub-{subject}_ses-{session}_hemi-{hemi}_label-{label}_curvature.csv"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
@@ -263,6 +275,7 @@ rule all:
         expand(
             os.path.join(DERIVATIVES_ROOT, "sub-{subject}", "ses-{session}", "features",
                         "sub-{subject}_ses-{session}_hemi-{hemi}_combined_curvature.csv"),
+            zip,
             subject=SUBJECTS,
             session=SESSIONS,
             hemi=HEMIS,
