@@ -62,7 +62,7 @@ It then shows a configuration summary and asks for confirmation before starting.
 ### Non-interactive mode
 
 ```bash
-python3 run_csc.py \
+python3 -m pipeline.run_csc \
   --project <NUMBER> \
   --bids-root /scratch/project_<NUMBER>/$USER/Dataset \
   --sif /scratch/project_<NUMBER>/$USER/Containers/hippocampus-pipeline.sif
@@ -71,7 +71,7 @@ python3 run_csc.py \
 ### Non-interactive mode with rule thread overrides
 
 ```bash
-python3 run_csc.py \
+python3 -m pipeline.run_csc \
   --project <NUMBER> \
   --bids-root /scratch/project_<NUMBER>/$USER/Dataset \
   --sif /scratch/project_<NUMBER>/$USER/Containers/hippocampus-pipeline.sif \
@@ -82,7 +82,7 @@ python3 run_csc.py \
 ### Dry run (preview without executing)
 
 ```bash
-python3 run_csc.py -n
+python3 -m pipeline.run_csc -n
 ```
 
 ## Command-Line Options
