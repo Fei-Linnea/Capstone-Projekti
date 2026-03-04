@@ -49,6 +49,8 @@ RUN pip install --no-cache-dir \
 RUN python3 -c "from hsf import fetch_models; fetch_models('/root/.hsf/models', {'single': {'arunet_4.0.0single_1706895706.onnx': {'url': 'https://huggingface.co/poiretclement/hsf/resolve/main/onnx/arunet_4.0.0single_1706895706.onnx', 'xxh3_64': '04ba080ed7f373c2'}}})" || true
 WORKDIR /app
 
+ENV PYTHONPATH="/app"
+
 # Set environment to allow pipeline/executable stack for onnxruntime
 ENV LD_PRELOAD=""
 
@@ -60,7 +62,7 @@ COPY pipeline /app/pipeline
 
 RUN chmod +x /app/pipeline/run_pipeline.py
 
-# Set entrypoint to batch wrapper (can still use snakemake directly if needed)
-ENTRYPOINT ["python3", "/app/pipeline/run_pipeline.py"]
+# Run as module so absolute imports like `pipeline.run_utils` work reliably
+ENTRYPOINT ["python3", "-m", "pipeline.run_pipeline"]
 
 CMD ["--help"]
