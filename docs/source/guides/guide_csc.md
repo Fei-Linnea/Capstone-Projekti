@@ -39,7 +39,6 @@ This downloads the container image (~4.3 GiB). Make sure `APPTAINER_CACHEDIR` an
 cd /scratch/project_<NUMBER>
 module load git
 git clone https://gitlab.utu.fi/capstone_group_7/radiomic-feature-extraction-hippocampus-morphometry.git hippocampus-pipeline
-cd hippocampus-pipeline/pipeline
 ```
 
 ## Run the Pipeline
@@ -47,7 +46,8 @@ cd hippocampus-pipeline/pipeline
 ### Interactive mode (recommended for first run)
 
 ```bash
-python3 run_csc.py
+cd hippocampus-pipeline
+python3 -m pipeline.run_csc
 ```
 
 The script will prompt you for:
