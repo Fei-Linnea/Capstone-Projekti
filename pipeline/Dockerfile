@@ -1,3 +1,23 @@
+# Copyright (c) 2026 Team Big Brain
+#
+# This file is part of radiomic-feature-extraction-hippocampus-morphometry.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
+
 FROM python:3.11-slim
 
 # Metadata
@@ -24,12 +44,13 @@ RUN pip install --no-cache-dir numpy
 
 # Then install remaining packages
 # HSF for hippocampal segmentation
-# PyTorch CPU version (lighter)
+# Force CPU-only PyTorch wheel to avoid pulling CUDA/NVIDIA runtime packages
 # Snakemake for workflow management
 # Pin PuLP to 2.7.0 for compatibility with Snakemake 7.32.4
 # SimpleITK, nibabel and pandas for nii_parse.py functions (data_processing part)
 # pyradiomics for feature extraction
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu \
+    torch==2.5.1+cpu \
     nibabel \
     pandas \
     pulp==2.7.0 \
@@ -42,8 +63,7 @@ RUN pip install --no-cache-dir \
     scikit-image \
     pyvista \
     pyvista[jupyter] \
-    vtk && \
-    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+    vtk
 
 # Pre-download HSF models to avoid checksum failures during pipeline execution
 RUN python3 -c "from hsf import fetch_models; fetch_models('/root/.hsf/models', {'single': {'arunet_4.0.0single_1706895706.onnx': {'url': 'https://huggingface.co/poiretclement/hsf/resolve/main/onnx/arunet_4.0.0single_1706895706.onnx', 'xxh3_64': '04ba080ed7f373c2'}}})" || true

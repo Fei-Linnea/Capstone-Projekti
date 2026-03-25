@@ -111,8 +111,13 @@ Then open `docs/build/html/index.html` in a browser.
 
 ## Authors
 
-- **BigBrain Team / Capstone Group 7**
-- University of Turku
+- **Team Big Brain / University of Turku Capstone Group 7**
+- Jenni Alarakkola
+- Talha Rizwan
+- Fei-Linnea Hakala
+- Uuno Tapper
+- Benjamin Rauh
+- Leevi Mäki-Kerttula
 
 ## References
 
@@ -127,8 +132,18 @@ Then open `docs/build/html/index.html` in a browser.
 - [Docker](https://www.docker.com/) — Container images
 - [ONNX Runtime](https://onnxruntime.ai/) — HSF model inference
 - [nibabel](https://nipy.org/nibabel/) — NIfTI file I/O
-- [VTK / PyVista](https://www.vtk.org/) — 3D mesh generation and visualization
+- [VTK](https://www.vtk.org/) — 3D mesh generation and visualization
+- [PyVista](https://pyvista.org/) — Curvature metrics calculation
 
 
 
 ## License
+
+Copyright (c) 2026 Team Big Brain.
+
+This project is licensed under the **GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)**.
+
+- Full license text: see `LICENSE`, `COPYING.LESSER` and `COPYING`
+- Third-party license and attribution guidance: see `THIRD_PARTY_NOTICES.md`
+
+Third-party components used by this project may be licensed under MIT, BSD-3-Clause, Apache-2.0, or other licenses. Their original license terms continue to apply to those components.
