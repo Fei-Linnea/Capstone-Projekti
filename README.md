@@ -111,7 +111,7 @@ Then open `docs/build/html/index.html` in a browser.
 
 ## Authors
 
-- **Team Big Brain / University of Turku Capstone Group 7**
+**Team Big Brain / University of Turku Capstone Group 7:**
 - Jenni Alarakkola
 - Talha Rizwan
 - Fei-Linnea Hakala

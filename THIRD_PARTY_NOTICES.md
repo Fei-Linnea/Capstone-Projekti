@@ -6,7 +6,7 @@ This repository includes third-party software with its own licenses.
 Those licenses remain in effect for their respective components.
 
 ## Apache 2.0 License Original NOTICEs (if present):
-=====================================================
+========================================================================================================
 
 Package: coverage (7.6.12)
 
@@ -33,7 +33,7 @@ limitations under the License.
 -----------------------------------------------------
 This software includes the above work under the Apache License 2.0.
 
-=====================================================
+========================================================================================================
 
 Package: prometheus_client (0.24.1)
 
@@ -53,7 +53,7 @@ license. For details, see prometheus_client/decorator.py.
 
 This software includes the above work under the Apache License 2.0.
 
-=====================================================
+========================================================================================================
 
 Package: propcache (0.4.1)
 
@@ -81,7 +81,7 @@ Original NOTICE file content:
 
 This software includes the above work under the Apache License 2.0.
 
-=====================================================
+========================================================================================================
 
 Package: requests (2.32.5)
 
@@ -98,7 +98,7 @@ Copyright 2019 Kenneth Reitz
 
 This software includes the above work under the Apache License 2.0.
 
-=====================================================
+========================================================================================================
 
 Package: simpleitk (2.5.3)
 
@@ -122,7 +122,7 @@ See LICENSE file for details.
 
 This software includes the above work under the Apache License 2.0.
 
-=====================================================
+========================================================================================================
 
 Package: toposort (1.10)
 
@@ -150,7 +150,7 @@ limitations under the License.
 
 This software includes the above work under the Apache License 2.0.
 
-=====================================================
+========================================================================================================
 
 Package: yarl (1.23.0)
 
@@ -178,7 +178,7 @@ Original NOTICE file content:
 
 This software includes the above work under the Apache License 2.0.
 
-=====================================================
+========================================================================================================
 
 ## What To Ship
 
